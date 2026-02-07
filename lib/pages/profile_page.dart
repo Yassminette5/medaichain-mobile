@@ -159,41 +159,71 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            '< Retour',
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 16,
-            ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-        ),
-        title: const Text(
-          'Profil du Centre',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _saveProfile,
-            child: const Text(
-              'Enregistrer',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      '< Retour',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'Profil du Centre',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _saveProfile,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Enregistrer',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -211,9 +241,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 elevation: 0,
                 color: Colors.white,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(20.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Column(
@@ -223,20 +254,23 @@ class _ProfilePageState extends State<ProfilePage> {
                               'Prise de rendez-vous en ligne',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               'Permettre aux patients de prendre rendez-vous via l\'application.',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 color: Colors.grey[600],
+                                height: 1.4,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 12),
                       Switch(
                         value: _center.onlineAppointmentEnabled,
                         onChanged: (value) {
@@ -251,15 +285,15 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               // Section Informations Générales
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12, top: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, top: 8),
                 child: Text(
                   'INFORMATIONS GÉNÉRALES',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -278,11 +312,25 @@ class _ProfilePageState extends State<ProfilePage> {
                         controller: _nameController,
                         decoration: InputDecoration(
                           labelText: 'Nom du centre',
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -296,12 +344,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         controller: _categoryController,
                         decoration: InputDecoration(
                           labelText: 'Catégorie',
-                          suffixIcon: const Icon(Icons.arrow_drop_down),
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -316,15 +378,15 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               // Section Coordonnées
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'COORDONNÉES',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -344,12 +406,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           labelText: 'Téléphone',
-                          prefixIcon: const Icon(Icons.phone),
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(Icons.phone, color: Colors.grey[600]),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -364,12 +440,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           labelText: 'Email professionnel',
-                          prefixIcon: const Icon(Icons.email),
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(Icons.email, color: Colors.grey[600]),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -386,13 +476,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         controller: _locationController,
                         decoration: InputDecoration(
                           labelText: 'Localisation',
-                          prefixIcon: const Icon(Icons.location_on),
+                          labelStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(Icons.location_on, color: Colors.grey[600]),
                           suffixIcon: const Icon(Icons.map, color: Colors.blue),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Colors.blue, width: 2),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -407,15 +511,15 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               // Section Horaires d'ouverture
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'HORAIRES D\'OUVERTURE',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -477,14 +581,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                                   const SizedBox(height: 4),
                                   if (schedule.isOpen)
-                                    Row(
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 4,
                                       children: [
                                         InkWell(
                                           onTap: () => _selectTime(context, schedule, true),
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
+                                              horizontal: 10,
+                                              vertical: 8,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.grey[100],
@@ -499,37 +605,38 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   size: 16,
                                                   color: Colors.blue[700],
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  schedule.startTime.isEmpty
-                                                      ? '08:00 AM'
-                                                      : schedule.startTime,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.blue[700],
-                                                    fontWeight: FontWeight.w500,
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    schedule.startTime.isEmpty
+                                                        ? '08:00 AM'
+                                                        : schedule.startTime,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.blue[700],
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
                                         ),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 8),
-                                          child: Text(
-                                            '-',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.grey,
-                                            ),
+                                        Text(
+                                          '-',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                         InkWell(
                                           onTap: () => _selectTime(context, schedule, false),
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
+                                              horizontal: 10,
+                                              vertical: 8,
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.grey[100],
@@ -544,15 +651,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   size: 16,
                                                   color: Colors.blue[700],
                                                 ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  schedule.endTime.isEmpty
-                                                      ? '06:30 PM'
-                                                      : schedule.endTime,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.blue[700],
-                                                    fontWeight: FontWeight.w500,
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    schedule.endTime.isEmpty
+                                                        ? '06:30 PM'
+                                                        : schedule.endTime,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.blue[700],
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
