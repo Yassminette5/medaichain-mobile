@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../onboarding/registration_success_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  final String? selectedRole;
+
+  const SignupScreen({super.key, this.selectedRole});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -499,7 +502,18 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() => _isLoading = false);
-      _showSuccessDialog();
+      // If coming from onboarding flow with a role, go to success screen
+      if (widget.selectedRole != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => RegistrationSuccessScreen(
+              role: widget.selectedRole!,
+            ),
+          ),
+        );
+      } else {
+        _showSuccessDialog();
+      }
     }
   }
 

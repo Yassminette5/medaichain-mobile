@@ -4,6 +4,7 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'signup_screen.dart';
+import '../onboarding/role_selection_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -60,15 +61,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 50),
+                          const SizedBox(height: 30),
                           _buildHeader(),
-                          const SizedBox(height: 40),
-                          _buildGlassCard(),
-                          const SizedBox(height: 32),
-                          _buildSignUpSection(),
-                          const SizedBox(height: 40),
-                          _buildFooter(),
                           const SizedBox(height: 24),
+                          _buildGlassCard(),
+                          const SizedBox(height: 24),
+                          _buildSignUpSection(),
+                          const SizedBox(height: 24),
+                          _buildFooter(),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -110,45 +111,44 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       children: [
         // Logo with glow
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: AppColors.neonGradient,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
-              BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 30, spreadRadius: -5),
-              BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 50, spreadRadius: 0),
+              BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: -5),
             ],
           ),
-          child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 38),
+          child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 28),
         ),
-        const SizedBox(height: 36),
+        const SizedBox(height: 20),
         // Title with gradient
         ShaderMask(
           shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-          child: const Text('MEDAIChain', style: TextStyle(fontSize: 44, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1.5)),
+          child: const Text('MEDAIChain', style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
         ),
-        const SizedBox(height: 8),
-        Text('Bienvenue, Docteur', style: TextStyle(fontSize: 20, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w300)),
-        const SizedBox(height: 4),
-        Text('Connectez-vous pour accéder à vos patients', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.4))),
+        const SizedBox(height: 6),
+        Text('Bienvenue, Docteur', style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w300)),
+        const SizedBox(height: 2),
+        Text('Connectez-vous pour accéder à vos patients', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4))),
       ],
     );
   }
 
   Widget _buildGlassCard() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Container(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Colors.white.withValues(alpha: 0.18), Colors.white.withValues(alpha: 0.06)],
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30)],
           ),
@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 hint: 'docteur@hopital.com',
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               _buildModernTextField(
                 controller: _passwordController,
                 label: 'Mot de passe',
@@ -169,24 +169,24 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 hint: '••••••••',
                 isPassword: true,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   _buildModernCheckbox(),
-                  const SizedBox(width: 10),
-                  Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
                   const Spacer(),
                   TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: ShaderMask(
                       shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13)),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
               _buildLoginButton(),
             ],
           ),
@@ -316,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           width: double.infinity,
           height: 54,
           child: OutlinedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen())),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
