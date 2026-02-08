@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'centers_list_page.dart';
+import 'patient_home_page.dart';
 
 class PatientLoginPage extends StatefulWidget {
   const PatientLoginPage({super.key});
@@ -36,10 +36,10 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
           _isLoading = false;
         });
 
-        // Naviguer vers la liste des centres
+        // Naviguer vers la page d'accueil du patient
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) =>  CentersListPage(),
+            builder: (context) => const PatientHomePage(),
           ),
         );
       }

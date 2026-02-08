@@ -13,6 +13,7 @@ class CentersListPage extends StatelessWidget {
       phone: '01 23 45 67 89',
       email: 'contact@bio-sante.fr',
       location: '15 Rue de la Paix, 75002 Paris',
+      onlineAppointmentEnabled: true,
     ),
     CenterModel(
       name: 'Centre Médical Paris Nord',
@@ -20,6 +21,7 @@ class CentersListPage extends StatelessWidget {
       phone: '01 98 76 54 32',
       email: 'contact@parisnord.fr',
       location: '42 Avenue des Champs, 75008 Paris',
+      onlineAppointmentEnabled: true,
     ),
     CenterModel(
       name: 'Labo Santé Express',
@@ -27,6 +29,7 @@ class CentersListPage extends StatelessWidget {
       phone: '01 11 22 33 44',
       email: 'contact@santeexpress.fr',
       location: '8 Boulevard Voltaire, 75011 Paris',
+      onlineAppointmentEnabled: false,
     ),
   ];
 
