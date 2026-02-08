@@ -9,7 +9,7 @@ class CenterHomePage extends StatefulWidget {
 }
 
 class _CenterHomePageState extends State<CenterHomePage> {
-  String _selectedFilter = 'All';
+  String _selectedFilter = 'Tous';
   final TextEditingController _searchController = TextEditingController();
 
   final List<PrescriptionModel> _prescriptions = [
@@ -17,27 +17,27 @@ class _CenterHomePageState extends State<CenterHomePage> {
       id: '1',
       patientName: 'Sarah Jenkins',
       initials: 'SJ',
-      timeAgo: 'Submitted 2 mins ago',
+      timeAgo: 'Soumis il y a 2 min',
       status: 'URGENT',
-      tests: ['Blood Work', 'Lipid Profile'],
+      tests: ['Prise de sang', 'Bilan lipidique'],
       avatarColor: Colors.blue,
     ),
     PrescriptionModel(
       id: '2',
       patientName: 'Robert Chen',
       initials: 'RC',
-      timeAgo: 'Submitted 45 mins ago',
+      timeAgo: 'Soumis il y a 45 min',
       status: 'ROUTINE',
-      tests: ['Urinalysis'],
+      tests: ['Analyse d\'urine'],
       avatarColor: Colors.green,
     ),
     PrescriptionModel(
       id: '3',
       patientName: 'Alice Murray',
       initials: 'AM',
-      timeAgo: 'Submitted 1 hour ago',
+      timeAgo: 'Soumis il y a 1 heure',
       status: 'URGENT',
-      tests: ['COVID-19 PCR', 'Swab Test'],
+      tests: ['PCR COVID-19', 'Test de prélèvement'],
       avatarColor: Colors.purple,
     ),
   ];
@@ -47,9 +47,9 @@ class _CenterHomePageState extends State<CenterHomePage> {
 
     if (_selectedFilter == 'Urgent') {
       filtered = filtered.where((p) => p.status == 'URGENT').toList();
-    } else if (_selectedFilter == 'Pending') {
+    } else if (_selectedFilter == 'En attente') {
       filtered = filtered.where((p) => p.status == 'PENDING').toList();
-    } else if (_selectedFilter == 'Today') {
+    } else if (_selectedFilter == 'Aujourd\'hui') {
       // Filtrer par aujourd'hui (simulation)
       filtered = filtered;
     }
@@ -68,9 +68,9 @@ class _CenterHomePageState extends State<CenterHomePage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'URGENT':
-        return Colors.orange;
+        return Colors.amber[700]!;
       case 'ROUTINE':
-        return Colors.grey;
+        return Colors.grey[400]!;
       case 'PENDING':
         return Colors.blue;
       default:
@@ -109,30 +109,10 @@ class _CenterHomePageState extends State<CenterHomePage> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black87,
+            fontSize: 20,
           ),
         ),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -142,52 +122,35 @@ class _CenterHomePageState extends State<CenterHomePage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: 'Search patients or test types...',
-                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
+                TextField(
+                  controller: _searchController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: 'Rechercher des patients ou types de tests...',
+                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 22),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
                     ),
-                    const SizedBox(width: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.tune, color: Colors.black87),
-                        onPressed: () {},
-                      ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
                     ),
-                  ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: ['All', 'Urgent', 'Pending', 'Today'].map((filter) {
+                    children: ['Tous', 'Urgent', 'En attente', 'Aujourd\'hui'].map((filter) {
                       final isSelected = _selectedFilter == filter;
                       return Padding(
                         padding: const EdgeInsets.only(right: 10),
@@ -218,7 +181,7 @@ class _CenterHomePageState extends State<CenterHomePage> {
                                     fontSize: 14,
                                   ),
                                 ),
-                                if (filter != 'All') ...[
+                                if (filter != 'Tous') ...[
                                   const SizedBox(width: 4),
                                   Icon(
                                     Icons.arrow_drop_down,
@@ -247,7 +210,7 @@ class _CenterHomePageState extends State<CenterHomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Recent Submissions',
+                      'Soumissions récentes',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -257,7 +220,7 @@ class _CenterHomePageState extends State<CenterHomePage> {
                     TextButton(
                       onPressed: () {},
                       child: const Text(
-                        'View all',
+                        'Voir tout',
                         style: TextStyle(
                           color: Colors.blue,
                           fontWeight: FontWeight.w600,
@@ -275,29 +238,27 @@ class _CenterHomePageState extends State<CenterHomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: 1,
+        currentIndex: 0,
         selectedItemColor: Colors.blue[700],
         unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.description),
-            label: 'Prescriptions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 40),
-            label: 'New',
+            icon: Icon(Icons.home),
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
-            label: 'Patients',
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            label: '',
           ),
         ],
       ),
@@ -310,131 +271,159 @@ class _CenterHomePageState extends State<CenterHomePage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      elevation: 0,
+      elevation: 2,
+      shadowColor: Colors.grey.withOpacity(0.1),
       color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: prescription.avatarColor.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  prescription.initials,
-                  style: TextStyle(
-                    color: prescription.avatarColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Contenu
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          prescription.patientName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(prescription.status).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          prescription.status,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: _getStatusColor(prescription.status),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    prescription.timeAgo,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: prescription.tests.map((test) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          test,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Boutons d'action
-            Column(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Action consulter
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
+                // Avatar
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.blue[100],
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Center(
+                    child: Text(
+                      prescription.initials,
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Contenu principal
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Consult'),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward, size: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              prescription.patientName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: prescription.status == 'URGENT' 
+                                  ? Colors.amber[200] 
+                                  : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Text(
+                              prescription.status,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: prescription.status == 'URGENT' 
+                                    ? Colors.amber[900] 
+                                    : Colors.grey[700],
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        prescription.timeAgo,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                IconButton(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-                  onPressed: () {},
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Tags des tests
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: prescription.tests.map((test) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    test,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            // Boutons d'action
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Action consulter
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Consulter',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.more_vert, color: Colors.grey[700], size: 20),
+                    onPressed: () {},
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
               ],
             ),
