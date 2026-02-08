@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/prescription_model.dart';
 import 'settings_page.dart';
 import 'patients_list_page.dart';
+import 'prescription_detail_page.dart';
 
 class CenterHomePage extends StatefulWidget {
   const CenterHomePage({super.key});
@@ -17,30 +18,48 @@ class _CenterHomePageState extends State<CenterHomePage> {
   final List<PrescriptionModel> _prescriptions = [
     PrescriptionModel(
       id: '1',
-      patientName: 'Sarah Jenkins',
-      initials: 'SJ',
-      timeAgo: 'Soumis il y a 2 min',
-      status: 'URGENT',
-      tests: ['Prise de sang', 'Bilan lipidique'],
+      requestNumber: 'REQ-8829',
+      patientName: 'Jean Dupont',
+      initials: 'JD',
+      patientAge: 45,
+      patientGender: 'Homme',
+      timeAgo: 'Il y a 5 min',
+      status: 'EN ATTENTE',
+      tests: ['Bilan sanguin complet', 'Numération Formule Sanguine (NFS)', 'Glycémie à jeun', 'Bilan Lipidique'],
       avatarColor: Colors.blue,
+      doctorName: 'Dr. Smith',
+      doctorSpecialty: 'Cardiologie',
+      clinicalContext: 'Symptômes de fatigue intense persistante depuis 3 semaines, suspicion d\'anémie ou carence en fer.',
     ),
     PrescriptionModel(
       id: '2',
-      patientName: 'Robert Chen',
-      initials: 'RC',
-      timeAgo: 'Soumis il y a 45 min',
-      status: 'ROUTINE',
-      tests: ['Analyse d\'urine'],
-      avatarColor: Colors.green,
+      requestNumber: 'REQ-8830',
+      patientName: 'Marie Curie',
+      initials: 'MC',
+      patientAge: 68,
+      patientGender: 'Femme',
+      timeAgo: 'Il y a 15 min',
+      status: 'EN ATTENTE',
+      tests: ['Test PCR', 'COVID-19'],
+      avatarColor: Colors.orange,
+      doctorName: 'Dr. Martin',
+      doctorSpecialty: 'Médecine générale',
+      clinicalContext: 'Dépistage COVID-19 suite à exposition récente.',
     ),
     PrescriptionModel(
       id: '3',
-      patientName: 'Alice Murray',
-      initials: 'AM',
-      timeAgo: 'Soumis il y a 1 heure',
-      status: 'URGENT',
-      tests: ['PCR COVID-19', 'Test de prélèvement'],
-      avatarColor: Colors.purple,
+      requestNumber: 'REQ-8831',
+      patientName: 'Pierre Martin',
+      initials: 'PM',
+      patientAge: 32,
+      patientGender: 'Homme',
+      timeAgo: 'Il y a 42 min',
+      status: 'EN ATTENTE',
+      tests: ['Analyse d\'urine'],
+      avatarColor: Colors.green,
+      doctorName: 'Dr. Dubois',
+      doctorSpecialty: 'Néphrologie',
+      clinicalContext: 'Contrôle de routine pour suivi rénal.',
     ),
   ];
 
@@ -48,12 +67,11 @@ class _CenterHomePageState extends State<CenterHomePage> {
     var filtered = _prescriptions;
 
     if (_selectedFilter == 'Urgent') {
-      filtered = filtered.where((p) => p.status == 'URGENT').toList();
-    } else if (_selectedFilter == 'En attente') {
-      filtered = filtered.where((p) => p.status == 'PENDING').toList();
-    } else if (_selectedFilter == 'Aujourd\'hui') {
-      // Filtrer par aujourd'hui (simulation)
-      filtered = filtered;
+      // Filtrer les plus récentes (moins de 10 minutes)
+      filtered = filtered.where((p) {
+        final minutes = int.tryParse(p.timeAgo.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+        return minutes < 10;
+      }).toList();
     }
 
     if (_searchController.text.isNotEmpty) {
@@ -148,55 +166,21 @@ class _CenterHomePageState extends State<CenterHomePage> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                const SizedBox(height: 16),
+                // Filtres modernes avec style segmenté
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(4),
                   child: Row(
-                    children: ['Tous', 'Urgent', 'En attente', 'Aujourd\'hui'].map((filter) {
-                      final isSelected = _selectedFilter == filter;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              _selectedFilter = filter;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.blue[700] : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected ? Colors.blue[700]! : Colors.grey[300]!,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  filter,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.black87,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                if (filter != 'Tous') ...[
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.arrow_drop_down,
-                                    size: 18,
-                                    color: isSelected ? Colors.white : Colors.black87,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildModernFilterChip('Tous', _selectedFilter == 'Tous'),
+                      const SizedBox(width: 8),
+                      _buildModernFilterChip('Urgent', _selectedFilter == 'Urgent'),
+                    ],
                   ),
                 ),
               ],
@@ -208,28 +192,13 @@ class _CenterHomePageState extends State<CenterHomePage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Soumissions récentes',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Voir tout',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'Soumissions récentes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ..._filteredPrescriptions.map((prescription) => _buildPrescriptionCard(prescription)),
@@ -328,39 +297,21 @@ class _CenterHomePageState extends State<CenterHomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              prescription.patientName,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: prescription.status == 'URGENT' 
-                                  ? Colors.amber[200] 
-                                  : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Text(
-                              prescription.status,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: prescription.status == 'URGENT' 
-                                    ? Colors.amber[900] 
-                                    : Colors.grey[700],
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        prescription.patientName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        prescription.tests.first,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -375,29 +326,6 @@ class _CenterHomePageState extends State<CenterHomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Tags des tests
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: prescription.tests.map((test) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    test,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
             const SizedBox(height: 16),
             // Boutons d'action
             Row(
@@ -405,7 +333,14 @@ class _CenterHomePageState extends State<CenterHomePage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Action consulter
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PrescriptionDetailPage(
+                            prescription: prescription,
+                          ),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
@@ -433,22 +368,49 @@ class _CenterHomePageState extends State<CenterHomePage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.more_vert, color: Colors.grey[700], size: 20),
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
+
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernFilterChip(String label, bool isSelected) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedFilter = label;
+          });
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? Colors.blue[700] : Colors.grey[600],
+              ),
+            ),
+          ),
         ),
       ),
     );
