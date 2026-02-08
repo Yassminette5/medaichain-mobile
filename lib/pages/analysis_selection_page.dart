@@ -158,28 +158,29 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
           // Barre de recherche
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               controller: _searchController,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: 'Rechercher par nom ou code...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[600], size: 22),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey[200]!),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey[200]!),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               ),
             ),
           ),
@@ -187,7 +188,7 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
           // Filtres par catégorie
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -195,23 +196,43 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
                 children: _categories.map((category) {
                   final isSelected = _selectedCategory == category;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(category),
-                      selected: isSelected,
-                      onSelected: (selected) {
+                    padding: const EdgeInsets.only(right: 10),
+                    child: InkWell(
+                      onTap: () {
                         setState(() {
                           _selectedCategory = category;
                         });
                       },
-                      backgroundColor: Colors.white,
-                      selectedColor: Colors.blue[700],
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                      side: BorderSide(
-                        color: isSelected ? Colors.blue[700]! : Colors.grey[300]!,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blue[700] : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? Colors.blue[700]! : Colors.grey[300]!,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isSelected)
+                              const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            if (isSelected) const SizedBox(width: 6),
+                            Text(
+                              category,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.black87,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -227,32 +248,58 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
               children: [
                 if (_favoriteAnalyses.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'ANALYSES FAVORITES (${_favoriteAnalyses.length})',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
-                        letterSpacing: 0.5,
-                      ),
+                    padding: const EdgeInsets.only(bottom: 16, top: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.blue[700],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'ANALYSES FAVORITES (${_favoriteAnalyses.length})',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[800],
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   ..._favoriteAnalyses.map((analysis) => _buildAnalysisItem(analysis)),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                 ],
 
                 if (_otherAnalyses.isNotEmpty) ...[
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'AUTRES ANALYSES',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
-                        letterSpacing: 0.5,
-                      ),
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'AUTRES ANALYSES',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[800],
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   ..._otherAnalyses.map((analysis) => _buildAnalysisItem(analysis)),
@@ -264,15 +311,15 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
           // Bouton de confirmation
           if (_selectedAnalyses.isNotEmpty)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, -2),
+                    color: Colors.grey.withOpacity(0.15),
+                    spreadRadius: 0,
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
                   ),
                 ],
               ),
@@ -289,17 +336,26 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      elevation: 0,
                     ),
-                    child: Text(
-                      'Confirmer (${_selectedAnalyses.length})',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.check_circle, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Confirmer (${_selectedAnalyses.length})',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -314,12 +370,13 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
     final isSelected = _selectedAnalyses.contains(analysis.id);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      elevation: 0,
-      color: Colors.white,
+      elevation: isSelected ? 2 : 0,
+      shadowColor: Colors.blue.withOpacity(0.2),
+      color: isSelected ? Colors.blue[50] : Colors.white,
       child: InkWell(
         onTap: () {
           setState(() {
@@ -330,22 +387,29 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
             }
           });
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? Colors.blue[700]! : Colors.grey[200]!,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          padding: const EdgeInsets.all(18),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12),
+                  color: isSelected ? Colors.blue[100] : Colors.blue[50],
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   _getIconData(analysis.icon),
                   color: Colors.blue[700],
-                  size: 24,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 16),
@@ -362,54 +426,78 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
+                              height: 1.3,
                             ),
                           ),
                         ),
                         if (analysis.isUrgent)
                           Container(
+                            margin: const EdgeInsets.only(left: 8),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 10,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.red[200]!,
+                                width: 1,
+                              ),
                             ),
                             child: Text(
                               'Urgent',
                               style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.red[700],
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${analysis.category} • ${analysis.code}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.category_outlined,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${analysis.category} • ${analysis.code}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Checkbox(
-                value: isSelected,
-                onChanged: (value) {
-                  setState(() {
-                    if (value == true) {
-                      _selectedAnalyses.add(analysis.id);
-                    } else {
-                      _selectedAnalyses.remove(analysis.id);
-                    }
-                  });
-                },
-                activeColor: Colors.blue[700],
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? Colors.blue[700]! : Colors.grey[400]!,
+                    width: 2,
+                  ),
+                  color: isSelected ? Colors.blue[700] : Colors.transparent,
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 16,
+                      )
+                    : null,
               ),
             ],
           ),

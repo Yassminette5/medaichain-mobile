@@ -18,8 +18,6 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
   String? _selectedAnalysisType;
   DateTime? _selectedDate;
   String? _selectedTime;
-  bool _isFasting = false;
-  final _medicationsController = TextEditingController();
   final Set<String> _selectedAllergies = {};
   List<String> _selectedAnalysesNames = [];
 
@@ -59,7 +57,6 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
 
   @override
   void dispose() {
-    _medicationsController.dispose();
     super.dispose();
   }
 
@@ -130,11 +127,6 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
       setState(() {
         _selectedAnalysesNames = result;
         _selectedAnalysisType = analysisType;
-        if (analysisType == 'sang') {
-          _isFasting = true;
-        } else {
-          _isFasting = false;
-        }
       });
     }
   }
@@ -403,92 +395,6 @@ class _AppointmentBookingPageState extends State<AppointmentBookingPage> {
             ),
             
             const SizedBox(height: 32),
-            
-            // Préparation de l'examen
-            if (_selectedAnalysisType == 'sang')
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Êtes-vous à jeun ?',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Switch(
-                            value: _isFasting,
-                            onChanged: (value) {
-                              setState(() {
-                                _isFasting = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Obligatoire pour cette analyse',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            
-            if (_selectedAnalysisType == 'sang') const SizedBox(height: 16),
-            
-            // Traitements ou médicaments
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Traitements ou médicaments en cours',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _medicationsController,
-                      decoration: InputDecoration(
-                        hintText: 'Ex: Paracétamol, Insuline...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
             
             // Allergies connues
             Card(
