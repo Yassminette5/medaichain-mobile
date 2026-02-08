@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile_page.dart';
+import 'center_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -36,12 +38,21 @@ class _LoginPageState extends State<LoginPage> {
           _isLoading = false;
         });
 
-        // Naviguer vers la page de profil
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const ProfilePage(),
-          ),
-        );
+        // Si "Remember me" est coché → aller directement à la home
+        // Sinon → aller à la page de profil pour mettre les coordonnées
+        if (_rememberMe) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const CenterHomePage(),
+            ),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const ProfilePage(),
+            ),
+          );
+        }
       }
     }
   }
@@ -147,6 +158,30 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+
+                  // Checkbox Remember me
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
+                        activeColor: Colors.blue[700],
+                      ),
+                      const Text(
+                        'Remember me',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 24),
 
                   // Bouton de connexion

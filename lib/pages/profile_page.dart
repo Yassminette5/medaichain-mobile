@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/center_model.dart';
-import 'home_page.dart';
+import 'center_home_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -48,10 +48,10 @@ class _ProfilePageState extends State<ProfilePage> {
       _center.email = _emailController.text;
       _center.location = _locationController.text;
 
-      // Naviguer vers la page d'accueil
+      // Naviguer vers la page d'accueil du centre
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => HomePage(centerName: _center.name),
+          builder: (context) => const CenterHomePage(),
         ),
       );
     }
