@@ -29,7 +29,9 @@ class _CenterHomePageState extends State<CenterHomePage> {
       avatarColor: Colors.blue,
       doctorName: 'Dr. Smith',
       doctorSpecialty: 'Cardiologie',
-      clinicalContext: 'Symptômes de fatigue intense persistante depuis 3 semaines, suspicion d\'anémie ou carence en fer.',
+      appointmentDate: DateTime(2024, 1, 15),
+      appointmentTime: '09:30',
+      allergies: ['Pénicilline', 'Arachides'],
     ),
     PrescriptionModel(
       id: '2',
@@ -44,7 +46,9 @@ class _CenterHomePageState extends State<CenterHomePage> {
       avatarColor: Colors.orange,
       doctorName: 'Dr. Martin',
       doctorSpecialty: 'Médecine générale',
-      clinicalContext: 'Dépistage COVID-19 suite à exposition récente.',
+      appointmentDate: DateTime(2024, 1, 16),
+      appointmentTime: '14:00',
+      allergies: [],
     ),
     PrescriptionModel(
       id: '3',
@@ -59,7 +63,9 @@ class _CenterHomePageState extends State<CenterHomePage> {
       avatarColor: Colors.green,
       doctorName: 'Dr. Dubois',
       doctorSpecialty: 'Néphrologie',
-      clinicalContext: 'Contrôle de routine pour suivi rénal.',
+      appointmentDate: DateTime(2024, 1, 17),
+      appointmentTime: '10:15',
+      allergies: ['Latex'],
     ),
   ];
 

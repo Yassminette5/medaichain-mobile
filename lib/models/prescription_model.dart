@@ -13,7 +13,9 @@ class PrescriptionModel {
   final Color avatarColor;
   final String doctorName;
   final String doctorSpecialty;
-  final String clinicalContext;
+  final DateTime appointmentDate;
+  final String appointmentTime;
+  final List<String> allergies;
 
   PrescriptionModel({
     required this.id,
@@ -28,6 +30,8 @@ class PrescriptionModel {
     required this.avatarColor,
     required this.doctorName,
     required this.doctorSpecialty,
-    required this.clinicalContext,
+    required this.appointmentDate,
+    required this.appointmentTime,
+    required this.allergies,
   });
 }

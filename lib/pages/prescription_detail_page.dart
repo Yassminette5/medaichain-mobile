@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/prescription_model.dart';
+import '../services/notification_service.dart';
+import '../models/notification_model.dart';
 
 class PrescriptionDetailPage extends StatefulWidget {
   final PrescriptionModel prescription;
@@ -15,6 +17,7 @@ class PrescriptionDetailPage extends StatefulWidget {
 
 class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
   bool _isAccepted = false;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   Widget build(BuildContext context) {
@@ -59,12 +62,7 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                               ),
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.open_in_full, color: Colors.grey[600]),
-                            onPressed: () {},
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
+
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -111,6 +109,25 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                       ),
                       const SizedBox(height: 24),
 
+                      // Date et heure du rendez-vous
+                      _buildSectionTitle('DATE ET HEURE DU RENDEZ-VOUS'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_formatDate(widget.prescription.appointmentDate)} à ${widget.prescription.appointmentTime}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
                       // Analyses requises
                       _buildSectionTitle('ANALYSES REQUISES'),
                       const SizedBox(height: 12),
@@ -143,18 +160,47 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                           )),
                       const SizedBox(height: 24),
 
-                      // Contexte clinique
-                      _buildSectionTitle('CONTEXTE CLINIQUE'),
+                      // Allergies
+                      _buildSectionTitle('ALLERGIES'),
                       const SizedBox(height: 8),
-                      Text(
-                        widget.prescription.clinicalContext,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          fontStyle: FontStyle.italic,
-                          height: 1.5,
-                        ),
-                      ),
+                      widget.prescription.allergies.isEmpty
+                          ? Text(
+                              'Aucune allergie déclarée',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            )
+                          : Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.prescription.allergies.map((allergy) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red[200]!),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.warning, size: 16, color: Colors.red[700]),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        allergy,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.red[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                       const SizedBox(height: 32),
 
                       // Boutons d'action
@@ -163,13 +209,13 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () {
-                                _handleRefuse();
+                                _handlePending();
                               },
-                              icon: const Icon(Icons.close, size: 20),
-                              label: const Text('Refuser'),
+                              icon: const Icon(Icons.schedule, size: 20),
+                              label: const Text('En attente'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red[700],
-                                side: BorderSide(color: Colors.red[700]!),
+                                foregroundColor: Colors.orange[700],
+                                side: BorderSide(color: Colors.orange[700]!),
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -195,6 +241,49 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                                 elevation: 0,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          PopupMenuButton<String>(
+                            icon: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(Icons.more_vert, color: Colors.grey[700], size: 20),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            onSelected: (value) {
+                              if (value == 'date_unavailable') {
+                                _handleDateUnavailable();
+                              } else if (value == 'other') {
+                                _handleOtherNotification();
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'date_unavailable',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.event_busy, size: 20, color: Colors.red),
+                                    SizedBox(width: 12),
+                                    Text('Date occupée'),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'other',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, size: 20, color: Colors.blue),
+                                    SizedBox(width: 12),
+                                    Text('Autre notification'),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -348,10 +437,36 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
     );
   }
 
+  String _formatDate(DateTime date) {
+    const months = [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
   void _handleAccept() {
-    setState(() {
-      _isAccepted = true;
-    });
+    // Envoyer une notification au patient
+    _notificationService.addNotification(
+      NotificationModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: 'Rendez-vous accepté',
+        message: 'Votre demande de rendez-vous (#${widget.prescription.requestNumber}) pour le ${_formatDate(widget.prescription.appointmentDate)} à ${widget.prescription.appointmentTime} a été acceptée. Veuillez respecter les informations fournies.',
+        date: DateTime.now(),
+        type: 'accepted',
+        requestNumber: widget.prescription.requestNumber,
+      ),
+    );
 
     // Afficher la notification de succès
     ScaffoldMessenger.of(context).showSnackBar(
@@ -362,44 +477,32 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Demande de ${widget.prescription.patientName.split(' ').first} acceptée',
+                'Rendez-vous accepté. Notification envoyée au patient.',
                 style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                setState(() {
-                  _isAccepted = false;
-                });
-              },
-              child: const Text(
-                'ANNULER',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 4),
+        backgroundColor: Colors.green[700],
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.fixed,
       ),
     );
 
-    // Retourner à la page précédente après un délai
+    // Retourner à la page précédente
     Future.delayed(const Duration(seconds: 1), () {
-      if (mounted && _isAccepted) {
-        Navigator.pop(context, true); // Retourner avec un résultat pour indiquer l'acceptation
+      if (mounted) {
+        Navigator.pop(context, true);
       }
     });
   }
 
-  void _handleRefuse() {
+  void _handlePending() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Refuser la demande'),
-        content: const Text('Êtes-vous sûr de vouloir refuser cette demande ?'),
+        title: const Text('Mettre en attente'),
+        content: const Text('Voulez-vous mettre cette demande en attente ? Le patient sera notifié qu\'il y a des procédures à suivre concernant son analyse.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -407,18 +510,150 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Fermer le dialog
-              Navigator.pop(context, false); // Retourner à la page précédente avec un résultat
+              Navigator.pop(context);
+              
+              // Envoyer une notification au patient
+              _notificationService.addNotification(
+                NotificationModel(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  title: 'Rendez-vous en attente',
+                  message: 'Votre demande de rendez-vous (#${widget.prescription.requestNumber}) est en attente. Il y a des procédures à suivre concernant votre analyse. Nous vous contacterons bientôt.',
+                  date: DateTime.now(),
+                  type: 'pending',
+                  requestNumber: widget.prescription.requestNumber,
+                ),
+              );
+
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Demande de ${widget.prescription.patientName} refusée'),
-                    backgroundColor: Colors.red,
+                    content: const Text('Demande mise en attente. Notification envoyée au patient.'),
+                    backgroundColor: Colors.orange[700],
+                  ),
+                );
+                
+                Future.delayed(const Duration(seconds: 1), () {
+                  if (mounted) {
+                    Navigator.pop(context, false);
+                  }
+                });
+              }
+            },
+            child: const Text('Mettre en attente', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleDateUnavailable() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Date occupée'),
+        content: const Text('Voulez-vous envoyer une notification au patient pour l\'informer que la date est occupée et proposer des dates alternatives ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              
+              // Générer des dates alternatives (exemple: +1, +2, +3 jours)
+              final alternativeDates = [
+                widget.prescription.appointmentDate.add(const Duration(days: 1)),
+                widget.prescription.appointmentDate.add(const Duration(days: 2)),
+                widget.prescription.appointmentDate.add(const Duration(days: 3)),
+              ];
+
+              // Envoyer une notification au patient avec dates alternatives
+              _notificationService.addNotification(
+                NotificationModel(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  title: 'Date de rendez-vous occupée',
+                  message: 'Désolé, la date de votre rendez-vous (#${widget.prescription.requestNumber}) pour le ${_formatDate(widget.prescription.appointmentDate)} à ${widget.prescription.appointmentTime} est occupée. Voici d\'autres jours disponibles si vous souhaitez réserver.',
+                  date: DateTime.now(),
+                  type: 'date_unavailable',
+                  requestNumber: widget.prescription.requestNumber,
+                  alternativeDates: alternativeDates.map((d) => _formatDate(d)).toList(),
+                ),
+              );
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Notification envoyée au patient avec dates alternatives.'),
+                    backgroundColor: Colors.blue[700],
                   ),
                 );
               }
             },
-            child: const Text('Refuser', style: TextStyle(color: Colors.red)),
+            child: const Text('Envoyer', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleOtherNotification() {
+    final messageController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Autre notification'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Entrez le message à envoyer au patient :'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: messageController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Votre message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (messageController.text.trim().isNotEmpty) {
+                Navigator.pop(context);
+                
+                // Envoyer une notification personnalisée au patient
+                _notificationService.addNotification(
+                  NotificationModel(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    title: 'Notification du centre',
+                    message: messageController.text.trim(),
+                    date: DateTime.now(),
+                    type: 'other',
+                    requestNumber: widget.prescription.requestNumber,
+                  ),
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Notification envoyée au patient.'),
+                      backgroundColor: Colors.blue[700],
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Envoyer', style: TextStyle(color: Colors.blue)),
           ),
         ],
       ),
