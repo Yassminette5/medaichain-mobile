@@ -48,12 +48,23 @@ class _ProfilePageState extends State<ProfilePage> {
       _center.email = _emailController.text;
       _center.location = _locationController.text;
 
-      // Naviguer vers la page d'accueil du centre
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const CenterHomePage(),
-        ),
-      );
+      // Si on vient de Settings, retourner en arrière
+      // Sinon, naviguer vers la page d'accueil
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profil mis à jour avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const CenterHomePage(),
+          ),
+        );
+      }
     }
   }
 

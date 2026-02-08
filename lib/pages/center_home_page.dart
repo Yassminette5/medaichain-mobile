@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/prescription_model.dart';
+import 'settings_page.dart';
+import 'patients_list_page.dart';
 
 class CenterHomePage extends StatefulWidget {
   const CenterHomePage({super.key});
@@ -243,6 +245,25 @@ class _CenterHomePageState extends State<CenterHomePage> {
         unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
+        onTap: (index) {
+          if (index == 1) {
+            // Patients
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>  PatientsListPage(),
+              ),
+            );
+          } else if (index == 2) {
+            // Settings
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsPage(),
+              ),
+            );
+          }
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

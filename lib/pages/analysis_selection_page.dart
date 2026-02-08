@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/analysis_model.dart';
+import '../services/analysis_service.dart';
 
 class AnalysisSelectionPage extends StatefulWidget {
   final String analysisType;
@@ -17,69 +18,9 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'Toutes';
   final Set<String> _selectedAnalyses = {};
+  final AnalysisService _analysisService = AnalysisService();
 
-  final List<AnalysisModel> _allAnalyses = [
-    AnalysisModel(
-      id: '1',
-      name: 'NFS (Numération Formule Sanguine)',
-      category: 'Hématologie',
-      code: 'HEM-001',
-      icon: 'flask',
-      isFavorite: true,
-    ),
-    AnalysisModel(
-      id: '2',
-      name: 'Glycémie à jeun',
-      category: 'Biochimie',
-      code: 'BIO-104',
-      icon: 'drop',
-      isFavorite: true,
-    ),
-    AnalysisModel(
-      id: '3',
-      name: 'PCR COVID-19',
-      category: 'Virologie',
-      code: 'VIR-992',
-      icon: 'virus',
-      isFavorite: true,
-      isUrgent: true,
-    ),
-    AnalysisModel(
-      id: '4',
-      name: 'Caryotype constitutionnel',
-      category: 'Génétique',
-      code: 'GEN-401',
-      icon: 'dna',
-    ),
-    AnalysisModel(
-      id: '5',
-      name: 'Bilan Lipidique',
-      category: 'Biochimie',
-      code: 'BIO-202',
-      icon: 'cross',
-    ),
-    AnalysisModel(
-      id: '6',
-      name: 'Troponine I',
-      category: 'Biochimie',
-      code: 'BIO-885',
-      icon: 'chart',
-    ),
-    AnalysisModel(
-      id: '7',
-      name: 'Analyse d\'urine complète',
-      category: 'Biochimie',
-      code: 'BIO-301',
-      icon: 'flask',
-    ),
-    AnalysisModel(
-      id: '8',
-      name: 'Créatinine',
-      category: 'Biochimie',
-      code: 'BIO-402',
-      icon: 'drop',
-    ),
-  ];
+  List<AnalysisModel> get _allAnalyses => _analysisService.getPatientAnalyses();
 
   List<String> get _categories {
     final categories = _allAnalyses.map((a) => a.category).toSet().toList();
@@ -122,7 +63,7 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
   IconData _getIconData(String icon) {
     switch (icon) {
       case 'flask':
-        return Icons.science;
+        return Icons.science_outlined;
       case 'drop':
         return Icons.water_drop;
       case 'virus':
@@ -133,6 +74,16 @@ class _AnalysisSelectionPageState extends State<AnalysisSelectionPage> {
         return Icons.medical_services;
       case 'chart':
         return Icons.bar_chart;
+      case 'microscope':
+        return Icons.science;
+      case 'heart':
+        return Icons.favorite;
+      case 'molecule':
+        return Icons.ac_unit;
+      case 'shield':
+        return Icons.shield;
+      case 'syringe':
+        return Icons.medical_services;
       default:
         return Icons.science;
     }
