@@ -117,19 +117,7 @@ class _CenterHomePageState extends State<CenterHomePage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.person, color: Colors.black87),
-            onPressed: () {
-              // Naviguer vers le profil
-            },
-          ),
-        ),
+
         title: const Text(
           'Prescriptions',
           style: TextStyle(

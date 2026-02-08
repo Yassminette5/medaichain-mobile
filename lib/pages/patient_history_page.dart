@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/patient_model.dart';
 import '../models/test_result_model.dart';
-import 'appointment_booking_page.dart';
-import '../models/center_model.dart';
+import 'publish_results_page.dart';
 
 class PatientHistoryPage extends StatefulWidget {
   final PatientModel patient;
@@ -248,59 +247,110 @@ class _PatientHistoryPageState extends State<PatientHistoryPage> {
 
           // Liste des résultats
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: _groupedByMonth.entries.map((entry) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16, top: 8),
-                      child: Row(
-                        children: [
-                          Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 8),
-                          Text(
-                            entry.key,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
+            child: widget.patient.recordCount == 0
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.assignment_outlined,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aucun historique',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Ce patient n\'a pas encore d\'analyses.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PublishResultsPage(patient: widget.patient),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.upload_file, size: 20),
+                          label: const Text('Publier les résultats'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[700],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    ...entry.value.map((test) => _buildTestCard(test)),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }).toList(),
-            ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: _groupedByMonth.entries.map((entry) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16, top: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                                const SizedBox(width: 8),
+                                Text(
+                                  entry.key,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ...entry.value.map((test) => _buildTestCard(test)),
+                          const SizedBox(height: 24),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Naviguer vers la page de prise de rendez-vous
-          final center = CenterModel(); // Centre par défaut
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AppointmentBookingPage(center: center),
-            ),
-          );
-        },
-        backgroundColor: Colors.blue[700],
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Nouvelle analyse',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      floatingActionButton: widget.patient.recordCount > 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PublishResultsPage(patient: widget.patient),
+                  ),
+                );
+              },
+              backgroundColor: Colors.blue[700],
+              icon: const Icon(Icons.upload_file, color: Colors.white),
+              label: const Text(
+                'Publier les résultats',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 

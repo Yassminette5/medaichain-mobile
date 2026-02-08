@@ -30,6 +30,12 @@ class PatientsListPage extends StatelessWidget {
       patientId: '#345678',
       recordCount: 15,
     ),
+    PatientModel(
+      id: '5',
+      name: 'Michael Brown',
+      patientId: '#999888',
+      recordCount: 0, // Nouveau patient sans historique
+    ),
   ];
 
   @override
@@ -60,12 +66,12 @@ class PatientsListPage extends StatelessWidget {
 
   Widget _buildPatientCard(BuildContext context, PatientModel patient) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0,
-      color: Colors.white,
+      color: Colors.grey[100],
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -77,12 +83,12 @@ class PatientsListPage extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: Colors.blue[100],
                   shape: BoxShape.circle,
@@ -93,7 +99,7 @@ class PatientsListPage extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.blue[700],
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
+                      fontSize: 18,
                     ),
                   ),
                 ),
@@ -106,7 +112,7 @@ class PatientsListPage extends StatelessWidget {
                     Text(
                       patient.name,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
@@ -125,6 +131,7 @@ class PatientsListPage extends StatelessWidget {
               Icon(
                 Icons.chevron_right,
                 color: Colors.grey[400],
+                size: 20,
               ),
             ],
           ),
