@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import '../dashboard/dashboard_screen.dart';
+import '../centre_analyse/centre_analyse_dashboard_screen.dart';
+import '../../core/theme/app_colors.dart';
 
 /// Registration Success Screen - Premium Animated Design
 class RegistrationSuccessScreen extends StatefulWidget {
@@ -114,11 +116,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          ),
+          gradient: AppColors.darkGradient,
         ),
         child: Stack(
           children: [
@@ -196,7 +194,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
       final size = 100.0 + random.nextDouble() * 150;
       final top = random.nextDouble() * MediaQuery.of(context).size.height;
       final left = random.nextDouble() * MediaQuery.of(context).size.width;
-      final color = index % 2 == 0 ? const Color(0xFF00D4AA) : const Color(0xFF667EEA);
+      final color = index % 2 == 0 ? AppColors.primary : const Color(0xFF667EEA);
 
       return Positioned(
         top: top,
@@ -241,7 +239,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00D4AA).withValues(alpha: 0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 50,
                       spreadRadius: 20,
                     ),
@@ -255,7 +253,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFF00D4AA).withValues(alpha: 0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -265,15 +263,11 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
                 width: 110,
                 height: 110,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF00D4AA), Color(0xFF00B894)],
-                  ),
+                  gradient: AppColors.heroGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00D4AA).withValues(alpha: 0.5),
+                      color: AppColors.primary.withValues(alpha: 0.5),
                       blurRadius: 25,
                       offset: const Offset(0, 10),
                     ),
@@ -296,9 +290,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
     return Column(
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFF00D4AA), Color(0xFF00E5CC)],
-          ).createShader(bounds),
+          shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
           child: const Text(
             'Compte Créé !',
             style: TextStyle(
@@ -397,7 +389,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
             width: 32,
             height: 32,
             decoration: const BoxDecoration(
-              color: Color(0xFF10B981),
+              color: AppColors.success,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.check, color: Colors.white, size: 20),
@@ -451,13 +443,11 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
       height: 58,
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF00D4AA), Color(0xFF00B894)],
-          ),
+          gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF00D4AA).withValues(alpha: 0.4),
+              color: AppColors.primary.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -500,7 +490,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
           width: 24,
           height: 2,
           decoration: BoxDecoration(
-            color: const Color(0xFF00D4AA).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(1),
           ),
         ),
@@ -517,7 +507,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
           width: 24,
           height: 2,
           decoration: BoxDecoration(
-            color: const Color(0xFF00D4AA).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(1),
           ),
         ),
@@ -526,8 +516,14 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
   }
 
   void _navigateToDashboard() {
+    Widget dashboard;
+    if (widget.role == 'centre_analyse' || widget.role == "Centre d'analyse") {
+      dashboard = const CentreAnalyseDashboardScreen();
+    } else {
+      dashboard = const DashboardScreen();
+    }
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      MaterialPageRoute(builder: (context) => dashboard),
       (route) => false,
     );
   }

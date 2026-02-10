@@ -1,198 +1,330 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/medical_card.dart';
-import '../diagnosis/add_diagnosis_screen.dart';
-import '../prescription/create_prescription_screen.dart';
 
-/// Écran Dossier Médical Patient
-class PatientMedicalRecordScreen extends StatefulWidget {
+/// Écran du dossier médical patient
+class PatientMedicalRecordScreen extends StatelessWidget {
   const PatientMedicalRecordScreen({super.key});
-
-  @override
-  State<PatientMedicalRecordScreen> createState() => _PatientMedicalRecordScreenState();
-}
-
-class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _expandedIndex = -1;
-
-  final List<Map<String, dynamic>> _timelineData = [
-    {'date': '15 Jan 2026', 'title': 'Contrôle diabète', 'description': 'HbA1c: 7.2%, Glycémie à jeun: 1.32 g/L', 'type': 'checkup', 'doctor': 'Dr. Mitchell'},
-    {'date': '3 Jan 2026', 'title': 'Renouvellement ordonnance', 'description': 'Metformine 500mg - Continuer 2x/jour', 'type': 'prescription', 'doctor': 'Dr. Mitchell'},
-    {'date': '18 Déc 2025', 'title': 'Résultats labo', 'description': 'Bilan complet - Fonction rénale normale', 'type': 'lab', 'doctor': 'Labo Central'},
-    {'date': '1 Déc 2025', 'title': 'Consultation cardiologie', 'description': 'ECG normal, Tension: 130/85', 'type': 'specialist', 'doctor': 'Dr. Cardinaux'},
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dossier Patient'),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.add_circle_outline),
-            onSelected: (value) {
-              if (value == 'diagnosis') Navigator.push(context, MaterialPageRoute(builder: (_) => const AddDiagnosisScreen()));
-              else if (value == 'prescription') Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePrescriptionScreen()));
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'diagnosis', child: Row(children: [Icon(Icons.medical_information, size: 20), SizedBox(width: 12), Text('Ajouter Diagnostic')])),
-              const PopupMenuItem(value: 'prescription', child: Row(children: [Icon(Icons.medication, size: 20), SizedBox(width: 12), Text('Créer Ordonnance')])),
-              const PopupMenuItem(value: 'note', child: Row(children: [Icon(Icons.note_add, size: 20), SizedBox(width: 12), Text('Ajouter Note')])),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.primary.withValues(alpha: 0.05), AppColors.background],
+            stops: const [0, 0.3],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPatientInfo(),
+                      const SizedBox(height: 24),
+                      _buildVitalSigns(),
+                      const SizedBox(height: 24),
+                      _buildMedicalHistory(),
+                      const SizedBox(height: 24),
+                      _buildCurrentMedications(),
+                      const SizedBox(height: 24),
+                      _buildRecentConsultations(),
+                    ],
+                  ),
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10)],
+              ),
+              child: const Icon(Icons.arrow_back_ios_new, size: 20),
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Dossier Médical',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10)],
+            ),
+            child: const Icon(Icons.more_vert, size: 20),
           ),
         ],
       ),
-      body: Column(children: [
-        _buildPatientHeader(),
-        const SizedBox(height: 16),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12)),
-          child: TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Colors.transparent,
-            indicator: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 4)]),
-            tabs: const [Tab(text: 'Historique'), Tab(text: 'Diagnostics'), Tab(text: 'Labo'), Tab(text: 'Rx')],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(child: TabBarView(controller: _tabController, children: [_buildTimelineTab(), _buildDiagnosesTab(), _buildLabsTab(), _buildPrescriptionsTab()])),
-      ]),
     );
   }
 
-  Widget _buildPatientHeader() {
+  Widget _buildPatientInfo() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(20)),
-      child: Column(children: [
-        Row(children: [
-          CircleAvatar(radius: 32, backgroundColor: Colors.white.withValues(alpha: 0.2), child: const Text('JD', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))),
-          const SizedBox(width: 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Jean Dupont', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text('45 ans • Homme • Groupe O+', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
-          ])),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20)],
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.verified, color: Colors.white, size: 14), const SizedBox(width: 6), Text('Blockchain', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 11, fontWeight: FontWeight.w500))]),
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Center(
+              child: Text('JD', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24)),
+            ),
           ),
-        ]),
-        const SizedBox(height: 16),
-        Row(children: [
-          _buildPatientStat('Dernière visite', '15 Jan 2026'),
-          Container(width: 1, height: 30, color: Colors.white.withValues(alpha: 0.2)),
-          _buildPatientStat('Allergies', 'Pénicilline'),
-          Container(width: 1, height: 30, color: Colors.white.withValues(alpha: 0.2)),
-          _buildPatientStat('Médecin', 'Dr. Mitchell'),
-        ]),
-      ]),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Jean Dupont',
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '52 ans • Masculin',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'ID: PAT-2024-1234',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildPatientStat(String label, String value) {
-    return Expanded(child: Column(children: [
-      Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
-      const SizedBox(height: 4),
-      Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-    ]));
-  }
-
-  Widget _buildTimelineTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: _timelineData.length,
-      itemBuilder: (context, index) {
-        final item = _timelineData[index];
-        final isExpanded = _expandedIndex == index;
-        IconData icon;
-        Color color;
-        switch (item['type']) {
-          case 'prescription': icon = Icons.medication; color = AppColors.prescription; break;
-          case 'lab': icon = Icons.science; color = AppColors.diagnosis; break;
-          case 'specialist': icon = Icons.medical_services; color = AppColors.secondary; break;
-          default: icon = Icons.check_circle; color = AppColors.primary;
-        }
-        return TimelineCard(
-          title: item['title'],
-          subtitle: item['description'],
-          date: item['date'],
-          icon: icon,
-          iconColor: color,
-          isExpanded: isExpanded,
-          onTap: () => setState(() => _expandedIndex = isExpanded ? -1 : index),
-          expandedContent: isExpanded ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [const Icon(Icons.person, size: 14, color: AppColors.textSecondary), const SizedBox(width: 6), Text(item['doctor'], style: const TextStyle(fontSize: 13))]),
-            const SizedBox(height: 8),
-            Row(children: [OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.download, size: 16), label: const Text('Télécharger')), const SizedBox(width: 12), ElevatedButton.icon(onPressed: () {}, icon: const Icon(Icons.share, size: 16), label: const Text('Partager'))]),
-          ]) : null,
-        );
-      },
+  Widget _buildVitalSigns() {
+    return MedicalCard(
+      title: 'Signes Vitaux',
+      titleIcon: Icons.favorite_rounded,
+      child: Row(
+        children: [
+          _buildVitalItem('❤️', '72', 'bpm', 'Rythme'),
+          _buildVitalItem('🩸', '120/80', 'mmHg', 'Tension'),
+          _buildVitalItem('🌡️', '36.8', '°C', 'Temp.'),
+          _buildVitalItem('💨', '16', '/min', 'Resp.'),
+        ],
+      ),
     );
   }
 
-  Widget _buildDiagnosesTab() {
-    return ListView(padding: const EdgeInsets.symmetric(horizontal: 20), children: [
-      MedicalCard(title: 'Diabète Type 2', titleIcon: Icons.healing, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _buildDiagnosisInfo('Diagnostiqué', 'Mars 2022'),
-        _buildDiagnosisInfo('Sévérité', 'Modéré'),
-        _buildDiagnosisInfo('Statut', 'Actif - Sous traitement'),
-      ])),
-      MedicalCard(title: 'Hypertension', titleIcon: Icons.favorite, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _buildDiagnosisInfo('Diagnostiqué', 'Janvier 2023'),
-        _buildDiagnosisInfo('Sévérité', 'Stade 1'),
-        _buildDiagnosisInfo('Statut', 'Contrôlé'),
-      ])),
-    ]);
+  Widget _buildVitalItem(String emoji, String value, String unit, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                TextSpan(
+                  text: ' $unit',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
   }
 
-  Widget _buildDiagnosisInfo(String label, String value) {
-    return Padding(padding: const EdgeInsets.only(bottom: 8), child: Row(children: [Text('$label: ', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)), Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13))]));
+  Widget _buildMedicalHistory() {
+    return MedicalCard(
+      title: 'Antécédents',
+      titleIcon: Icons.history_rounded,
+      child: Column(
+        children: [
+          _buildHistoryItem('Diabète Type 2', '2018', AppColors.warning),
+          const SizedBox(height: 12),
+          _buildHistoryItem('Hypertension', '2020', AppColors.error),
+          const SizedBox(height: 12),
+          _buildHistoryItem('Chirurgie appendice', '2010', AppColors.textSecondary),
+        ],
+      ),
+    );
   }
 
-  Widget _buildLabsTab() {
-    return ListView(padding: const EdgeInsets.symmetric(horizontal: 20), children: [
-      MedicalCard(title: 'HbA1c', titleIcon: Icons.science, child: Column(children: [
-        Row(children: [const Text('7.2%', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.warning)), const Spacer(), Column(crossAxisAlignment: CrossAxisAlignment.end, children: [const Text('Cible: < 7.0%', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)), const SizedBox(height: 4), Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(8)), child: const Text('Légèrement élevé', style: TextStyle(color: AppColors.warning, fontSize: 10, fontWeight: FontWeight.w500)))])]),
-        const SizedBox(height: 12),
-        ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: 0.72, backgroundColor: AppColors.border, valueColor: const AlwaysStoppedAnimation<Color>(AppColors.warning), minHeight: 8)),
-      ])),
-    ]);
+  Widget _buildHistoryItem(String condition, String year, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(condition, style: const TextStyle(fontWeight: FontWeight.w600))),
+          Text(year, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        ],
+      ),
+    );
   }
 
-  Widget _buildPrescriptionsTab() {
-    return ListView(padding: const EdgeInsets.symmetric(horizontal: 20), children: [
-      MedicalCard(title: 'Metformine 500mg', titleIcon: Icons.medication, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _buildDiagnosisInfo('Posologie', '2x par jour'),
-        _buildDiagnosisInfo('Durée', 'Continue'),
-        _buildDiagnosisInfo('Prescrit par', 'Dr. Mitchell'),
-        const SizedBox(height: 8),
-        Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: AppColors.successLight, borderRadius: BorderRadius.circular(8)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.check_circle, color: AppColors.success, size: 14), SizedBox(width: 6), Text('Actif', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w500, fontSize: 12))])),
-      ])),
-      MedicalCard(title: 'Lisinopril 10mg', titleIcon: Icons.medication, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        _buildDiagnosisInfo('Posologie', '1x par jour'),
-        _buildDiagnosisInfo('Durée', 'Continue'),
-        _buildDiagnosisInfo('Prescrit par', 'Dr. Cardinaux'),
-      ])),
-    ]);
+  Widget _buildCurrentMedications() {
+    return MedicalCard(
+      title: 'Médicaments Actuels',
+      titleIcon: Icons.medication_rounded,
+      child: Column(
+        children: [
+          _buildMedicationItem('Metformine', '500mg', '2x/jour', AppColors.primary),
+          const SizedBox(height: 12),
+          _buildMedicationItem('Amlodipine', '5mg', '1x/jour', AppColors.secondary),
+          const SizedBox(height: 12),
+          _buildMedicationItem('Aspirine', '100mg', '1x/jour', AppColors.prescription),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedicationItem(String name, String dose, String frequency, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.medication, color: Colors.white, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(dose, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(frequency, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentConsultations() {
+    return MedicalCard(
+      title: 'Consultations Récentes',
+      titleIcon: Icons.calendar_today_rounded,
+      child: Column(
+        children: [
+          _buildConsultationItem('Dr. Sarah Mitchell', '15 Jan 2024', 'Suivi diabète'),
+          const SizedBox(height: 12),
+          _buildConsultationItem('Dr. Marc Laurent', '02 Jan 2024', 'Bilan cardiologique'),
+          const SizedBox(height: 12),
+          _buildConsultationItem('Dr. Sarah Mitchell', '18 Déc 2023', 'Contrôle tension'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConsultationItem(String doctor, String date, String reason) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: AppColors.heroGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(child: Icon(Icons.person, color: Colors.white, size: 20)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(doctor, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(reason, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
+            ),
+          ),
+          Text(date, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        ],
+      ),
+    );
   }
 }

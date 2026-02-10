@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
+import '../../models/user_model.dart';
+import '../../providers/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../centre_analyse/centre_analyse_dashboard_screen.dart';
 import 'signup_screen.dart';
+import 'reset_password_screen.dart';
 import '../onboarding/role_selection_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
@@ -177,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
                   const Spacer(),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: _showForgotPasswordDialog,
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: ShaderMask(
                       shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
@@ -210,18 +215,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: TextField(
             controller: controller,
             obscureText: isPassword && _obscurePassword,
             keyboardType: keyboardType,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: const TextStyle(color: Colors.black, fontSize: 16),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+              hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4)),
               prefixIcon: ShaderMask(
                 shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
                 child: Icon(icon, color: Colors.white, size: 22),
@@ -370,11 +375,121 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   void _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorSnackBar('Veuillez remplir tous les champs');
+      return;
+    }
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.login(email: email, password: password);
+
     if (mounted) {
       setState(() => _isLoading = false);
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
+      if (success) {
+        Widget dashboard;
+        final userRole = authProvider.user?.role.value ?? '';
+        if (userRole == 'centre_analyse') {
+          dashboard = const CentreAnalyseDashboardScreen();
+        } else {
+          dashboard = const DashboardScreen();
+        }
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => dashboard));
+      } else {
+        _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
+      }
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Mot de passe oublié', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Entrez votre email pour recevoir un lien de réinitialisation', 
+                 style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'votre@email.com',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('Annuler', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isEmpty) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(content: Text('Veuillez entrer votre email'), backgroundColor: Colors.orange),
+                );
+                return;
+              }
+              
+              Navigator.pop(dialogContext);
+              
+              // Appel API avec le bon contexte
+              final success = await authProvider.forgotPassword(email);
+              
+              if (mounted) {
+                if (success) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ResetPasswordScreen(email: email),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(authProvider.error ?? 'Erreur'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Envoyer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

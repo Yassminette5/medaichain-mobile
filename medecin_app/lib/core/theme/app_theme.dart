@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// MEDAIChain App Theme Configuration
-/// Modern healthcare theme with Material 3 design
+/// Modern healthcare theme with Material 3 design - Purple/Lavender style
 class AppTheme {
   AppTheme._();
 
@@ -115,24 +115,25 @@ class AppTheme {
         ),
       ),
 
-      // Card Theme
+      // Card Theme - Large border radius, soft shadow
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.cardBackground,
+        shadowColor: AppColors.cardShadow,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(28),
         ),
       ),
 
-      // Elevated Button Theme
+      // Elevated Button Theme - Very rounded
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 16,
@@ -141,14 +142,14 @@ class AppTheme {
         ),
       ),
 
-      // Outlined Button Theme
+      // Outlined Button Theme - Very rounded
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           side: const BorderSide(color: AppColors.primary, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.inter(
             fontSize: 16,
@@ -168,29 +169,29 @@ class AppTheme {
         ),
       ),
 
-      // Input Decoration Theme
+      // Input Decoration Theme - Large border radius
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         hintStyle: GoogleFonts.inter(
@@ -219,7 +220,7 @@ class AppTheme {
           fontWeight: FontWeight.normal,
         ),
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
 
       // Floating Action Button Theme
@@ -237,7 +238,7 @@ class AppTheme {
         space: 1,
       ),
 
-      // Chip Theme
+      // Chip Theme - Very rounded
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
         labelStyle: GoogleFonts.inter(
@@ -247,7 +248,7 @@ class AppTheme {
         ),
         side: BorderSide.none,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
 

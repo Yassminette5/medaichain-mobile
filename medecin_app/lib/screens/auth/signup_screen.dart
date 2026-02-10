@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../onboarding/registration_success_screen.dart';
 
@@ -18,9 +21,16 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  // Médecin fields
   final _specialityController = TextEditingController();
+  final _wilayaController = TextEditingController();
+  // Centre d'analyse fields
+  final _centreNameController = TextEditingController();
+  final _categorieController = TextEditingController();
+  final _centreLocationController = TextEditingController();
   bool _acceptTerms = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -42,9 +52,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     _animController.dispose();
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _specialityController.dispose();
+    _wilayaController.dispose();
+    _centreNameController.dispose();
+    _categorieController.dispose();
+    _centreLocationController.dispose();
     super.dispose();
   }
 
@@ -70,15 +85,15 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 10),
                               _buildHeader(),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 20),
                               _buildStepIndicator(),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 20),
                               _buildGlassCard(),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 20),
                               _buildLoginLink(),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
@@ -143,10 +158,10 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       children: [
         ShaderMask(
           shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-          child: const Text('Créer un compte', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
+          child: const Text('Créer un compte', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
         ),
-        const SizedBox(height: 8),
-        Text('Rejoignez MEDAIChain et révolutionnez\nvotre pratique médicale', style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.6), height: 1.5)),
+        const SizedBox(height: 4),
+        Text('Rejoignez MEDAIChain et révolutionnez\nvotre pratique médicale', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6), height: 1.3)),
       ],
     );
   }
@@ -183,14 +198,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Container(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [Colors.white.withValues(alpha: 0.18), Colors.white.withValues(alpha: 0.06)],
             ),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
           ),
           child: AnimatedSwitcher(
@@ -216,16 +231,69 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   }
 
   Widget _buildStep1() {
+    final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
+
+    if (isCentreAnalyse) {
+      return Column(
+        key: const ValueKey(0),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepTitle('Informations du centre', Icons.biotech_rounded),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _centreNameController,
+            label: 'Nom du centre',
+            icon: Icons.business_rounded,
+            hint: 'Laboratoire Alpha, Centre Bio...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _categorieController,
+            label: 'Catégorie',
+            icon: Icons.category_rounded,
+            hint: 'Biologie, Radiologie, Imagerie...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _phoneController,
+            label: 'Téléphone du centre',
+            icon: Icons.phone_outlined,
+            hint: '+213 555 123 456',
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _emailController,
+            label: 'Email du centre',
+            icon: Icons.alternate_email,
+            hint: 'contact@centre-analyse.com',
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _centreLocationController,
+            label: 'Localisation',
+            icon: Icons.location_on_outlined,
+            hint: 'Alger, Oran, Constantine...',
+          ),
+          const SizedBox(height: 16),
+          _buildNextButton('Continuer'),
+        ],
+      );
+    }
+
     return Column(
       key: const ValueKey(0),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildStepTitle('Informations personnelles', Icons.person_outline),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         _buildModernTextField(controller: _nameController, label: 'Nom complet', icon: Icons.badge_outlined, hint: 'Dr. Jean Dupont'),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
         _buildModernTextField(controller: _emailController, label: 'Email professionnel', icon: Icons.alternate_email, hint: 'jean.dupont@hopital.com', keyboardType: TextInputType.emailAddress),
-        const SizedBox(height: 28),
+        const SizedBox(height: 10),
+        _buildModernTextField(controller: _phoneController, label: 'Téléphone', icon: Icons.phone_outlined, hint: '+213 555 123 456', keyboardType: TextInputType.phone),
+        const SizedBox(height: 20),
         _buildNextButton('Continuer'),
       ],
     );
@@ -237,13 +305,13 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildStepTitle('Sécurité du compte', Icons.lock_outline),
-        const SizedBox(height: 24),
-        _buildModernTextField(controller: _passwordController, label: 'Mot de passe', icon: Icons.lock_outline_rounded, hint: '••••••••', isPassword: true, obscure: _obscurePassword, onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword)),
-        const SizedBox(height: 20),
-        _buildModernTextField(controller: _confirmPasswordController, label: 'Confirmer le mot de passe', icon: Icons.lock_outline_rounded, hint: '••••••••', isPassword: true, obscure: _obscureConfirmPassword, onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword)),
         const SizedBox(height: 16),
+        _buildModernTextField(controller: _passwordController, label: 'Mot de passe', icon: Icons.lock_outline_rounded, hint: '••••••••', isPassword: true, obscure: _obscurePassword, onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword)),
+        const SizedBox(height: 10),
+        _buildModernTextField(controller: _confirmPasswordController, label: 'Confirmer le mot de passe', icon: Icons.lock_outline_rounded, hint: '••••••••', isPassword: true, obscure: _obscureConfirmPassword, onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword)),
+        const SizedBox(height: 10),
         _buildPasswordStrength(),
-        const SizedBox(height: 28),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(child: _buildBackButton()),
@@ -256,16 +324,43 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   }
 
   Widget _buildStep3() {
+    // Afficher les champs selon le rôle sélectionné
+    final isMedecin = widget.selectedRole == 'Médecin' || widget.selectedRole == 'medecin' || widget.selectedRole == null;
+    final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
+    
     return Column(
       key: const ValueKey(2),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStepTitle('Informations professionnelles', Icons.medical_services_outlined),
-        const SizedBox(height: 24),
-        _buildModernTextField(controller: _specialityController, label: 'Spécialité', icon: Icons.medical_information_outlined, hint: 'Médecine générale'),
-        const SizedBox(height: 24),
+        if (!isCentreAnalyse) ...[
+          _buildStepTitle(
+            isMedecin
+                ? 'Informations professionnelles'
+                : 'Informations complémentaires',
+            Icons.medical_services_outlined,
+          ),
+          const SizedBox(height: 16),
+          if (isMedecin) ...[
+            _buildModernTextField(
+              controller: _specialityController,
+              label: 'Spécialité',
+              icon: Icons.medical_information_outlined,
+              hint: 'Cardiologie, Pédiatrie...',
+            ),
+            const SizedBox(height: 8),
+            _buildModernTextField(
+              controller: _wilayaController,
+              label: 'Wilaya',
+              icon: Icons.location_on_outlined,
+              hint: 'Alger, Oran, Constantine...',
+            ),
+          ],
+        ] else ...[
+          _buildStepTitle('Finalisation', Icons.check_circle_outline),
+        ],
+        const SizedBox(height: 16),
         _buildTermsCheckbox(),
-        const SizedBox(height: 28),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(child: _buildBackButton()),
@@ -281,15 +376,15 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             gradient: AppColors.neonGradient,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: Colors.white, size: 20),
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
-        const SizedBox(width: 14),
-        Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 10),
+        Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -307,34 +402,37 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 10),
+        if (label.isNotEmpty) ...[
+          Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+        ],
         Container(
+          height: 48,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: TextField(
             controller: controller,
             obscureText: isPassword && obscure,
             keyboardType: keyboardType,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: const TextStyle(color: Colors.black, fontSize: 14),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+              hintStyle: TextStyle(color: Colors.black.withValues(alpha: 0.4), fontSize: 13),
               prefixIcon: ShaderMask(
                 shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-                child: Icon(icon, color: Colors.white, size: 22),
+                child: Icon(icon, color: AppColors.primary, size: 20),
               ),
               suffixIcon: isPassword
                   ? IconButton(
-                      icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white.withValues(alpha: 0.5)),
+                      icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.black.withValues(alpha: 0.5), size: 18),
                       onPressed: onToggleObscure,
                     )
                   : null,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),
@@ -498,23 +596,129 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   }
 
   void _handleSignup() async {
+    // Validation
+    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty || _phoneController.text.trim().isEmpty) {
+      _showErrorSnackBar('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorSnackBar('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (_passwordController.text.length < 8) {
+      _showErrorSnackBar('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    if (!_acceptTerms) {
+      _showErrorSnackBar('Veuillez accepter les conditions d\'utilisation');
+      return;
+    }
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      // If coming from onboarding flow with a role, go to success screen
-      if (widget.selectedRole != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => RegistrationSuccessScreen(
-              role: widget.selectedRole!,
-            ),
-          ),
-        );
-      } else {
-        _showSuccessDialog();
+
+    // Convert role from string to enum
+    UserRole role = UserRole.medecin; // Default
+    if (widget.selectedRole != null) {
+      switch (widget.selectedRole) {
+        case 'medecin':
+        case 'Médecin':
+          role = UserRole.medecin;
+          break;
+        case 'patient':
+        case 'Patient':
+          role = UserRole.patient;
+          break;
+        case 'pharmacie':
+        case 'Pharmacie':
+          role = UserRole.pharmacie;
+          break;
+        case 'centre_analyse':
+        case "Centre d'analyse":
+          role = UserRole.centreAnalyse;
+          break;
+        case 'clinique':
+        case 'Clinique':
+          role = UserRole.clinique;
+          break;
       }
     }
+
+    String? firstName;
+    String? lastName;
+    String? speciality;
+    String? hospital;
+    String? licenseNumber;
+    String? centreName;
+    String? categorie;
+    String? localisation;
+    String? wilaya;
+
+    if (role == UserRole.centreAnalyse) {
+      centreName = _centreNameController.text.trim();
+      categorie = _categorieController.text.trim();
+      localisation = _centreLocationController.text.trim();
+    } else {
+      // Pour Médecin, Patient, Pharmacie, Clinique
+      final fullName = _nameController.text.trim();
+      final nameParts = fullName.split(' ');
+      if (nameParts.isNotEmpty) {
+        firstName = nameParts.first;
+        lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      }
+      
+      if (role == UserRole.medecin) {
+        speciality = _specialityController.text.trim();
+        wilaya = _wilayaController.text.trim();
+      }
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+      phone: _phoneController.text.trim(),
+      role: role,
+      firstName: firstName,
+      lastName: lastName,
+      speciality: speciality,
+      centreName: centreName,
+      categorie: categorie,
+      localisation: localisation,
+      wilaya: wilaya,
+    );
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (success) {
+        if (widget.selectedRole != null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => RegistrationSuccessScreen(
+                role: widget.selectedRole!,
+              ),
+            ),
+          );
+        } else {
+          _showSuccessDialog();
+        }
+      } else {
+        _showErrorSnackBar(authProvider.error ?? 'Erreur d\'inscription');
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   void _showSuccessDialog() {

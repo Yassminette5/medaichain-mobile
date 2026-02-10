@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 /// MEDAIChain Modern Healthcare Color Palette
-/// Contemporary design with glassmorphism and vibrant gradients
+/// Purple/Lavender theme with soft, premium design
 class AppColors {
   AppColors._();
 
-  // Primary Colors - Vibrant Medical Teal
-  static const Color primary = Color(0xFF00BFA6);
-  static const Color primaryLight = Color(0xFF64FFDA);
-  static const Color primaryDark = Color(0xFF00897B);
+  // Primary Colors - Purple/Lavender
+  static const Color primary = Color(0xFF7C3AED);
+  static const Color primaryLight = Color(0xFFA78BFA);
+  static const Color primaryDark = Color(0xFF5B21B6);
 
-  // Secondary Colors - Electric Blue
-  static const Color secondary = Color(0xFF536DFE);
-  static const Color secondaryLight = Color(0xFF8C9EFF);
-  static const Color secondaryDark = Color(0xFF304FFE);
+  // Secondary Colors - Pastel Pink
+  static const Color secondary = Color(0xFFEC4899);
+  static const Color secondaryLight = Color(0xFFF9A8D4);
+  static const Color secondaryDark = Color(0xFFBE185D);
 
-  // Background Colors - Dark Mode Inspired
-  static const Color background = Color(0xFFF0F4F8);
+  // Background Colors - Light Mode
+  static const Color background = Color(0xFFF8FAFC);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color cardBackground = Color(0xFFFFFFFF);
-  static const Color darkBackground = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF1E293B);
+  static const Color darkBackground = Color(0xFF1E1B4B);
+  static const Color darkSurface = Color(0xFF312E81);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
-  static const Color textLight = Color(0xFF94A3B8);
+  static const Color textPrimary = Color(0xFF1E1B4B);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textLight = Color(0xFF9CA3AF);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
-  // Status Colors - Vibrant
+  // Status Colors - Soft Pastels
   static const Color success = Color(0xFF10B981);
   static const Color successLight = Color(0xFFD1FAE5);
   static const Color warning = Color(0xFFF59E0B);
@@ -39,7 +39,14 @@ class AppColors {
   static const Color info = Color(0xFF0EA5E9);
   static const Color infoLight = Color(0xFFE0F2FE);
 
-  // Medical-specific Colors - Neon Accents
+  // Category Colors - Vibrant Pastels (like reference image)
+  static const Color categoryGreen = Color(0xFF34D399);
+  static const Color categoryCoral = Color(0xFFFB7185);
+  static const Color categoryYellow = Color(0xFFFBBF24);
+  static const Color categoryBlue = Color(0xFF60A5FA);
+  static const Color categoryPurple = Color(0xFFA78BFA);
+
+  // Medical-specific Colors
   static const Color alert = Color(0xFFFF5252);
   static const Color alertLight = Color(0xFFFFCDD2);
   static const Color prescription = Color(0xFFA855F7);
@@ -51,29 +58,29 @@ class AppColors {
   static const Color ai = Color(0xFFEC4899);
   static const Color aiLight = Color(0xFFFCE7F3);
 
-  // Modern Gradients
+  // Modern Gradients - Purple/Lavender Theme
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF00BFA6), Color(0xFF00E5FF)],
+    colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
   );
 
   static const LinearGradient heroGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+    colors: [Color(0xFF7C3AED), Color(0xFF8B5CF6)],
   );
 
   static const LinearGradient aiGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFEC4899), Color(0xFF8B5CF6)],
+    colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
   );
 
   static const LinearGradient darkGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+    colors: [Color(0xFF312E81), Color(0xFF1E1B4B)],
   );
 
   static const LinearGradient glassGradient = LinearGradient(
@@ -85,18 +92,43 @@ class AppColors {
   static const LinearGradient neonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF00F5A0), Color(0xFF00D9F5)],
+    colors: [Color(0xFF8B5CF6), Color(0xFFC4B5FD)],
   );
 
-  // Shadow Colors
-  static Color shadowColor = const Color(0xFF00BFA6).withValues(alpha: 0.15);
-  static Color cardShadow = const Color(0xFF000000).withValues(alpha: 0.08);
-  static Color glowShadow = const Color(0xFF00BFA6).withValues(alpha: 0.4);
+  // Soft category gradients
+  static const LinearGradient greenGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF34D399), Color(0xFF6EE7B7)],
+  );
+
+  static const LinearGradient coralGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFFB7185), Color(0xFFFDA4AF)],
+  );
+
+  static const LinearGradient yellowGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFFBBF24), Color(0xFFFDE68A)],
+  );
+
+  static const LinearGradient blueGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF60A5FA), Color(0xFF93C5FD)],
+  );
+
+  // Shadow Colors - Soft purple tint
+  static Color shadowColor = const Color(0xFF7C3AED).withValues(alpha: 0.12);
+  static Color cardShadow = const Color(0xFF7C3AED).withValues(alpha: 0.08);
+  static Color glowShadow = const Color(0xFF7C3AED).withValues(alpha: 0.3);
 
   // Border Colors
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderLight = Color(0xFFF1F5F9);
-  static const Color divider = Color(0xFFE2E8F0);
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color borderLight = Color(0xFFF3F4F6);
+  static const Color divider = Color(0xFFE5E7EB);
   static const Color glassBorder = Color(0x30FFFFFF);
 
   // Biometric
@@ -126,14 +158,14 @@ class GlassCard extends StatelessWidget {
     return Container(
       margin: margin,
       child: ClipRRect(
-        borderRadius: borderRadius ?? BorderRadius.circular(20),
+        borderRadius: borderRadius ?? BorderRadius.circular(28),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Container(
             padding: padding ?? const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: AppColors.glassGradient,
-              borderRadius: borderRadius ?? BorderRadius.circular(20),
+              borderRadius: borderRadius ?? BorderRadius.circular(28),
               border: Border.all(color: AppColors.glassBorder, width: 1.5),
             ),
             child: child,
@@ -153,7 +185,7 @@ class NeonGlowBox extends StatelessWidget {
   const NeonGlowBox({
     super.key,
     required this.child,
-    this.glowColor = const Color(0xFF00BFA6),
+    this.glowColor = const Color(0xFF7C3AED),
     this.blurRadius = 20,
   });
 
@@ -161,10 +193,10 @@ class NeonGlowBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withValues(alpha: 0.4),
+            color: glowColor.withValues(alpha: 0.3),
             blurRadius: blurRadius,
             spreadRadius: 0,
           ),

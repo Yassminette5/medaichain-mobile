@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/theme/app_colors.dart';
 import '../auth/signup_screen.dart';
 
 /// Role Selection Screen - Premium Design
@@ -45,6 +46,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       'icon': Icons.local_pharmacy_rounded,
       'gradient': const [Color(0xFF4FACFE), Color(0xFF00F2FE)],
     },
+    {
+      'id': 'clinique',
+      'title': 'Clinique',
+      'subtitle': 'Gérez votre établissement et vos équipes efficacement',
+      'icon': Icons.local_hospital_rounded,
+      'gradient': const [Color(0xFFFF9966), Color(0xFFFF5E62)],
+    },
   ];
 
   @override
@@ -80,11 +88,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          ),
+          gradient: AppColors.darkGradient,
         ),
         child: SafeArea(
           child: FadeTransition(
@@ -92,12 +96,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
             child: Column(
               children: [
                 _buildHeader(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10), // Reduced from 24
                 _buildTitle(),
-                const SizedBox(height: 32),
-                Expanded(child: _buildRoleGrid()),
+                const SizedBox(height: 16), // Reduced from 32
+                Expanded(child: _buildRoleList()),
                 _buildContinueButton(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16), // Reduced from 24
               ],
             ),
           ),
@@ -114,38 +118,38 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10), // Reduced padding
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+              child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
             ),
           ),
           const Spacer(),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF00D4AA).withValues(alpha: 0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 6,
+                  height: 6,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF00D4AA),
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 const Text(
                   'Étape 1/3',
                   style: TextStyle(
-                    color: Color(0xFF00D4AA),
-                    fontSize: 13,
+                    color: AppColors.primary,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -162,47 +166,43 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          // Robot avatar
+          // Robot avatar - Reduced size
           Container(
-            width: 90,
-            height: 90,
+            width: 60, // Reduced from 90
+            height: 60, // Reduced from 90
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF00D4AA), Color(0xFF00B894)],
-              ),
+              gradient: AppColors.heroGradient,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00D4AA).withValues(alpha: 0.4),
-                  blurRadius: 30,
-                  spreadRadius: 5,
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 3,
                 ),
               ],
             ),
-            child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 45),
+            child: const Icon(Icons.smart_toy_rounded, color: Colors.white, size: 30), // Reduced from 45
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16), // Reduced from 24
           ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [Color(0xFF00D4AA), Color(0xFF00E5CC)],
-            ).createShader(bounds),
+            shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
             child: const Text(
               'Qui êtes-vous ?',
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 24, // Reduced from 32
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4), // Reduced from 8
           Text(
-            'Sélectionnez votre profil pour personnaliser\nvotre expérience MEDAIChain',
+            'Sélectionnez votre profil pour personnaliser\nvotre expérience', // Shortened text
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               color: Colors.white.withValues(alpha: 0.6),
-              height: 1.5,
+              height: 1.3,
             ),
           ),
         ],
@@ -210,21 +210,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
     );
   }
 
-  Widget _buildRoleGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.85,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-        ),
-        itemCount: _roles.length,
-        itemBuilder: (context, index) => _buildRoleCard(_roles[index], index),
-      ),
+  Widget _buildRoleList() {
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 20), // Slightly reduced horizontal padding
+      physics: const BouncingScrollPhysics(),
+      itemCount: _roles.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 10), // Reduced from 16
+      itemBuilder: (context, index) => _buildRoleCard(_roles[index], index),
     );
   }
 
@@ -237,6 +229,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
+        height: 82, // Increased from 76
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
@@ -252,7 +245,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                     Colors.white.withValues(alpha: 0.04),
                   ],
                 ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20), // Slightly reduced radius
           border: Border.all(
             color: isSelected
                 ? Colors.white.withValues(alpha: 0.3)
@@ -263,84 +256,83 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               ? [
                   BoxShadow(
                     color: gradientColors[0].withValues(alpha: 0.4),
-                    blurRadius: 25,
-                    offset: const Offset(0, 10),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
                 ]
               : null,
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Icon
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white.withValues(alpha: 0.25)
-                          : Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      role['icon'],
-                      color: isSelected ? Colors.white : gradientColors[0],
-                      size: 26,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Title
-                  Text(
-                    role['title'],
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Subtitle
-                  Text(
-                    role['subtitle'],
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isSelected
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.white.withValues(alpha: 0.5),
-                      height: 1.3,
-                    ),
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Reduced padding
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                width: 42, // Reduced from 52
+                height: 42, // Reduced from 52
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  role['icon'],
+                  color: isSelected ? Colors.white : gradientColors[0],
+                  size: 22, // Reduced size
+                ),
               ),
-            ),
-            // Checkmark
-            if (isSelected)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 28,
-                  height: 28,
+              const SizedBox(width: 12),
+              // Text Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      role['title'],
+                      style: TextStyle(
+                        fontSize: 15, // Reduced from 17
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      role['subtitle'],
+                      maxLines: 1, // Restricted to 1 line to save space
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11, // Reduced from 12
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Checkmark
+              if (isSelected) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 24, // Reduced from 28
+                  height: 24,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 8,
+                        blurRadius: 5,
                       ),
                     ],
                   ),
-                  child: Icon(Icons.check, color: gradientColors[0], size: 18),
+                  child: Icon(Icons.check, color: gradientColors[0], size: 16),
                 ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -352,22 +344,20 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: SizedBox(
         width: double.infinity,
-        height: 58,
+        height: 54, // Increased from 50
         child: Container(
           decoration: BoxDecoration(
             gradient: isEnabled
-                ? const LinearGradient(
-                    colors: [Color(0xFF00D4AA), Color(0xFF00B894)],
-                  )
+                ? AppColors.primaryGradient
                 : null,
             color: isEnabled ? null : Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: isEnabled
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF00D4AA).withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
                   ]
                 : null,
@@ -378,7 +368,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: Row(
@@ -387,16 +377,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                 Text(
                   'Continuer',
                   style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 16, // Reduced from 17
                     fontWeight: FontWeight.w600,
                     color: isEnabled ? Colors.white : Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Icon(
                   Icons.arrow_forward_rounded,
                   color: isEnabled ? Colors.white : Colors.white.withValues(alpha: 0.4),
-                  size: 22,
+                  size: 20,
                 ),
               ],
             ),
