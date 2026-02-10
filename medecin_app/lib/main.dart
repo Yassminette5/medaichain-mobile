@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'models/user_model.dart';
 import 'providers/auth_provider.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/centre_analyse/centre_analyse_dashboard_screen.dart';
+import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,8 +63,14 @@ class AuthWrapper extends StatelessWidget {
       );
     }
 
-    // Si connecté, aller au dashboard
+    // Si connecté, router vers le bon dashboard selon le rôle
     if (authProvider.isLoggedIn) {
+      if (authProvider.user?.role == UserRole.centreAnalyse) {
+        return const CentreAnalyseDashboardScreen();
+      }
+      if (authProvider.user?.role == UserRole.pharmacie) {
+        return const PharmacieDashboardScreen();
+      }
       return const DashboardScreen();
     }
 

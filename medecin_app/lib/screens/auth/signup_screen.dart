@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../onboarding/registration_success_screen.dart';
+import '../pharmacie/pharmacie_dashboard_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne
 class SignupScreen extends StatefulWidget {
@@ -31,6 +32,12 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   final _centreNameController = TextEditingController();
   final _categorieController = TextEditingController();
   final _centreLocationController = TextEditingController();
+  // Pharmacie fields
+  final _pharmacyNameController = TextEditingController();
+  final _gouvernoratController = TextEditingController();
+  final _delegationController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _licenseNumberController = TextEditingController();
   bool _acceptTerms = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -60,6 +67,11 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     _centreNameController.dispose();
     _categorieController.dispose();
     _centreLocationController.dispose();
+    _pharmacyNameController.dispose();
+    _gouvernoratController.dispose();
+    _delegationController.dispose();
+    _addressController.dispose();
+    _licenseNumberController.dispose();
     super.dispose();
   }
 
@@ -232,6 +244,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
 
   Widget _buildStep1() {
     final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
+    final isPharmacie = widget.selectedRole == 'Pharmacie' || widget.selectedRole == 'pharmacie';
 
     if (isCentreAnalyse) {
       return Column(
@@ -275,6 +288,69 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
             label: 'Localisation',
             icon: Icons.location_on_outlined,
             hint: 'Alger, Oran, Constantine...',
+          ),
+          const SizedBox(height: 16),
+          _buildNextButton('Continuer'),
+        ],
+      );
+    }
+
+    if (isPharmacie) {
+      return Column(
+        key: const ValueKey(0),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepTitle('Informations de la pharmacie', Icons.local_pharmacy_rounded),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _pharmacyNameController,
+            label: 'Nom de la pharmacie',
+            icon: Icons.local_pharmacy_rounded,
+            hint: 'Pharmacie El Amel, Pharmacie Centrale...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _gouvernoratController,
+            label: 'Gouvernorat',
+            icon: Icons.location_city_rounded,
+            hint: 'Alger, Oran, Constantine...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _delegationController,
+            label: 'Délégation',
+            icon: Icons.map_rounded,
+            hint: 'Bab El Oued, Hussein Dey...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _addressController,
+            label: 'Adresse',
+            icon: Icons.place_rounded,
+            hint: '12 Rue de la Liberté...',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _licenseNumberController,
+            label: 'Numéro de licence',
+            icon: Icons.badge_rounded,
+            hint: '12345/DZ',
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _phoneController,
+            label: 'Téléphone',
+            icon: Icons.phone_outlined,
+            hint: '+213 555 123 456',
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 8),
+          _buildModernTextField(
+            controller: _emailController,
+            label: 'Email',
+            icon: Icons.alternate_email,
+            hint: 'contact@pharmacie.com',
+            keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 16),
           _buildNextButton('Continuer'),
@@ -327,12 +403,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     // Afficher les champs selon le rôle sélectionné
     final isMedecin = widget.selectedRole == 'Médecin' || widget.selectedRole == 'medecin' || widget.selectedRole == null;
     final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
+    final isPharmacie = widget.selectedRole == 'Pharmacie' || widget.selectedRole == 'pharmacie';
+    final skipProfessionalFields = isCentreAnalyse || isPharmacie;
     
     return Column(
       key: const ValueKey(2),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!isCentreAnalyse) ...[
+        if (!skipProfessionalFields) ...[
           _buildStepTitle(
             isMedecin
                 ? 'Informations professionnelles'
@@ -655,13 +733,23 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     String? categorie;
     String? localisation;
     String? wilaya;
+    String? pharmacyName;
+    String? gouvernorat;
+    String? delegation;
+    String? address;
 
     if (role == UserRole.centreAnalyse) {
       centreName = _centreNameController.text.trim();
       categorie = _categorieController.text.trim();
       localisation = _centreLocationController.text.trim();
+    } else if (role == UserRole.pharmacie) {
+      pharmacyName = _pharmacyNameController.text.trim();
+      gouvernorat = _gouvernoratController.text.trim();
+      delegation = _delegationController.text.trim();
+      address = _addressController.text.trim();
+      licenseNumber = _licenseNumberController.text.trim();
     } else {
-      // Pour Médecin, Patient, Pharmacie, Clinique
+      // Pour Médecin, Patient, Clinique
       final fullName = _nameController.text.trim();
       final nameParts = fullName.split(' ');
       if (nameParts.isNotEmpty) {
@@ -688,6 +776,11 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       categorie: categorie,
       localisation: localisation,
       wilaya: wilaya,
+      pharmacyName: pharmacyName,
+      gouvernorat: gouvernorat,
+      delegation: delegation,
+      address: address,
+      licenseNumber: licenseNumber,
     );
 
     if (mounted) {

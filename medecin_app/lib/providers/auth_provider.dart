@@ -47,6 +47,10 @@ class AuthProvider with ChangeNotifier {
     String? categorie,
     String? localisation,
     String? wilaya,
+    String? pharmacyName,
+    String? gouvernorat,
+    String? delegation,
+    String? address,
   }) async {
     _isLoading = true;
     _error = null;
@@ -67,6 +71,10 @@ class AuthProvider with ChangeNotifier {
         categorie: categorie,
         localisation: localisation,
         wilaya: wilaya,
+        pharmacyName: pharmacyName,
+        gouvernorat: gouvernorat,
+        delegation: delegation,
+        address: address,
       );
       _user = response.user;
       _isLoading = false;

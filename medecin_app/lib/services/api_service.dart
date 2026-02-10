@@ -27,6 +27,10 @@ class ApiService {
     String? categorie,
     String? localisation,
     String? wilaya,
+    String? pharmacyName,
+    String? gouvernorat,
+    String? delegation,
+    String? address,
   }) async {
     final Map<String, dynamic> body = {
       'email': email,
@@ -44,6 +48,10 @@ class ApiService {
     if (categorie != null) body['categorie'] = categorie;
     if (localisation != null) body['localisation'] = localisation;
     if (wilaya != null) body['wilaya'] = wilaya;
+    if (pharmacyName != null) body['pharmacyName'] = pharmacyName;
+    if (gouvernorat != null) body['gouvernorat'] = gouvernorat;
+    if (delegation != null) body['delegation'] = delegation;
+    if (address != null) body['address'] = address;
 
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
