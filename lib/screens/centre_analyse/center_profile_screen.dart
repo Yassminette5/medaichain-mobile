@@ -19,6 +19,7 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
   String? _email;
   String? _logoUrl;
   bool _onlineBookingEnabled = true;
+  bool _isActive = true;
   bool _isEditing = false;
   bool _isLoading = true;
 
@@ -74,6 +75,13 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
           _email = labProfile['email'] ?? '';
           _logoUrl = labProfile['logo'] ?? labProfile['logoUrl'] ?? labProfile['image'];
           _onlineBookingEnabled = labProfile['onlineBooking'] ?? labProfile['reservation_en_ligne'] ?? true;
+          _isActive = labProfile['isActive'] ?? true;
+          
+          // Normaliser la localisation pour correspondre exactement à un item du dropdown
+          if (_localisation != null && _localisation!.isNotEmpty) {
+            final normalizedLocation = _normalizeLocation(_localisation!);
+            _localisation = normalizedLocation;
+          }
           
           _nameController.text = _labName ?? '';
           _localisationController.text = _localisation ?? '';
@@ -118,6 +126,7 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
         'phone': _phoneController.text,
         'email': _emailController.text,
         'onlineBooking': _onlineBookingEnabled,
+        'isActive': _isActive,
       };
 
       await ApiService.updateLabProfile(updateData);
@@ -220,8 +229,8 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildProfileCard(),
-                  const SizedBox(height: 20),
-                  _buildOnlineBookingCard(),
+                  const SizedBox(height: 16),
+                  _buildIsActiveCard(),
                   const SizedBox(height: 24),
                   _buildInfoSection(),
                   const SizedBox(height: 20), // Espace en bas pour le scroll
@@ -302,7 +311,10 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
     );
   }
 
-  Widget _buildOnlineBookingCard() {
+
+
+
+  Widget _buildIsActiveCard() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -315,10 +327,14 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: _isActive ? AppColors.success : AppColors.textSecondary,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 18),
+            child: Icon(
+              _isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -326,9 +342,9 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Réservation en ligne',
-                  style: TextStyle(
+                Text(
+                  _isActive ? 'Compte actif' : 'Compte désactivé',
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -336,7 +352,9 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Permettre aux patients de réserver',
+                  _isActive 
+                      ? 'Les patients peuvent prendre rendez-vous'
+                      : 'Les rendez-vous sont désactivés',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -346,13 +364,13 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
             ),
           ),
           Switch(
-            value: _onlineBookingEnabled,
-            onChanged: (value) {
+            value: _isActive,
+            onChanged: _isEditing ? (value) {
               setState(() {
-                _onlineBookingEnabled = value;
+                _isActive = value;
               });
-            },
-            activeColor: AppColors.primary,
+            } : null,
+            activeColor: AppColors.success,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
@@ -470,6 +488,45 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
     );
   }
 
+  String _normalizeLocation(String location) {
+    // Normaliser la localisation pour correspondre exactement à un item du dropdown
+    final tunisianCities = [
+      'Tunis',
+      'Ariana',
+      'Ben Arous',
+      'Manouba',
+      'Bizerte',
+      'Nabeul',
+      'Zaghouan',
+      'Sousse',
+      'Monastir',
+      'Mahdia',
+      'Sfax',
+      'Kairouan',
+      'Kasserine',
+      'Sidi Bouzid',
+      'Gafsa',
+      'Tozeur',
+      'Kebili',
+      'Gabès',
+      'Médenine',
+      'Tataouine',
+      'Béja',
+      'Jendouba',
+      'Le Kef',
+      'Siliana',
+    ];
+    
+    // Chercher une correspondance insensible à la casse
+    final lowerLocation = location.toLowerCase();
+    for (final city in tunisianCities) {
+      if (city.toLowerCase() == lowerLocation) {
+        return city; // Retourner la version avec la bonne casse
+      }
+    }
+    return location; // Si aucune correspondance, retourner l'original
+  }
+
   Widget _buildLocationField() {
     final tunisianCities = [
       'Tunis',
@@ -538,7 +595,9 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: _localisation?.isEmpty ?? true ? null : _localisation,
+                            value: _localisation?.isEmpty ?? true 
+                                ? null 
+                                : (tunisianCities.contains(_localisation) ? _localisation : null),
                             isExpanded: true,
                             hint: Text(
                               'Sélectionner une ville',
@@ -572,15 +631,15 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
                             }).toList(),
                             onChanged: (String? newValue) {
                               setState(() {
-                                _localisation = newValue;
-                                _localisationController.text = newValue ?? '';
+                                _localisation = newValue != null ? _normalizeLocation(newValue) : null;
+                                _localisationController.text = _localisation ?? '';
                               });
                             },
                           ),
                         ),
                       )
                     : Text(
-                        _localisation ?? 'Non spécifié',
+                        _localisation ?? '',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
