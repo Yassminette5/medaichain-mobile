@@ -94,8 +94,12 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
       return {'icon': Icons.image, 'value': 'imagerie'};
     } else if (categoryLower.contains('bio')) {
       return {'icon': Icons.science, 'value': 'biologie'};
+    } else if (categoryLower.contains('neuro')) {
+      // Neuro est envoyé tel quel au backend (le backend peut accepter des valeurs personnalisées)
+      return {'icon': Icons.psychology, 'value': categoryLower};
     } else {
-      return {'icon': Icons.science, 'value': 'autre'};
+      // Pour les autres catégories non reconnues, on envoie le nom tel quel
+      return {'icon': Icons.science, 'value': categoryLower};
     }
   }
 
@@ -117,15 +121,29 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
     // Vérifier que la date n'est pas dans le passé
     final now = DateTime.now();
-    final appointmentDateTime = DateTime(
+    // Créer la date/heure en UTC directement avec l'heure sélectionnée
+    // On envoie l'heure telle quelle au backend (sans conversion de fuseau horaire)
+    final hour = int.parse(_selectedTime!.split(':')[0]);
+    final minute = int.parse(_selectedTime!.split(':')[1]);
+    
+    final appointmentDateTime = DateTime.utc(
       _selectedDate!.year,
       _selectedDate!.month,
       _selectedDate!.day,
-      int.parse(_selectedTime!.split(':')[0]),
-      int.parse(_selectedTime!.split(':')[1]),
+      hour,
+      minute,
     );
 
-    if (appointmentDateTime.isBefore(now)) {
+    // Vérifier avec la date locale pour la validation
+    final appointmentDateTimeLocal = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      hour,
+      minute,
+    );
+
+    if (appointmentDateTimeLocal.isBefore(now)) {
       _showErrorSnackBar('La date et l\'heure ne peuvent pas être dans le passé');
       return;
     }
@@ -133,6 +151,12 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Debug: afficher les valeurs avant envoi
+      debugPrint('🔵 Type d\'analyse sélectionné: $_selectedAnalysisType');
+      debugPrint('🔵 Heure sélectionnée: $_selectedTime');
+      debugPrint('🔵 Date sélectionnée: ${_selectedDate!.toIso8601String()}');
+      debugPrint('🔵 Date/heure complète (UTC): ${appointmentDateTime.toIso8601String()}');
+      
       final appointmentData = {
         'analysisType': _selectedAnalysisType,
         'appointmentDate': appointmentDateTime.toIso8601String(),
@@ -146,6 +170,8 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
         'status': 'pending',
       };
 
+      debugPrint('🔵 Données envoyées au backend: $appointmentData');
+      
       await ApiService.createAppointment(appointmentData);
 
       if (mounted) {
@@ -197,9 +223,10 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(8),
@@ -221,82 +248,48 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Indicateur de progression
-            _buildProgressIndicator(),
-            const SizedBox(height: 24),
-            // Type d'analyse
-            _buildAnalysisTypeSection(),
-            const SizedBox(height: 24),
-            // Date et Heure
-            _buildDateTimeSection(),
-            const SizedBox(height: 24),
-            // Traitements
-            _buildTreatmentSection(),
-            const SizedBox(height: 24),
-            // Allergies
-            _buildAllergiesSection(),
-            const SizedBox(height: 24),
-            // Notes
-            _buildNotesSection(),
-            const SizedBox(height: 24),
-            // Information banner
-            _buildInfoBanner(),
-            const SizedBox(height: 30),
-            // Bouton de confirmation
-            _buildConfirmButton(),
-            const SizedBox(height: 20),
-          ],
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/background_rendevu.jpg'),
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildProgressIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Configuration du rendez-vous',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: 0.66, // Étape 2 sur 3
-                  backgroundColor: AppColors.textSecondary.withValues(alpha: 0.1),
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 100,
+            bottom: 20,
           ),
-          const SizedBox(width: 16),
-          Text(
-            'Étape 2 sur 3',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Type d'analyse
+              _buildAnalysisTypeSection(),
+              const SizedBox(height: 30),
+              // Date et Heure
+              _buildDateTimeSection(),
+              const SizedBox(height: 30),
+              // Traitements
+              _buildTreatmentSection(),
+              const SizedBox(height: 30),
+              // Allergies
+              _buildAllergiesSection(),
+              const SizedBox(height: 30),
+              // Notes
+              _buildNotesSection(),
+              const SizedBox(height: 30),
+              // Information banner
+              _buildInfoBanner(),
+              const SizedBox(height: 30),
+              // Bouton de confirmation
+              _buildConfirmButton(),
+              const SizedBox(height: 20),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -307,7 +300,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   }
 
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.center,
     children: [
       const Text(
         "Type d'analyse",
@@ -316,6 +309,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
         ),
+        textAlign: TextAlign.center,
       ),
       const SizedBox(height: 18),
 
@@ -419,14 +413,16 @@ Widget _buildAnalysisTypeCard(
 
   Widget _buildDateTimeSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Date et Heure',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+        const Center(
+          child: Text(
+            'Date et Heure',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -487,12 +483,14 @@ Widget _buildAnalysisTypeCard(
         ),
         const SizedBox(height: 16),
         // Créneaux horaires
-        const Text(
-          'Sélectionner une heure',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        const Center(
+          child: Text(
+            'Sélectionner une heure',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -561,7 +559,7 @@ Widget _buildAnalysisTypeCard(
             child: Container(
               margin: const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.transparent,
+                color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -600,6 +598,7 @@ Widget _buildAnalysisTypeCard(
   }
 
   Widget _buildTimeSlot(String time, bool isSelected) {
+    const blueColor = Color(0xFF3B82F6); // Bleu
     return InkWell(
       onTap: () {
         setState(() {
@@ -610,10 +609,10 @@ Widget _buildAnalysisTypeCard(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
+          color: isSelected ? blueColor : AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.2),
+            color: isSelected ? blueColor : AppColors.textSecondary.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -631,14 +630,16 @@ Widget _buildAnalysisTypeCard(
 
   Widget _buildTreatmentSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Préparation de l\'examen',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+        const Center(
+          child: Text(
+            'Préparation de l\'examen',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -704,14 +705,16 @@ Widget _buildAnalysisTypeCard(
   }
 Widget _buildAllergiesSection() {
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      const Text(
-        'Allergies connues',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+      const Center(
+        child: Text(
+          'Allergies connues',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
       const SizedBox(height: 16),
@@ -866,14 +869,16 @@ Widget _buildAllergiesSection() {
 
   Widget _buildNotesSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'Notes supplémentaires',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        const Center(
+          child: Text(
+            'Notes supplémentaires',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 12),
