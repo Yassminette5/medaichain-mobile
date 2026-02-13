@@ -578,4 +578,149 @@ class ApiService {
       }
     }
   }
+
+  // Récupérer les rendez-vous du laboratoire
+  static Future<List<Map<String, dynamic>>> getLabAppointments() async {
+    final token = await getAccessToken();
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/appointments/lab/my-appointments'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data['appointments'] != null) {
+        return List<Map<String, dynamic>>.from(data['appointments']);
+      } else if (data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getLabAppointments();
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de récupération des rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de récupération des rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
+
+  // Accepter un rendez-vous
+  static Future<void> acceptAppointment(String appointmentId) async {
+    final token = await getAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/appointments/lab/$appointmentId/accept'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return acceptAppointment(appointmentId);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur d\'acceptation du rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur d\'acceptation du rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
+
+  // Refuser un rendez-vous
+  static Future<void> rejectAppointment(String appointmentId, {String? reason}) async {
+    final token = await getAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/appointments/lab/$appointmentId/reject'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: reason != null ? jsonEncode({'reason': reason}) : null,
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return rejectAppointment(appointmentId, reason: reason);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de refus du rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de refus du rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
+
+  // Remettre un rendez-vous en attente
+  static Future<void> setPendingAppointment(String appointmentId) async {
+    final token = await getAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/appointments/lab/$appointmentId/pending'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return setPendingAppointment(appointmentId);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de remise en attente du rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de remise en attente du rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
 }

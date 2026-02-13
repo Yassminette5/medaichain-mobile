@@ -5,6 +5,7 @@ import '../../services/api_service.dart';
 import 'center_patients_screen.dart';
 import 'center_notifications_screen.dart';
 import 'center_settings_screen.dart';
+import 'appointment_detail_screen.dart';
 
 /// Home Centre d'Analyse Screen
 class HomeCentreAnalyse extends StatefulWidget {
@@ -22,6 +23,8 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
   final TextEditingController _searchController = TextEditingController();
   String? _labName;
   int _currentIndex = 0;
+  List<Map<String, dynamic>> _appointments = [];
+  bool _isLoadingAppointments = true;
 
   @override
   void initState() {
@@ -43,6 +46,8 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
 
     // Charger les informations du labo
     _loadLabProfile();
+    // Charger les rendez-vous
+    _loadAppointments();
   }
 
   Future<void> _loadLabProfile() async {
@@ -60,6 +65,91 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
           _labName = null;
         });
       }
+    }
+  }
+
+  Future<void> _loadAppointments() async {
+    setState(() {
+      _isLoadingAppointments = true;
+    });
+
+    try {
+      final appointments = await ApiService.getLabAppointments();
+      if (mounted) {
+        setState(() {
+          _appointments = appointments;
+          _isLoadingAppointments = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAppointments = false;
+        });
+      }
+    }
+  }
+
+  String _getAnalysisTypeLabel(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'analyse_sanguin':
+        return 'Analyse sanguine';
+      case 'scanner':
+        return 'Scanner';
+      case 'radiologie':
+        return 'Radiologie';
+      case 'imagerie':
+        return 'Imagerie';
+      case 'biologie':
+        return 'Biologie';
+      default:
+        return type ?? 'Autre';
+    }
+  }
+
+  String _getStatusLabel(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'EN ATTENTE';
+      case 'accepted':
+        return 'ACCEPTÉ';
+      case 'rejected':
+        return 'REFUSÉ';
+      default:
+        return 'EN ATTENTE';
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return const Color(0xFFF59E0B);
+      case 'accepted':
+        return AppColors.success;
+      case 'rejected':
+        return AppColors.error;
+      default:
+        return const Color(0xFFF59E0B);
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final appointmentDay = DateTime(date.year, date.month, date.day);
+      
+      if (appointmentDay == today) {
+        return 'Aujourd\'hui, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      } else if (appointmentDay == today.add(const Duration(days: 1))) {
+        return 'Demain, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      } else {
+        final months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        return '${date.day} ${months[date.month - 1]}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      return dateString;
     }
   }
 
@@ -104,7 +194,7 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
               const SizedBox(height: 16),
               _buildFilterButtons(),
               const SizedBox(height: 24),
-              _buildSectionTitle('Analyses récentes'),
+              _buildSectionTitle('Demandes de rendez-vous'),
               const SizedBox(height: 16),
               _buildRecentAnalyses(),
             ],
@@ -372,59 +462,132 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
   }
 
   Widget _buildRecentAnalyses() {
-    final analyses = [
-      {
-        'patient': 'Jean Dupont',
-        'type': 'Analyse Sanguine Complète',
-        'status': 'EN ATTENTE',
-        'statusColor': const Color(0xFFF59E0B),
-        'avatarColor': AppColors.primary,
-        'avatarIcon': Icons.person,
-        'detail1': 'Aujourd\'hui, 14:30',
-        'detail1Icon': Icons.calendar_today,
-        'detail2': 'Lab #402',
-        'detail2Icon': Icons.science,
-        'buttonText': 'Voir les détails',
-        'buttonIcon': Icons.visibility,
-        'buttonColor': AppColors.primary,
-        'hasButton': true,
-      },
-      {
-        'patient': 'Marie Lambert',
-        'type': 'Test PCR Urgent',
-        'status': 'URGENT',
-        'statusColor': const Color(0xFFEF4444),
-        'avatarColor': const Color(0xFFEF4444),
-        'avatarIcon': Icons.priority_high,
-        'detail1': 'Il y a 10 min',
-        'detail1Icon': Icons.access_time,
-        'detail2': 'PCR Box',
-        'detail2Icon': Icons.inventory_2,
-        'buttonText': 'Traiter en priorité',
-        'buttonIcon': Icons.work,
-        'buttonColor': const Color(0xFF1E40AF),
-        'hasButton': true,
-      },
-      {
-        'patient': 'Marc Vasseur',
-        'type': 'Bilan Lipidique',
-        'status': 'COMPLÉTÉ',
-        'statusColor': const Color(0xFF10B981),
-        'avatarColor': AppColors.textLight,
-        'avatarIcon': Icons.person,
-        'detail1': 'Terminé à 09:15',
-        'detail1Icon': Icons.check_circle,
-        'detail2': null,
-        'detail2Icon': null,
-        'buttonText': null,
-        'buttonIcon': null,
-        'buttonColor': null,
-        'hasButton': false,
-      },
-    ];
+    if (_isLoadingAppointments) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
+
+    if (_appointments.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 64,
+                color: AppColors.textLight,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Aucune demande de rendez-vous',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Les demandes apparaîtront ici',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Filtrer uniquement les rendez-vous en attente (pending)
+    final pendingAppointments = _appointments.where((apt) {
+      final status = apt['status']?.toString().toLowerCase() ?? '';
+      return status == 'pending';
+    }).toList();
+
+    if (pendingAppointments.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 64,
+                color: AppColors.textLight,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Aucune demande en attente',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Toutes les demandes ont été traitées',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Column(
-      children: analyses.map((analyse) {
+      children: pendingAppointments.map((appointment) {
+        // Extraire les informations du patient
+        final patientId = appointment['patientId'];
+        String patientName = 'Patient';
+        
+        if (patientId != null && patientId is Map) {
+          final firstName = patientId['firstName'] ?? '';
+          final lastName = patientId['lastName'] ?? '';
+          if (firstName.isNotEmpty || lastName.isNotEmpty) {
+            patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
+            if (patientName.isEmpty) {
+              patientName = patientId['name'] ?? patientId['email'] ?? 'Patient';
+            }
+          } else {
+            patientName = patientId['name'] ?? patientId['email'] ?? 'Patient';
+          }
+        }
+
+        final analysisType = appointment['analysisType'] ?? '';
+        final status = appointment['status'] ?? 'pending';
+        final appointmentDate = appointment['appointmentDate'] ?? '';
+        final statusColor = _getStatusColor(status);
+        
+        final analyse = {
+          'patient': patientName,
+          'type': _getAnalysisTypeLabel(analysisType),
+          'status': _getStatusLabel(status),
+          'statusColor': statusColor,
+          'avatarColor': AppColors.primary,
+          'avatarIcon': Icons.person,
+          'detail1': _formatDate(appointmentDate),
+          'detail1Icon': Icons.calendar_today,
+          'detail2': null,
+          'detail2Icon': null,
+          'buttonText': 'Voir les détails',
+          'buttonIcon': Icons.visibility,
+          'buttonColor': AppColors.primary,
+          'hasButton': true,
+          'appointment': appointment, // Stocker l'appointment complet pour la navigation
+        };
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
@@ -442,25 +605,9 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header avec avatar, nom, type et statut
+              // Header avec nom, date et statut
               Row(
                 children: [
-                  // Avatar
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: analyse['avatarColor'] as Color,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      analyse['avatarIcon'] as IconData,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Nom et type
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,13 +620,23 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          analyse['type'] as String,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              analyse['detail1'] as String,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -503,80 +660,51 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Détails
-              Row(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        analyse['detail1Icon'] as IconData,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        analyse['detail1'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (analyse['detail2'] != null) ...[
-                    const SizedBox(width: 20),
-                    Row(
-                      children: [
-                        Icon(
-                          analyse['detail2Icon'] as IconData,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          analyse['detail2'] as String,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
               // Bouton d'action
-              if (analyse['hasButton'] as bool) ...[
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(
-                      analyse['buttonIcon'] as IconData,
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Naviguer vers les détails du rendez-vous
+                    final appointment = analyse['appointment'] as Map<String, dynamic>;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AppointmentDetailScreen(
+                          appointment: appointment,
+                        ),
+                      ),
+                    ).then((refresh) {
+                      // Recharger les rendez-vous après retour si refresh est true
+                      if (refresh == true) {
+                        _loadAppointments();
+                      }
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.visibility,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  label: const Text(
+                    'Voir les détails',
+                    style: TextStyle(
                       color: Colors.white,
-                      size: 20,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
-                    label: Text(
-                      analyse['buttonText'] as String,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: analyse['buttonColor'] as Color,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
+                    elevation: 0,
                   ),
                 ),
-              ],
+              ),
             ],
           ),
         );
