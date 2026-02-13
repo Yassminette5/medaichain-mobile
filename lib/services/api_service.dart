@@ -543,4 +543,39 @@ class ApiService {
       }
     }
   }
+
+  // ========== RENDEZ-VOUS ==========
+  static Future<void> createAppointment(Map<String, dynamic> appointmentData) async {
+    final token = await getAccessToken();
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/appointments'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(appointmentData),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return createAppointment(appointmentData);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de création du rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de création du rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
 }

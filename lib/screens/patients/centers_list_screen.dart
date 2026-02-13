@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../auth/login_screen.dart';
+import 'center_detail_screen.dart';
 
 /// Écran de liste des centres d'analyses pour les patients
 class CentersListScreen extends StatefulWidget {
@@ -343,7 +344,14 @@ class _CentersListScreenState extends State<CentersListScreen> {
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Naviguer vers la page de détails du centre
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CenterDetailScreen(
+                centerId: center['id'] as String,
+              ),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(20),
         child: Padding(
@@ -354,18 +362,50 @@ class _CentersListScreenState extends State<CentersListScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icône du centre
+                  // Image du centre
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.cardShadow.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.science_rounded,
-                      color: AppColors.primary,
-                      size: 28,
+                    child: ClipOval(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(
+                          'assets/images/labo_icone.jpg',
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.science_rounded,
+                                color: AppColors.primary,
+                                size: 35,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -414,7 +454,14 @@ class _CentersListScreenState extends State<CentersListScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Naviguer vers la page de détails du centre
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CenterDetailScreen(
+                          centerId: center['id'] as String,
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryLight,
