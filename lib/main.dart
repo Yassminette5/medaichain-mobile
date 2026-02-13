@@ -5,9 +5,9 @@ import 'core/theme/app_theme.dart';
 import 'models/user_model.dart';
 import 'providers/auth_provider.dart';
 import 'screens/onboarding/welcome_screen.dart';
-import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/centre_analyse/home_centre_analyse.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+import 'screens/patients/centers_list_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,29 +52,52 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    // Utiliser Consumer pour écouter les changements d'AuthProvider
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Afficher un loader pendant l'initialisation
+        if (authProvider.isLoading) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-    // Afficher un loader pendant l'initialisation
-    if (authProvider.isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+        // Si connecté, router vers le bon dashboard selon le rôle
+        if (authProvider.isLoggedIn) {
+          final role = authProvider.user?.role;
+          
+          // Debug: afficher le rôle pour diagnostiquer
+          debugPrint('🔍 Rôle utilisateur détecté: $role');
+          debugPrint('🔍 User complet: ${authProvider.user?.email} - ${authProvider.user?.role}');
+          debugPrint('🔍 User ID: ${authProvider.user?.id}');
+          
+          if (role == UserRole.patient) {
+            debugPrint('✅ Redirection vers CentersListScreen pour patient');
+            return const CentersListScreen();
+          }
+          if (role == UserRole.centreAnalyse) {
+            debugPrint('✅ Redirection vers HomeCentreAnalyse pour centre d\'analyse');
+            return const HomeCentreAnalyse();
+          }
+          if (role == UserRole.pharmacie) {
+            debugPrint('✅ Redirection vers PharmacieDashboardScreen pour pharmacie');
+            return const PharmacieDashboardScreen();
+          }
+          if (role == UserRole.medecin) {
+            debugPrint('✅ Redirection vers HomeCentreAnalyse pour médecin');
+            return const HomeCentreAnalyse();
+          }
+          // Pour les autres rôles ou si le rôle n'est pas défini
+          debugPrint('⚠️ Rôle non reconnu ou null: $role');
+          return const WelcomeScreen();
+        }
 
-    // Si connecté, router vers le bon dashboard selon le rôle
-    if (authProvider.isLoggedIn) {
-      if (authProvider.user?.role == UserRole.centreAnalyse) {
-        return const HomeCentreAnalyse();
-      }
-      if (authProvider.user?.role == UserRole.pharmacie) {
-        return const PharmacieDashboardScreen();
-      }
-      return const DashboardScreen();
-    }
-
-    // Sinon, afficher l'écran de bienvenue
-    return const WelcomeScreen();
+        // Sinon, afficher l'écran de bienvenue
+        debugPrint('ℹ️ Utilisateur non connecté, affichage de WelcomeScreen');
+        return const WelcomeScreen();
+      },
+    );
   }
 }

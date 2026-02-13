@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
+import '../../services/api_service.dart';
+import 'center_patients_screen.dart';
+import 'center_notifications_screen.dart';
+import 'center_settings_screen.dart';
 
 /// Home Centre d'Analyse Screen
 class HomeCentreAnalyse extends StatefulWidget {
@@ -16,6 +20,8 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
   late Animation<double> _fadeAnim;
   String _selectedFilter = 'Tous';
   final TextEditingController _searchController = TextEditingController();
+  String? _labName;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -34,6 +40,27 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
         statusBarColor: Colors.transparent,
       ),
     );
+
+    // Charger les informations du labo
+    _loadLabProfile();
+  }
+
+  Future<void> _loadLabProfile() async {
+    try {
+      final labProfile = await ApiService.getLabProfile();
+      if (mounted) {
+        setState(() {
+          _labName = labProfile['name'] ?? labProfile['centreName'] ?? labProfile['centre_name'];
+        });
+      }
+    } catch (e) {
+      // En cas d'erreur, on garde la valeur par défaut
+      if (mounted) {
+        setState(() {
+          _labName = null;
+        });
+      }
+    }
   }
 
   @override
@@ -47,56 +74,116 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 24),
-                _buildWelcomeCard(),
-                const SizedBox(height: 24),
-                _buildSearchBar(),
-                const SizedBox(height: 16),
-                _buildFilterButtons(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Analyses récentes'),
-                const SizedBox(height: 16),
-                _buildRecentAnalyses(),
-              ],
-            ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildHomePage(),
+          const CenterPatientsScreen(),
+          const CenterNotificationsScreen(),
+          const CenterSettingsScreen(),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildHomePage() {
+    return SafeArea(
+      child: FadeTransition(
+        opacity: _fadeAnim,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildWelcomeCard(),
+              const SizedBox(height: 24),
+              _buildSearchBar(),
+              const SizedBox(height: 16),
+              _buildFilterButtons(),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Analyses récentes'),
+              const SizedBox(height: 16),
+              _buildRecentAnalyses(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Bonjour 👋',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.home_rounded, 'Accueil'),
+              _buildNavItem(1, Icons.people_rounded, 'Patients'),
+              _buildNavItem(2, Icons.notifications_rounded, 'Notifications'),
+              _buildNavItem(3, Icons.settings_rounded, 'Paramètres'),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          "Centre d'Analyse",
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
+      ),
     );
   }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppColors.primary : AppColors.textLight,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              color: isSelected ? AppColors.primary : AppColors.textLight,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Text(
+      _labName ?? 'Labo Central',
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+
 
   Widget _buildWelcomeCard() {
     return Container(
@@ -123,9 +210,9 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Centre d'Analyse",
-                  style: TextStyle(
+                Text(
+                  _labName ?? 'Labo Central',
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -286,16 +373,61 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
 
   Widget _buildRecentAnalyses() {
     final analyses = [
-      {'name': 'Bilan Sanguin Complet', 'patient': 'Ahmed B.', 'status': 'En cours', 'color': const Color(0xFFF59E0B)},
-      {'name': 'Glycémie à jeun', 'patient': 'Fatima Z.', 'status': 'Terminé', 'color': const Color(0xFF10B981)},
-      {'name': 'NFS + Plaquettes', 'patient': 'Karim L.', 'status': 'Terminé', 'color': const Color(0xFF10B981)},
+      {
+        'patient': 'Jean Dupont',
+        'type': 'Analyse Sanguine Complète',
+        'status': 'EN ATTENTE',
+        'statusColor': const Color(0xFFF59E0B),
+        'avatarColor': AppColors.primary,
+        'avatarIcon': Icons.person,
+        'detail1': 'Aujourd\'hui, 14:30',
+        'detail1Icon': Icons.calendar_today,
+        'detail2': 'Lab #402',
+        'detail2Icon': Icons.science,
+        'buttonText': 'Voir les détails',
+        'buttonIcon': Icons.visibility,
+        'buttonColor': AppColors.primary,
+        'hasButton': true,
+      },
+      {
+        'patient': 'Marie Lambert',
+        'type': 'Test PCR Urgent',
+        'status': 'URGENT',
+        'statusColor': const Color(0xFFEF4444),
+        'avatarColor': const Color(0xFFEF4444),
+        'avatarIcon': Icons.priority_high,
+        'detail1': 'Il y a 10 min',
+        'detail1Icon': Icons.access_time,
+        'detail2': 'PCR Box',
+        'detail2Icon': Icons.inventory_2,
+        'buttonText': 'Traiter en priorité',
+        'buttonIcon': Icons.work,
+        'buttonColor': const Color(0xFF1E40AF),
+        'hasButton': true,
+      },
+      {
+        'patient': 'Marc Vasseur',
+        'type': 'Bilan Lipidique',
+        'status': 'COMPLÉTÉ',
+        'statusColor': const Color(0xFF10B981),
+        'avatarColor': AppColors.textLight,
+        'avatarIcon': Icons.person,
+        'detail1': 'Terminé à 09:15',
+        'detail1Icon': Icons.check_circle,
+        'detail2': null,
+        'detail2Icon': null,
+        'buttonText': null,
+        'buttonIcon': null,
+        'buttonColor': null,
+        'hasButton': false,
+      },
     ];
 
     return Column(
       children: analyses.map((analyse) {
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(20),
@@ -307,59 +439,144 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.science_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      analyse['name'] as String,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+              // Header avec avatar, nom, type et statut
+              Row(
+                children: [
+                  // Avatar
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: analyse['avatarColor'] as Color,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      analyse['avatarIcon'] as IconData,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Nom et type
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          analyse['patient'] as String,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          analyse['type'] as String,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Tag de statut
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: (analyse['statusColor'] as Color).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      analyse['status'] as String,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: analyse['statusColor'] as Color,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Patient: ${analyse['patient']}',
-                      style: TextStyle(
-                        fontSize: 13,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Détails
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        analyse['detail1Icon'] as IconData,
+                        size: 16,
                         color: AppColors.textSecondary,
                       ),
+                      const SizedBox(width: 6),
+                      Text(
+                        analyse['detail1'] as String,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (analyse['detail2'] != null) ...[
+                    const SizedBox(width: 20),
+                    Row(
+                      children: [
+                        Icon(
+                          analyse['detail2Icon'] as IconData,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          analyse['detail2'] as String,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: (analyse['color'] as Color).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  analyse['status'] as String,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: analyse['color'] as Color,
+              // Bouton d'action
+              if (analyse['hasButton'] as bool) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: Icon(
+                      analyse['buttonIcon'] as IconData,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    label: Text(
+                      analyse['buttonText'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: analyse['buttonColor'] as Color,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         );

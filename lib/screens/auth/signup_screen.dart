@@ -6,7 +6,7 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../centre_analyse/home_centre_analyse.dart';
 import '../onboarding/registration_success_screen.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 
@@ -853,7 +853,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(ctx);
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeCentreAnalyse()));
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                     child: const Text('Commencer', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),

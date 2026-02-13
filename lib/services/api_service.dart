@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -199,6 +200,161 @@ class ApiService {
     }
   }
 
+  // ========== PROFIL LABORATOIRE ==========
+  static Future<Map<String, dynamic>> getLabProfile() async {
+    final token = await getAccessToken();
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab/profile'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      // Token expiré, essayer de rafraîchir
+      await refreshToken();
+      return getLabProfile();
+    } else {
+      throw Exception('Erreur de récupération du profil laboratoire');
+    }
+  }
+
+  // ========== METTRE À JOUR PROFIL LABORATOIRE ==========
+  static Future<void> updateLabProfile(Map<String, dynamic> data) async {
+    final token = await getAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/lab/profile'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      // Token expiré, essayer de rafraîchir
+      await refreshToken();
+      return updateLabProfile(data);
+    } else {
+      throw Exception('Erreur de mise à jour du profil laboratoire');
+    }
+  }
+
+  // ========== GESTION DES CATÉGORIES LABORATOIRE ==========
+  static Future<List<String>> getLabCategories() async {
+    final token = await getAccessToken();
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab/categories'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<String>.from(data);
+      } else if (data['categories'] != null) {
+        return List<String>.from(data['categories']);
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getLabCategories();
+    } else {
+      throw Exception('Erreur de récupération des catégories');
+    }
+  }
+
+  static Future<void> addLabCategories(List<String> categories) async {
+    final token = await getAccessToken();
+    
+    if (token == null) {
+      throw Exception('Non authentifié');
+    }
+    
+    // Le backend accepte string | string[], donc on envoie le tableau directement
+    final response = await http.post(
+      Uri.parse('$baseUrl/lab/categories'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'categories': categories}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return addLabCategories(categories);
+    } else {
+      // Essayer de récupérer le message d'erreur du backend
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur d\'ajout des catégories';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception) {
+          rethrow;
+        }
+        throw Exception('Erreur d\'ajout des catégories: ${response.statusCode} - ${response.body}');
+      }
+    }
+  }
+
+  static Future<void> removeLabCategories(List<String> categories) async {
+    final token = await getAccessToken();
+    
+    if (token == null) {
+      throw Exception('Non authentifié');
+    }
+    
+    // Le backend accepte string | string[], donc on envoie le tableau directement
+    final response = await http.post(
+      Uri.parse('$baseUrl/lab/categories/remove'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'categories': categories}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return removeLabCategories(categories);
+    } else {
+      // Essayer de récupérer le message d'erreur du backend
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de suppression des catégories';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception) {
+          rethrow;
+        }
+        throw Exception('Erreur de suppression des catégories: ${response.statusCode} - ${response.body}');
+      }
+    }
+  }
+
   // ========== DÉCONNEXION ==========
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -245,5 +401,146 @@ class ApiService {
   static Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
     return token != null;
+  }
+
+  // ========== LISTE DES CENTRES D'ANALYSE ==========
+  static Future<List<Map<String, dynamic>>> getCentersList() async {
+    // Endpoint public GET /lab pour récupérer tous les laboratoires vérifiés
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    // Debug: afficher la réponse
+    debugPrint('🔍 GET /lab - Status: ${response.statusCode}');
+    debugPrint('🔍 Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      debugPrint('🔍 Parsed data type: ${data.runtimeType}');
+      
+      if (data is List) {
+        debugPrint('🔍 Data is List, length: ${data.length}');
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data is Map) {
+        debugPrint('🔍 Data is Map, keys: ${data.keys}');
+        if (data['labs'] != null) {
+          final labs = data['labs'];
+          debugPrint('🔍 Found labs key, type: ${labs.runtimeType}, length: ${labs is List ? labs.length : 'N/A'}');
+          return List<Map<String, dynamic>>.from(labs);
+        } else if (data['centers'] != null) {
+          final centers = data['centers'];
+          debugPrint('🔍 Found centers key, type: ${centers.runtimeType}, length: ${centers is List ? centers.length : 'N/A'}');
+          return List<Map<String, dynamic>>.from(centers);
+        } else if (data['data'] != null) {
+          final dataList = data['data'];
+          debugPrint('🔍 Found data key, type: ${dataList.runtimeType}, length: ${dataList is List ? dataList.length : 'N/A'}');
+          return List<Map<String, dynamic>>.from(dataList);
+        }
+        debugPrint('⚠️ No valid key found in response, returning empty list');
+        return [];
+      }
+      debugPrint('⚠️ Unexpected data type: ${data.runtimeType}');
+      return [];
+    } else {
+      // Essayer de récupérer le message d'erreur du backend
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de récupération des centres d\'analyse';
+        debugPrint('❌ Error: $errorMessage');
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        debugPrint('❌ Error ${response.statusCode}: ${response.body}');
+        throw Exception('Erreur de récupération des centres d\'analyse: ${response.statusCode}');
+      }
+    }
+  }
+
+  // ========== RÉCUPÉRER UN LABORATOIRE PAR ID ==========
+  static Future<Map<String, dynamic>> getLabById(String labId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab/$labId'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Map<String, dynamic>.from(data);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de récupération du laboratoire';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de récupération du laboratoire: ${response.statusCode}');
+      }
+    }
+  }
+
+  // ========== RECHERCHER DES LABORATOIRES ==========
+  static Future<List<Map<String, dynamic>>> searchLabs({
+    String? localisation,
+    String? categorie,
+  }) async {
+    final queryParams = <String, String>{};
+    if (localisation != null && localisation.isNotEmpty) {
+      queryParams['localisation'] = localisation;
+    }
+    if (categorie != null && categorie.isNotEmpty) {
+      queryParams['categorie'] = categorie;
+    }
+
+    final uri = Uri.parse('$baseUrl/lab/search').replace(queryParameters: queryParams);
+    
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data['labs'] != null) {
+        return List<Map<String, dynamic>>.from(data['labs']);
+      } else if (data['centers'] != null) {
+        return List<Map<String, dynamic>>.from(data['centers']);
+      } else if (data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            errorData['statusMessage'] ??
+                            'Erreur de recherche des laboratoires';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) {
+          rethrow;
+        }
+        throw Exception('Erreur de recherche des laboratoires: ${response.statusCode}');
+      }
+    }
   }
 }

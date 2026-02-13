@@ -66,6 +66,7 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final String? centreName;
 
   User({
     required this.id,
@@ -77,6 +78,7 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
+    this.centreName,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -94,6 +96,7 @@ class User {
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'])
           : null,
+      centreName: json['centreName'] ?? json['centre_name'],
     );
   }
 }

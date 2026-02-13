@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import '../dashboard/dashboard_screen.dart';
+
 import '../centre_analyse/home_centre_analyse.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -520,7 +520,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
     if (widget.role == 'centre_analyse' || widget.role == "Centre d'analyse") {
       dashboard = const HomeCentreAnalyse();
     } else {
-      dashboard = const DashboardScreen();
+      dashboard = const HomeCentreAnalyse();
     }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => dashboard),

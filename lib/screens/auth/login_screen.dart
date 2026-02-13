@@ -5,9 +5,10 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
+import '../patients/centers_list_screen.dart';
+import '../onboarding/welcome_screen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../onboarding/role_selection_screen.dart';
@@ -392,16 +393,27 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        Widget dashboard;
-        final userRole = authProvider.user?.role.value ?? '';
-        if (userRole == 'centre_analyse') {
-          dashboard = const HomeCentreAnalyse();
-        } else if (userRole == 'pharmacie') {
-          dashboard = const PharmacieDashboardScreen();
+        // Rediriger directement vers le bon écran selon le rôle
+        final role = authProvider.user?.role;
+        Widget targetScreen;
+        
+        if (role == UserRole.patient) {
+          targetScreen = const CentersListScreen();
+        } else if (role == UserRole.centreAnalyse) {
+          targetScreen = const HomeCentreAnalyse();
+        } else if (role == UserRole.pharmacie) {
+          targetScreen = const PharmacieDashboardScreen();
+        } else if (role == UserRole.medecin) {
+          targetScreen = const HomeCentreAnalyse();
         } else {
-          dashboard = const DashboardScreen();
+          // Par défaut, laisser AuthWrapper gérer
+          targetScreen = const WelcomeScreen();
         }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => dashboard));
+        
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => targetScreen),
+          (route) => false,
+        );
       } else {
         _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }
