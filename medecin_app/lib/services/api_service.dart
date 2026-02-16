@@ -5,8 +5,8 @@ import '../models/user_model.dart';
 
 class ApiService {
   // Changez cette URL pour votre backend
-  static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  // static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
+  //static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
+  static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -76,24 +76,45 @@ class ApiService {
     required String email,
     required String password,
   }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
+    print('🌐 ApiService: Sending login request to $baseUrl/auth/login');
+    print('📧 ApiService: Email: $email');
+    
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final authResponse = AuthResponse.fromJson(data);
-      await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
-      await _saveUser(authResponse.user);
-      return authResponse;
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['message'] ?? 'Email ou mot de passe incorrect');
+      print('📥 ApiService: Response status: ${response.statusCode}');
+      print('📥 ApiService: Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('✅ ApiService: JSON decoded successfully');
+        print('👤 ApiService: User role from API: ${data['user']['role']}');
+        
+        final authResponse = AuthResponse.fromJson(data);
+        print('✅ ApiService: AuthResponse created');
+        print('🎭 ApiService: Parsed role enum: ${authResponse.user.role}');
+        print('📝 ApiService: Parsed role value: ${authResponse.user.role.value}');
+        
+        await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
+        await _saveUser(authResponse.user);
+        print('💾 ApiService: Tokens and user saved');
+        
+        return authResponse;
+      } else {
+        final error = jsonDecode(response.body);
+        print('❌ ApiService: Login failed: ${error['message']}');
+        throw Exception(error['message'] ?? 'Email ou mot de passe incorrect');
+      }
+    } catch (e) {
+      print('❌ ApiService: Exception during login: $e');
+      rethrow;
     }
   }
 

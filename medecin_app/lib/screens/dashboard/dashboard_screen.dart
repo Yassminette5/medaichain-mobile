@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/medical_card.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../patients/patient_access_request_screen.dart';
 import '../patients/patient_medical_record_screen.dart';
+import '../patients/patient_medication_request_screen.dart';
 import '../ai/ai_decision_support_screen.dart';
 import '../profile/doctor_profile_screen.dart';
 
@@ -223,48 +227,80 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userRole = authProvider.user?.role ?? UserRole.patient;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Actions rapides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            _buildActionButton(context, Icons.add_circle_outline, 'Nouvelle\nConsult.', AppColors.primary),
-            const SizedBox(width: 12),
-            _buildActionButton(context, Icons.document_scanner_outlined, 'Scanner\nDocument', AppColors.secondary),
-            const SizedBox(width: 12),
-            _buildActionButton(context, Icons.video_call_outlined, 'Appel\nVidéo', AppColors.diagnosis),
-            const SizedBox(width: 12),
-            _buildActionButton(context, Icons.calendar_today_outlined, 'Planifier', AppColors.prescription),
-          ],
-        ),
+        userRole == UserRole.patient
+            ? Row(
+                children: [
+                  _buildActionButton(
+                    context,
+                    Icons.medical_services_outlined,
+                    'Demander\nMédicament',
+                    AppColors.primary,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PatientMedicationRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.document_scanner_outlined, 'Scanner\nDocument', AppColors.secondary),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.video_call_outlined, 'Appel\nVidéo', AppColors.diagnosis),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.calendar_today_outlined, 'Planifier', AppColors.prescription),
+                ],
+              )
+            : Row(
+                children: [
+                  _buildActionButton(context, Icons.add_circle_outline, 'Nouvelle\nConsult.', AppColors.primary),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.document_scanner_outlined, 'Scanner\nDocument', AppColors.secondary),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.video_call_outlined, 'Appel\nVidéo', AppColors.diagnosis),
+                  const SizedBox(width: 12),
+                  _buildActionButton(context, Icons.calendar_today_outlined, 'Planifier', AppColors.prescription),
+                ],
+              ),
       ],
     );
   }
 
-  Widget _buildActionButton(BuildContext context, IconData icon, String label, Color color) {
+  Widget _buildActionButton(BuildContext context, IconData icon, String label, Color color, {VoidCallback? onTap}) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 15)],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
-                borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 15)],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 10),
-            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.3)),
-          ],
+              const SizedBox(height: 10),
+              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.3)),
+            ],
+          ),
         ),
       ),
     );

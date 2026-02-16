@@ -93,20 +93,31 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    print('🔑 AuthProvider: Starting login for $email');
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      print('📡 AuthProvider: Calling API login...');
       final response = await ApiService.login(
         email: email,
         password: password,
       );
+      
+      print('✅ AuthProvider: API login successful');
+      print('👤 AuthProvider: User data received: ${response.user.email}');
+      print('🎭 AuthProvider: User role: ${response.user.role}');
+      print('📝 AuthProvider: Role value: ${response.user.role.value}');
+      
       _user = response.user;
       _isLoading = false;
       notifyListeners();
+      
+      print('✅ AuthProvider: Login completed successfully');
       return true;
     } catch (e) {
+      print('❌ AuthProvider: Login failed with error: $e');
       _error = e.toString().replaceFirst('Exception: ', '');
       _isLoading = false;
       notifyListeners();

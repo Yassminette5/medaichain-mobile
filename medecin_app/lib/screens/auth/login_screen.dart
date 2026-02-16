@@ -389,22 +389,54 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.login(email: email, password: password);
 
+    print('🔐 Login attempt completed');
+    print('✅ Success: $success');
+    
     if (mounted) {
       setState(() => _isLoading = false);
+      
       if (success) {
+        final user = authProvider.user;
+        final userRole = user?.role ?? UserRole.patient;
+        final userRoleValue = user?.role.value ?? 'unknown';
+        
+        print('👤 User: ${user?.email}');
+        print('🎭 Role Enum: $userRole');
+        print('📝 Role Value: $userRoleValue');
+        print('🆔 User ID: ${user?.id}');
+        
         Widget dashboard;
-        final userRole = authProvider.user?.role.value ?? '';
-        if (userRole == 'centre_analyse') {
+        String dashboardName;
+        
+        if (userRole == UserRole.centreAnalyse) {
+          print('🏥 Routing to: Centre Analyse Dashboard');
           dashboard = const CentreAnalyseDashboardScreen();
-        } else if (userRole == 'pharmacie') {
+          dashboardName = 'CentreAnalyseDashboard';
+        } else if (userRole == UserRole.pharmacie) {
+          print('💊 Routing to: Pharmacie Dashboard');
           dashboard = const PharmacieDashboardScreen();
+          dashboardName = 'PharmacieDashboard';
         } else {
+          print('👨‍⚕️ Routing to: Default Dashboard (Medecin)');
           dashboard = const DashboardScreen();
+          dashboardName = 'DefaultDashboard';
         }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => dashboard));
+        
+        print('🚀 Navigating to: $dashboardName');
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) {
+            print('📍 Building dashboard: $dashboardName');
+            return dashboard;
+          })
+        );
+        print('✅ Navigation completed');
       } else {
+        print('❌ Login failed: ${authProvider.error}');
         _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }
+    } else {
+      print('⚠️ Widget not mounted, skipping navigation');
     }
   }
 
