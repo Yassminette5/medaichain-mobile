@@ -7,13 +7,10 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../onboarding/registration_success_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
 
-/// Écran d'Inscription Ultra Moderne
+/// Écran d'Inscription Patient - Ultra Moderne
 class SignupScreen extends StatefulWidget {
-  final String? selectedRole;
-
-  const SignupScreen({super.key, this.selectedRole});
+  const SignupScreen({super.key});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -25,21 +22,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  // Médecin fields
-  final _specialityController = TextEditingController();
-  final _wilayaController = TextEditingController();
-  final _experienceController = TextEditingController();
-  // Centre d'analyse fields
-  final _centreNameController = TextEditingController();
-  final _categorieController = TextEditingController();
-  final _centreLocationController = TextEditingController();
-  // Pharmacie fields
-  final _pharmacyNameController = TextEditingController();
-  final _ownerNameController = TextEditingController(); // Added ownerName controller
-  final _gouvernoratController = TextEditingController();
-  final _delegationController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _licenseNumberController = TextEditingController();
   bool _acceptTerms = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -64,18 +46,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _specialityController.dispose();
-    _wilayaController.dispose();
-    _experienceController.dispose();
-    _centreNameController.dispose();
-    _categorieController.dispose();
-    _centreLocationController.dispose();
-    _pharmacyNameController.dispose();
-    _ownerNameController.dispose(); // Dispose ownerName controller
-    _gouvernoratController.dispose();
-    _delegationController.dispose();
-    _addressController.dispose();
-    _licenseNumberController.dispose();
     super.dispose();
   }
 
@@ -177,7 +147,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
           child: const Text('Créer un compte', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
         ),
         const SizedBox(height: 4),
-        Text('Rejoignez MEDAIChain et révolutionnez\nvotre pratique médicale', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6), height: 1.3)),
+        Text('Rejoignez MEDAIChain et gérez\nvotre santé en toute sécurité', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6), height: 1.3)),
       ],
     );
   }
@@ -186,7 +156,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     return Row(
       children: List.generate(3, (index) {
         final isActive = index <= _currentStep;
-        final isCompleted = index < _currentStep;
         return Expanded(
           child: Row(
             children: [
@@ -246,138 +215,17 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     }
   }
 
+  /// Step 1: Informations personnelles (Patient)
   Widget _buildStep1() {
-    final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
-    final isPharmacie = widget.selectedRole == 'Pharmacie' || widget.selectedRole == 'pharmacie';
-
-    if (isCentreAnalyse) {
-      return Column(
-        key: const ValueKey(0),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepTitle('Informations du centre', Icons.biotech_rounded),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _centreNameController,
-            label: 'Nom du centre',
-            icon: Icons.business_rounded,
-            hint: 'Laboratoire Alpha, Centre Bio...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _categorieController,
-            label: 'Catégorie',
-            icon: Icons.category_rounded,
-            hint: 'Biologie, Radiologie, Imagerie...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _phoneController,
-            label: 'Téléphone du centre',
-            icon: Icons.phone_outlined,
-            hint: '+213 555 123 456',
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _emailController,
-            label: 'Email du centre',
-            icon: Icons.alternate_email,
-            hint: 'contact@centre-analyse.com',
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _centreLocationController,
-            label: 'Localisation',
-            icon: Icons.location_on_outlined,
-            hint: 'Alger, Oran, Constantine...',
-          ),
-          const SizedBox(height: 16),
-          _buildNextButton('Continuer'),
-        ],
-      );
-    }
-
-    if (isPharmacie) {
-      return Column(
-        key: const ValueKey(0),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepTitle('Informations de la pharmacie', Icons.local_pharmacy_rounded),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _pharmacyNameController,
-            label: 'Nom de la pharmacie',
-            icon: Icons.local_pharmacy_rounded,
-            hint: 'Pharmacie El Amel, Pharmacie Centrale...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _ownerNameController,
-            label: 'Nom du propriétaire',
-            icon: Icons.person_rounded,
-            hint: 'Dr. Pharmacien...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _gouvernoratController,
-            label: 'Gouvernorat',
-            icon: Icons.location_city_rounded,
-            hint: 'Alger, Oran, Constantine...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _delegationController,
-            label: 'Délégation',
-            icon: Icons.map_rounded,
-            hint: 'Bab El Oued, Hussein Dey...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _addressController,
-            label: 'Adresse',
-            icon: Icons.place_rounded,
-            hint: '12 Rue de la Liberté...',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _licenseNumberController,
-            label: 'Numéro de licence',
-            icon: Icons.badge_rounded,
-            hint: '12345/DZ',
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _phoneController,
-            label: 'Téléphone',
-            icon: Icons.phone_outlined,
-            hint: '+213 555 123 456',
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 8),
-          _buildModernTextField(
-            controller: _emailController,
-            label: 'Email',
-            icon: Icons.alternate_email,
-            hint: 'contact@pharmacie.com',
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 16),
-          _buildNextButton('Continuer'),
-        ],
-      );
-    }
-
     return Column(
       key: const ValueKey(0),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildStepTitle('Informations personnelles', Icons.person_outline),
         const SizedBox(height: 16),
-        _buildModernTextField(controller: _nameController, label: 'Nom complet', icon: Icons.badge_outlined, hint: 'Dr. Jean Dupont'),
+        _buildModernTextField(controller: _nameController, label: 'Nom complet', icon: Icons.badge_outlined, hint: 'Jean Dupont'),
         const SizedBox(height: 10),
-        _buildModernTextField(controller: _emailController, label: 'Email professionnel', icon: Icons.alternate_email, hint: 'jean.dupont@hopital.com', keyboardType: TextInputType.emailAddress),
+        _buildModernTextField(controller: _emailController, label: 'Email', icon: Icons.alternate_email, hint: 'jean.dupont@email.com', keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 10),
         _buildModernTextField(controller: _phoneController, label: 'Téléphone', icon: Icons.phone_outlined, hint: '+213 555 123 456', keyboardType: TextInputType.phone),
         const SizedBox(height: 20),
@@ -386,6 +234,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     );
   }
 
+  /// Step 2: Sécurité du compte
   Widget _buildStep2() {
     return Column(
       key: const ValueKey(1),
@@ -410,51 +259,13 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     );
   }
 
+  /// Step 3: Finalisation
   Widget _buildStep3() {
-    // Afficher les champs selon le rôle sélectionné
-    final isMedecin = widget.selectedRole == 'Médecin' || widget.selectedRole == 'medecin' || widget.selectedRole == null;
-    final isCentreAnalyse = widget.selectedRole == "Centre d'analyse" || widget.selectedRole == 'centre_analyse';
-    final isPharmacie = widget.selectedRole == 'Pharmacie' || widget.selectedRole == 'pharmacie';
-    final skipProfessionalFields = isCentreAnalyse || isPharmacie;
-    
     return Column(
       key: const ValueKey(2),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!skipProfessionalFields) ...[
-          _buildStepTitle(
-            isMedecin
-                ? 'Informations professionnelles'
-                : 'Informations complémentaires',
-            Icons.medical_services_outlined,
-          ),
-          const SizedBox(height: 16),
-          if (isMedecin) ...[
-            _buildModernTextField(
-              controller: _specialityController,
-              label: 'Spécialité',
-              icon: Icons.medical_information_outlined,
-              hint: 'Cardiologie, Pédiatrie...',
-            ),
-            const SizedBox(height: 8),
-            _buildModernTextField(
-              controller: _wilayaController,
-              label: 'Wilaya',
-              icon: Icons.location_on_outlined,
-              hint: 'Alger, Oran, Constantine...',
-            ),
-            const SizedBox(height: 8),
-            _buildModernTextField(
-              controller: _experienceController,
-              label: 'Années d\'expérience',
-              icon: Icons.work_history_outlined,
-              hint: '5',
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ] else ...[
-          _buildStepTitle('Finalisation', Icons.check_circle_outline),
-        ],
+        _buildStepTitle('Finalisation', Icons.check_circle_outline),
         const SizedBox(height: 16),
         _buildTermsCheckbox(),
         const SizedBox(height: 20),
@@ -694,7 +505,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
 
   void _handleSignup() async {
     // Validation
-    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty || _phoneController.text.trim().isEmpty) {
+    if (_nameController.text.trim().isEmpty || _emailController.text.trim().isEmpty || _passwordController.text.isEmpty || _phoneController.text.trim().isEmpty) {
       _showErrorSnackBar('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -716,114 +527,32 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
 
     setState(() => _isLoading = true);
 
-    // Convert role from string to enum
-    UserRole role = UserRole.medecin; // Default
-    if (widget.selectedRole != null) {
-      switch (widget.selectedRole) {
-        case 'medecin':
-        case 'Médecin':
-          role = UserRole.medecin;
-          break;
-        case 'patient':
-        case 'Patient':
-          role = UserRole.patient;
-          break;
-        case 'pharmacie':
-        case 'Pharmacie':
-          role = UserRole.pharmacie;
-          break;
-        case 'centre_analyse':
-        case "Centre d'analyse":
-          role = UserRole.centreAnalyse;
-          break;
-        case 'clinique':
-        case 'Clinique':
-          role = UserRole.clinique;
-          break;
-      }
-    }
-
-    String? firstName;
-    String? lastName;
-    String? speciality;
-    String? hospital;
-    String? licenseNumber;
-    int? yearsOfExperience;
-    String? centreName;
-    String? categorie;
-    String? localisation;
-    String? wilaya;
-    String? pharmacyName;
-    String? ownerName; // Added ownerName variable
-    String? gouvernorat;
-    String? delegation;
-    String? address;
-
-    if (role == UserRole.centreAnalyse) {
-      centreName = _centreNameController.text.trim();
-      categorie = _categorieController.text.trim();
-      localisation = _centreLocationController.text.trim();
-    } else if (role == UserRole.pharmacie) {
-      pharmacyName = _pharmacyNameController.text.trim();
-      ownerName = _ownerNameController.text.trim(); // Capture ownerName
-      gouvernorat = _gouvernoratController.text.trim();
-      delegation = _delegationController.text.trim();
-      address = _addressController.text.trim();
-      licenseNumber = _licenseNumberController.text.trim();
-    } else {
-      // Pour Médecin, Patient, Clinique
-      final fullName = _nameController.text.trim();
-      final nameParts = fullName.split(' ');
-      if (nameParts.isNotEmpty) {
-        firstName = nameParts.first;
-        lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-      }
-      
-      if (role == UserRole.medecin) {
-        speciality = _specialityController.text.trim();
-        wilaya = _wilayaController.text.trim();
-        if (_experienceController.text.isNotEmpty) {
-          yearsOfExperience = int.tryParse(_experienceController.text.trim());
-        }
-      }
-    }
+    // Patient signup — parse name
+    final fullName = _nameController.text.trim();
+    final nameParts = fullName.split(' ');
+    final firstName = nameParts.first;
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.register(
       email: _emailController.text.trim(),
       password: _passwordController.text,
       phone: _phoneController.text.trim(),
-      role: role,
+      role: UserRole.patient,
       firstName: firstName,
       lastName: lastName,
-      speciality: speciality,
-      centreName: centreName,
-      categorie: categorie,
-      localisation: localisation,
-      wilaya: wilaya,
-      pharmacyName: pharmacyName,
-      ownerName: ownerName, // Pass ownerName to authProvider
-      gouvernorat: gouvernorat,
-      delegation: delegation,
-      address: address,
-      licenseNumber: licenseNumber,
-      yearsOfExperience: yearsOfExperience,
     );
 
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        if (widget.selectedRole != null) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => RegistrationSuccessScreen(
-                role: widget.selectedRole!,
-              ),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const RegistrationSuccessScreen(
+              role: 'patient',
             ),
-          );
-        } else {
-          _showSuccessDialog();
-        }
+          ),
+        );
       } else {
         _showErrorSnackBar(authProvider.error ?? 'Erreur d\'inscription');
       }
@@ -837,58 +566,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
         backgroundColor: Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: AppColors.darkSurface,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: AppColors.neonGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 30)],
-                ),
-                child: const Icon(Icons.check, color: Colors.white, size: 48),
-              ),
-              const SizedBox(height: 24),
-              const Text('Compte créé !', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 12),
-              Text('Bienvenue sur MEDAIChain, Docteur !', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14), textAlign: TextAlign.center),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: Container(
-                  decoration: BoxDecoration(gradient: AppColors.neonGradient, borderRadius: BorderRadius.circular(16)),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardScreen()));
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent, shadowColor: Colors.transparent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                    child: const Text('Commencer', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

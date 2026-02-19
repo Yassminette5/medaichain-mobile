@@ -8,9 +8,10 @@ import '../../providers/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../centre_analyse/centre_analyse_dashboard_screen.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
+import '../patient/patient_dashboard_screen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
-import '../onboarding/role_selection_screen.dart';
+
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -322,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           width: double.infinity,
           height: 54,
           child: OutlinedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -398,6 +399,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           dashboard = const CentreAnalyseDashboardScreen();
         } else if (userRole == 'pharmacie') {
           dashboard = const PharmacieDashboardScreen();
+        } else if (userRole == 'patient') {
+          dashboard = const PatientDashboardScreen();
         } else {
           dashboard = const DashboardScreen();
         }

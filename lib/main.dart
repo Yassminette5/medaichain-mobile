@@ -8,6 +8,11 @@ import 'screens/onboarding/welcome_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/centre_analyse/centre_analyse_dashboard_screen.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+import 'screens/patient/patient_dashboard_screen.dart';
+import 'screens/admin/admin_login_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,10 +42,16 @@ class MEDAIChainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
       ],
       child: MaterialApp(
-        title: 'MEDAIChain',
+        title: 'MEDAIChain Admin',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const AuthWrapper(),
+        // Define routes for web navigation
+        routes: {
+          '/': (context) => kIsWeb ? const AdminLoginScreen() : const AuthWrapper(),
+          '/admin': (context) => const AdminLoginScreen(),
+          '/admin/dashboard': (context) => const AdminDashboardScreen(),
+        },
+        initialRoute: '/',
       ),
     );
   }
@@ -71,6 +82,10 @@ class AuthWrapper extends StatelessWidget {
       if (authProvider.user?.role == UserRole.pharmacie) {
         return const PharmacieDashboardScreen();
       }
+      if (authProvider.user?.role == UserRole.patient) {
+        return const PatientDashboardScreen();
+      }
+      // Médecin ou Clinique → Dashboard médecin
       return const DashboardScreen();
     }
 
@@ -78,3 +93,4 @@ class AuthWrapper extends StatelessWidget {
     return const WelcomeScreen();
   }
 }
+
