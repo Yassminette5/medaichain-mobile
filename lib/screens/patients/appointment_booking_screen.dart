@@ -201,6 +201,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     );
   }
 
+  // ignore: unused_element
   void _addAllergy() {
     if (_allergyController.text.trim().isNotEmpty) {
       setState(() {
@@ -376,7 +377,7 @@ Widget _buildAnalysisTypeCard(
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
               BoxShadow(
-                color: gradient.first.withOpacity(0.35),
+                color: gradient.first.withValues(alpha: 0.35),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

@@ -456,7 +456,7 @@ class AppointmentDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (hasAllergies && allergies.isNotEmpty) ...[
-            ...(allergies as List).map((allergy) => Padding(
+            ...allergies.map((allergy) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -5,9 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class ApiService {
-  // Changez cette URL pour votre backend
-  static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  // static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
+  // Détecter automatiquement la bonne URL selon la plateforme
+  static String get baseUrl {
+    if (kIsWeb) {
+      // Sur le web, utiliser localhost
+      return 'http://localhost:3000';
+    } else {
+      // Sur mobile (Android), utiliser 10.0.2.2 pour l'émulateur
+      return 'http://10.0.2.2:3000';
+    }
+  }
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -77,8 +84,12 @@ class ApiService {
     required String email,
     required String password,
   }) async {
+    final url = '$baseUrl/auth/login';
+    debugPrint('🔵 URL de connexion: $url');
+    debugPrint('🔵 Email: $email');
+    
     final response = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
+      Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
@@ -86,15 +97,22 @@ class ApiService {
       }),
     );
 
+    debugPrint('🔵 Status code: ${response.statusCode}');
+    debugPrint('🔵 Response body: ${response.body}');
+
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      debugPrint('🔵 Data reçue: $data');
       final authResponse = AuthResponse.fromJson(data);
+      debugPrint('🔵 User parsé: ${authResponse.user.email} - ${authResponse.user.role}');
       await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
       await _saveUser(authResponse.user);
       return authResponse;
     } else {
       final error = jsonDecode(response.body);
-      throw Exception(error['message'] ?? 'Email ou mot de passe incorrect');
+      final errorMessage = error['message'] ?? 'Email ou mot de passe incorrect';
+      debugPrint('❌ Erreur de connexion: $errorMessage');
+      throw Exception(errorMessage);
     }
   }
 
@@ -204,6 +222,10 @@ class ApiService {
   static Future<Map<String, dynamic>> getLabProfile() async {
     final token = await getAccessToken();
     
+    debugPrint('🔵 API Service: Récupération du profil lab...');
+    debugPrint('🔵 API Service: URL: $baseUrl/lab/profile');
+    debugPrint('🔵 API Service: Token présent: ${token != null && token.isNotEmpty}');
+    
     final response = await http.get(
       Uri.parse('$baseUrl/lab/profile'),
       headers: {
@@ -212,14 +234,122 @@ class ApiService {
       },
     );
 
+    debugPrint('🔵 API Service: Réponse status: ${response.statusCode}');
+    debugPrint('🔵 API Service: Réponse body: ${response.body}');
+
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      debugPrint('✅ API Service: Profil récupéré avec succès');
+      debugPrint('✅ API Service: Données: $data');
+      
+      // Si le backend retourne un message indiquant que le profil doit être initialisé
+      if (data['needsInit'] == true) {
+        debugPrint('⚠️ API Service: Profil nécessite une initialisation');
+        // Essayer d'initialiser le profil
+        return await _initLabProfile();
+      }
+      
+      // Vérifier si les données sont valides
+      if (data.isEmpty || (data['centreName'] == null && data['name'] == null && data['centre_name'] == null)) {
+        debugPrint('⚠️ API Service: Profil vide ou incomplet, tentative d\'initialisation');
+        return await _initLabProfile();
+      }
+      
+      return data;
+    } else if (response.statusCode == 404) {
+      debugPrint('⚠️ API Service: Profil non trouvé (404), tentative d\'initialisation');
+      // Profil non trouvé, essayer de l'initialiser
+      return await _initLabProfile();
     } else if (response.statusCode == 401) {
+      debugPrint('⚠️ API Service: Token expiré (401), rafraîchissement...');
       // Token expiré, essayer de rafraîchir
       await refreshToken();
       return getLabProfile();
     } else {
-      throw Exception('Erreur de récupération du profil laboratoire');
+      // Essayer de parser l'erreur
+      try {
+        final error = jsonDecode(response.body);
+        final errorMessage = error['message'] ?? 'Erreur de récupération du profil laboratoire';
+        debugPrint('❌ API Service: Erreur du backend: $errorMessage');
+        
+        // Si le backend dit "profil non trouvé" mais qu'on a un token valide,
+        // essayer quand même d'initialiser le profil
+        if (errorMessage.toLowerCase().contains('profil') && 
+            errorMessage.toLowerCase().contains('trouvé')) {
+          debugPrint('⚠️ API Service: Message "profil non trouvé" détecté, tentative d\'initialisation');
+          return await _initLabProfile();
+        }
+        
+        throw Exception(errorMessage);
+      } catch (e) {
+        debugPrint('❌ API Service: Erreur lors du parsing de la réponse: $e');
+        // Si on ne peut pas parser l'erreur, essayer quand même d'initialiser
+        debugPrint('⚠️ API Service: Tentative d\'initialisation du profil...');
+        return await _initLabProfile();
+      }
+    }
+  }
+
+  // Initialiser le profil lab s'il n'existe pas
+  static Future<Map<String, dynamic>> _initLabProfile() async {
+    final token = await getAccessToken();
+    
+    debugPrint('🔵 API Service: Tentative d\'initialisation du profil...');
+    
+    // Essayer d'appeler l'endpoint d'initialisation s'il existe
+    final response = await http.post(
+      Uri.parse('$baseUrl/lab/profile/init'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    debugPrint('🔵 API Service: Init response status: ${response.statusCode}');
+    debugPrint('🔵 API Service: Init response body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      debugPrint('✅ API Service: Profil initialisé avec succès');
+      return data;
+    } else {
+      // Si l'endpoint n'existe pas, récupérer les données de l'utilisateur
+      debugPrint('⚠️ API Service: Endpoint init non disponible, récupération des données utilisateur...');
+      try {
+        final user = await getProfile();
+        debugPrint('✅ API Service: Données utilisateur récupérées: ${user.email}, ${user.centreName}');
+        
+        // Retourner un profil avec les données de l'utilisateur
+        final defaultProfile = {
+          'name': user.centreName ?? 'Centre d\'Analyses',
+          'centreName': user.centreName ?? 'Centre d\'Analyses',
+          'centre_name': user.centreName ?? 'Centre d\'Analyses',
+          'email': user.email,
+          'phone': user.phone,
+          'localisation': '',
+          'categorie': [],
+          'onlineBooking': true,
+          'isActive': true,
+          'needsInit': true,
+        };
+        debugPrint('✅ API Service: Profil par défaut créé: $defaultProfile');
+        return defaultProfile;
+      } catch (e) {
+        debugPrint('❌ API Service: Erreur lors de la récupération du profil utilisateur: $e');
+        // Retourner un profil minimal
+        return {
+          'name': 'Centre d\'Analyses',
+          'centreName': 'Centre d\'Analyses',
+          'centre_name': 'Centre d\'Analyses',
+          'email': '',
+          'phone': '',
+          'localisation': '',
+          'categorie': [],
+          'onlineBooking': true,
+          'isActive': true,
+          'needsInit': true,
+        };
+      }
     }
   }
 

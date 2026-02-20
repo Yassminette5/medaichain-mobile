@@ -69,14 +69,6 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
     }
   }
 
-  String _formatTime(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return '';
-    }
-  }
 
   String _getStatusLabel(String? status, String? appointmentId) {
     switch (status?.toLowerCase()) {
@@ -306,13 +298,9 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
   Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
     final appointmentDate = appointment['appointmentDate'] ?? '';
     final status = appointment['status'] ?? 'pending';
-    final analysisType = appointment['analysisType'] ?? '';
-    
     // Récupérer les informations du patient depuis patientId (populate)
     final patientId = appointment['patientId'];
     String patientName = 'Patient';
-    String? patientEmail;
-    String? patientPhone;
     
     if (patientId != null && patientId is Map) {
       final firstName = patientId['firstName'] ?? '';
@@ -325,19 +313,11 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
       } else {
         patientName = patientId['name'] ?? patientId['email'] ?? 'Patient';
       }
-      patientEmail = patientId['email'];
-      patientPhone = patientId['phone'];
     } else {
       // Fallback pour les anciennes structures
       patientName = appointment['patientName'] ?? 'Patient';
     }
     
-    final hasAllergies = appointment['hasAllergies'] ?? false;
-    final allergies = appointment['allergiesDetails'] ?? [];
-    final hasTreatment = appointment['hasCurrentTreatment'] ?? false;
-    final treatmentDetails = appointment['currentTreatmentDetails'] ?? '';
-    final notes = appointment['notes'] ?? '';
-
     // Extraire l'ID du patient
     String? patientIdString;
     if (patientId != null && patientId is Map) {
@@ -449,42 +429,6 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
     );
   }
 
-  void _showActionDialog(BuildContext context, Map<String, dynamic> appointment, String action) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(action == 'accepter' ? 'Accepter le rendez-vous' : 'Mettre en attente'),
-        content: Text(
-          action == 'accepter'
-              ? 'Voulez-vous accepter ce rendez-vous ?'
-              : 'Voulez-vous mettre ce rendez-vous en attente ?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implémenter l'action
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Rendez-vous ${action == 'accepter' ? 'accepté' : 'mis en attente'}'),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text('Confirmer'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFilterButton(String label, bool isSelected) {
     return GestureDetector(
       onTap: () {
@@ -511,6 +455,7 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
     );
   }
 
+  // ignore: unused_element
   void _showNotificationDialog(BuildContext context, Map<String, dynamic> appointment) {
     showDialog(
       context: context,

@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'models/user_model.dart';
 import 'providers/auth_provider.dart';
+import 'utils/platform_utils.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/centre_analyse/home_centre_analyse.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
 import 'screens/patients/centers_list_screen.dart';
+import 'screens/web/login_web_screen.dart';
+import 'screens/web/center_dashboard_web.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,14 +75,21 @@ class AuthWrapper extends StatelessWidget {
           debugPrint('🔍 Rôle utilisateur détecté: $role');
           debugPrint('🔍 User complet: ${authProvider.user?.email} - ${authProvider.user?.role}');
           debugPrint('🔍 User ID: ${authProvider.user?.id}');
+          debugPrint('🔍 Platform: ${PlatformUtils.isWeb ? "Web" : "Mobile"}');
           
           if (role == UserRole.patient) {
             debugPrint('✅ Redirection vers CentersListScreen pour patient');
             return const CentersListScreen();
           }
           if (role == UserRole.centreAnalyse) {
-            debugPrint('✅ Redirection vers HomeCentreAnalyse pour centre d\'analyse');
-            return const HomeCentreAnalyse();
+            // Sur web, rediriger vers le dashboard web, sinon mobile
+            if (PlatformUtils.isWeb) {
+              debugPrint('✅ Redirection vers CenterDashboardWeb pour centre d\'analyse (Web)');
+              return const CenterDashboardWeb();
+            } else {
+              debugPrint('✅ Redirection vers HomeCentreAnalyse pour centre d\'analyse (Mobile)');
+              return const HomeCentreAnalyse();
+            }
           }
           if (role == UserRole.pharmacie) {
             debugPrint('✅ Redirection vers PharmacieDashboardScreen pour pharmacie');
@@ -94,9 +104,16 @@ class AuthWrapper extends StatelessWidget {
           return const WelcomeScreen();
         }
 
-        // Sinon, afficher l'écran de bienvenue
-        debugPrint('ℹ️ Utilisateur non connecté, affichage de WelcomeScreen');
-        return const WelcomeScreen();
+        // Sinon, afficher l'écran de bienvenue ou login web selon la plateforme
+        debugPrint('ℹ️ Utilisateur non connecté');
+        // Sur web, rediriger directement vers le login web pour les centres d'analyse
+        if (PlatformUtils.isWeb) {
+          debugPrint('ℹ️ Affichage de LoginWebScreen (Web)');
+          return const LoginWebScreen();
+        } else {
+          debugPrint('ℹ️ Affichage de WelcomeScreen (Mobile)');
+          return const WelcomeScreen();
+        }
       },
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
-import '../../widgets/medical_card.dart';
 
 /// Écran du profil du centre d'analyse
 class CenterProfileScreen extends StatefulWidget {
@@ -17,6 +16,7 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
   List<String> _categories = [];
   String? _phone;
   String? _email;
+  // ignore: unused_field
   String? _logoUrl;
   bool _onlineBookingEnabled = true;
   bool _isActive = true;

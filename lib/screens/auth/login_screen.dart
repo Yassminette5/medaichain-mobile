@@ -9,7 +9,6 @@ import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../patients/centers_list_screen.dart';
 import '../onboarding/welcome_screen.dart';
-import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../onboarding/role_selection_screen.dart';
 

@@ -21,7 +21,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _codeVerified = false;
+  final bool _codeVerified = false;
   String? _error;
 
   @override
@@ -122,7 +122,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Center(
                 child: Text(
                   'Code envoyé à ${widget.email}',
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -131,7 +131,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               // Code input
               Text(
                 'Code de vérification',
-                style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -143,10 +143,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   hintText: '------',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3), letterSpacing: 8),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), letterSpacing: 8),
                   counterText: '',
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
+                  fillColor: Colors.white.withValues(alpha: 0.1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -162,7 +162,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               // New password
               Text(
                 'Nouveau mot de passe',
-                style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -171,17 +171,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Minimum 6 caractères',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.5)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withValues(alpha: 0.5)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
+                  fillColor: Colors.white.withValues(alpha: 0.1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -193,7 +193,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               // Confirm password
               Text(
                 'Confirmer le mot de passe',
-                style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -202,17 +202,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Répétez le mot de passe',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.5)),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withValues(alpha: 0.5)),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                     onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   ),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
+                  fillColor: Colors.white.withValues(alpha: 0.1),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -226,9 +226,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [

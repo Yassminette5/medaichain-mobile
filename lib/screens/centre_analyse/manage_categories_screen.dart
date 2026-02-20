@@ -245,6 +245,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
     return _categoryData.keys.toList();
   }
 
+  // ignore: unused_element
   List<String> get _categoriesToShow {
     if (_selectedCategoryFilter == 'Tous') {
       return _allAvailableCategories;

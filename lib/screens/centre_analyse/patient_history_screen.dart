@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/api_service.dart';
 
 /// Écran d'historique d'un patient
 class PatientHistoryScreen extends StatefulWidget {

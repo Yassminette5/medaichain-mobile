@@ -259,10 +259,7 @@ class _CenterDetailScreenState extends State<CenterDetailScreen> {
     // Si isActive est true, le centre peut prendre des rendez-vous
     // onlineBooking est optionnel, si isActive est true, on considère que c'est disponible
     final isActive = _centerData!['isActive'] == true;
-    final onlineBooking = _centerData!['onlineBooking'] ?? 
-                          _centerData!['reservation_en_ligne'] ?? 
-                          false;
-    // Si isActive est true, on peut prendre rendez-vous (même si onlineBooking n'est pas défini)
+    // Si isActive est true, on peut prendre rendez-vous
     final canBook = isActive;
 
     return Container(

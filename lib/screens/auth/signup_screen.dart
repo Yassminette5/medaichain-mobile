@@ -8,7 +8,6 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../onboarding/registration_success_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne
 class SignupScreen extends StatefulWidget {
@@ -183,7 +182,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     return Row(
       children: List.generate(3, (index) {
         final isActive = index <= _currentStep;
-        final isCompleted = index < _currentStep;
+        final _ = index < _currentStep;
         return Expanded(
           child: Row(
             children: [
@@ -728,7 +727,6 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     String? firstName;
     String? lastName;
     String? speciality;
-    String? hospital;
     String? licenseNumber;
     String? centreName;
     String? categorie;
