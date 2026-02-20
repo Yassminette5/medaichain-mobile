@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
-import 'models/user_model.dart';
 import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
-import 'screens/dashboard/dashboard_screen.dart';
-import 'screens/centre_analyse/centre_analyse_dashboard_screen.dart';
-import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+import 'screens/patientnesrine/homeScreen.dart';
+import 'screens/patientnesrine/main_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +40,10 @@ class MEDAIChainApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/welcome': (context) => const WelcomeScreen(),
+        },
       ),
     );
   }
@@ -63,15 +66,9 @@ class AuthWrapper extends StatelessWidget {
       );
     }
 
-    // Si connecté, router vers le bon dashboard selon le rôle
+    // Si connecté, naviguer vers HomeScreen
     if (authProvider.isLoggedIn) {
-      if (authProvider.user?.role == UserRole.centreAnalyse) {
-        return const CentreAnalyseDashboardScreen();
-      }
-      if (authProvider.user?.role == UserRole.pharmacie) {
-        return const PharmacieDashboardScreen();
-      }
-      return const DashboardScreen();
+      return const MainScreen();
     }
 
     // Sinon, afficher l'écran de bienvenue

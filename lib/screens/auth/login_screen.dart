@@ -3,14 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
-import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../centre_analyse/centre_analyse_dashboard_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
+import '../patientnesrine/homeScreen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
-import '../onboarding/role_selection_screen.dart';
+import '../patientnesrine/main_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -322,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           width: double.infinity,
           height: 54,
           child: OutlinedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -392,16 +389,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        Widget dashboard;
-        final userRole = authProvider.user?.role.value ?? '';
-        if (userRole == 'centre_analyse') {
-          dashboard = const CentreAnalyseDashboardScreen();
-        } else if (userRole == 'pharmacie') {
-          dashboard = const PharmacieDashboardScreen();
-        } else {
-          dashboard = const DashboardScreen();
-        }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => dashboard));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
       } else {
         _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }

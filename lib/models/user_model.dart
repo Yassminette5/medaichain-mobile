@@ -66,6 +66,12 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final String? fullName;
+  final String? gender;
+  final int? age;
+  final int? height;
+  final int? weight;
+  final List<String>? allergies;
 
   User({
     required this.id,
@@ -77,6 +83,12 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
+    this.fullName,
+    this.gender,
+    this.age,
+    this.height,
+    this.weight,
+    this.allergies,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -94,8 +106,17 @@ class User {
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'])
           : null,
+      fullName: json['fullName'],
+      gender: json['gender'],
+      age: (json['age'] as num?)?.toInt(),
+      height: (json['height'] as num?)?.toInt(),
+      weight: (json['weight'] as num?)?.toInt(),
+      allergies: json['allergies'] != null
+          ? List<String>.from(json['allergies'])
+          : null,
     );
   }
+
 }
 
 class AuthResponse {

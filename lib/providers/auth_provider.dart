@@ -23,13 +23,49 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final savedUser = await ApiService.getSavedUser();
-      if (savedUser != null) {
-        // Vérifier si le token est encore valide
-        _user = await ApiService.getProfile();
-        // Charger le profil médecin si applicable
-        if (_user?.role == UserRole.medecin) {
-          await fetchDoctorProfile();
+      
+      // Attempt to fetch fresh profile
+      User? fetchedUser;
+      try {
+        fetchedUser = await ApiService.getProfile();
+      } catch (e) {
+        // If fetch fails but we have saved user, use saved user
+        if (savedUser != null) {
+          _user = savedUser;
         }
+      }
+
+      if (fetchedUser != null) {
+        debugPrint('[AuthProvider] Fetched user from API: ${fetchedUser.fullName}, role: ${fetchedUser.role}');
+        // Merge strategy: Use fetched user but fall back to saved user for missing profile fields
+        // This handles cases where backend doesn't yet return the new fields
+        _user = User(
+          id: fetchedUser.id,
+          email: fetchedUser.email,
+          phone: fetchedUser.phone,
+          role: fetchedUser.role,
+          isEmailVerified: fetchedUser.isEmailVerified,
+          isProfileCompleted: fetchedUser.isProfileCompleted || (savedUser?.isProfileCompleted ?? false),
+          isActive: fetchedUser.isActive,
+          createdAt: fetchedUser.createdAt,
+          lastLoginAt: fetchedUser.lastLoginAt,
+          fullName: fetchedUser.fullName ?? savedUser?.fullName,
+          gender: fetchedUser.gender ?? savedUser?.gender,
+          age: fetchedUser.age ?? savedUser?.age,
+          height: fetchedUser.height ?? savedUser?.height,
+          weight: fetchedUser.weight ?? savedUser?.weight,
+          allergies: (fetchedUser.allergies != null && fetchedUser.allergies!.isNotEmpty) 
+              ? fetchedUser.allergies 
+              : savedUser?.allergies,
+        );
+        debugPrint('[AuthProvider] Merged user fullName: ${_user?.fullName}');
+      } else if (savedUser != null) {
+        _user = savedUser;
+      }
+
+      // Modifier: If we have a user, check for doctor profile
+      if (_user?.role == UserRole.medecin) {
+        await fetchDoctorProfile();
       }
     } catch (e) {
       _user = null;
@@ -45,8 +81,7 @@ class AuthProvider with ChangeNotifier {
     required String password,
     required String phone,
     required UserRole role,
-    String? firstName,
-    String? lastName,
+    String? fullName,
     String? speciality,
     String? hospital,
     String? licenseNumber,
@@ -71,8 +106,7 @@ class AuthProvider with ChangeNotifier {
         password: password,
         phone: phone,
         role: role,
-        firstName: firstName,
-        lastName: lastName,
+        fullName: fullName,
         speciality: speciality,
         hospital: hospital,
         licenseNumber: licenseNumber,
@@ -156,6 +190,40 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // Ignorer
+    }
+  }
+
+  // Mettre à jour le profil patient
+  Future<bool> updatePatientProfile({
+    String? fullName,
+    required String gender,
+    required int age,
+    required int height,
+    required int weight,
+    required List<String> allergies,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    
+    try {
+      final updatedUser = await ApiService.updatePatientProfile(
+        fullName: fullName,
+        gender: gender,
+        age: age,
+        height: height,
+        weight: weight,
+        allergies: allergies,
+      );
+      _user = updatedUser;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      rethrow;
     }
   }
 

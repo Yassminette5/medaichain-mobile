@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -19,8 +20,7 @@ class ApiService {
     required String password,
     required String phone,
     required UserRole role,
-    String? firstName,
-    String? lastName,
+    String? fullName,
     String? speciality,
     String? hospital,
     String? licenseNumber,
@@ -42,8 +42,7 @@ class ApiService {
       'role': role.value,
     };
 
-    if (firstName != null) body['firstName'] = firstName;
-    if (lastName != null) body['lastName'] = lastName;
+    if (fullName != null) body['fullName'] = fullName;
     if (speciality != null) body['speciality'] = speciality;
     if (hospital != null) body['hospital'] = hospital;
     if (licenseNumber != null) body['licenseNumber'] = licenseNumber;
@@ -176,6 +175,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
+      debugPrint('[ApiService] Profile raw response: ${response.body}');
       final data = jsonDecode(response.body);
       return User.fromJson(data);
     } else if (response.statusCode == 401) {
@@ -208,6 +208,50 @@ class ApiService {
       return getDoctorProfile();
     } else {
       return null;
+    }
+  }
+
+  // ========== PROFIL PATIENT (informations) ==========
+  static Future<User> updatePatientProfile({
+    String? fullName,
+    required String gender,
+    required int age,
+    required int height,
+    required int weight,
+    required List<String> allergies,
+  }) async {
+    final token = await getAccessToken();
+
+    final body = {
+      'gender': gender.trim().toLowerCase(),
+      'age': age,
+      'height': height,
+      'weight': weight,
+      'allergies': allergies,
+    };
+
+    if (fullName != null) body['fullName'] = fullName;
+
+    // 1. Send update to Backend
+    final response = await http.put(
+      Uri.parse('$baseUrl/profiles/patient'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final updatedUser = User.fromJson(data);
+      
+      // 2. Save to SharedPreferences
+      await _saveUser(updatedUser);
+      return updatedUser;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Erreur de mise à jour du profil');
     }
   }
 
@@ -253,6 +297,12 @@ class ApiService {
       'isEmailVerified': user.isEmailVerified,
       'isProfileCompleted': user.isProfileCompleted,
       'isActive': user.isActive,
+      'fullName': user.fullName,
+      'gender': user.gender,
+      'age': user.age,
+      'height': user.height,
+      'weight': user.weight,
+      'allergies': user.allergies,
       'createdAt': user.createdAt.toIso8601String(),
     }));
   }
