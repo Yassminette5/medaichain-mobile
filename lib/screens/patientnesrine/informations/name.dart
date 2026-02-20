@@ -43,7 +43,7 @@ class _NameStepState extends State<NameStep> {
             style: GoogleFonts.poppins(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
@@ -51,7 +51,7 @@ class _NameStepState extends State<NameStep> {
             "Vérifiez que votre nom complet est correct pour votre dossier médical.",
             style: GoogleFonts.poppins(
               fontSize: 16,
-              color: AppColors.textGrey,
+              color: Colors.white.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 48),

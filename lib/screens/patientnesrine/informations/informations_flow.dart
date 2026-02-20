@@ -24,8 +24,22 @@ class InformationsFlow extends StatefulWidget {
 
 class _InformationsFlowState extends State<InformationsFlow> {
   final PageController _pageController = PageController();
+  late UserInfoViewModel _vm;
   bool _isSaving = false;
   int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _vm = UserInfoViewModel();
+    // Initialize with existing user data if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null && user.fullName != null) {
+        _vm.setFullName(user.fullName!);
+      }
+    });
+  }
 
   void _goToNext() {
     _pageController.nextPage(
@@ -42,9 +56,17 @@ class _InformationsFlowState extends State<InformationsFlow> {
   }
 
   Future<void> _finishAndSave() async {
-    final vm = context.read<UserInfoViewModel>();
+    final vm = _vm;
+    debugPrint('[InformationsFlow] _finishAndSave called');
+    debugPrint('[InformationsFlow] vm.fullName: ${vm.fullName}');
+    debugPrint('[InformationsFlow] vm.gender: ${vm.gender}');
+    debugPrint('[InformationsFlow] vm.age: ${vm.age}');
+    debugPrint('[InformationsFlow] vm.currentHeight: ${vm.currentHeight}');
+    debugPrint('[InformationsFlow] vm.currentWeight: ${vm.currentWeight}');
+    debugPrint('[InformationsFlow] vm.allergies: ${vm.allergies}');
 
     if (vm.age == null) {
+      debugPrint('[InformationsFlow] Age is null, showing snackbar and returning');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Veuillez sélectionner votre date de naissance"),
@@ -54,8 +76,10 @@ class _InformationsFlowState extends State<InformationsFlow> {
     }
 
     setState(() => _isSaving = true);
+    debugPrint('[InformationsFlow] _isSaving set to true');
 
     try {
+      debugPrint('[InformationsFlow] Calling updatePatientProfile...');
       await context.read<AuthProvider>().updatePatientProfile(
         fullName: vm.fullName,
         gender: vm.gender,
@@ -64,22 +88,25 @@ class _InformationsFlowState extends State<InformationsFlow> {
         weight: vm.currentWeight,
         allergies: vm.allergies.toList(),
       );
+      debugPrint('[InformationsFlow] updatePatientProfile successful');
     } catch (e) {
-      debugPrint('Profile save error: $e');
-      // Show error but still try to navigate if robust
+      debugPrint('[InformationsFlow] Profile save error: $e');
       if (mounted) {
          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur de sauvegarde: $e')),
         );
       }
-    }
-
-    if (mounted) {
-      setState(() => _isSaving = false);
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-        (route) => false,
-      );
+    } finally {
+      if (mounted) {
+        debugPrint('[InformationsFlow] Finalizing, navigating to MainScreen');
+        setState(() => _isSaving = false);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+      } else {
+        debugPrint('[InformationsFlow] Not mounted after save, skipping navigation');
+      }
     }
   }
 
@@ -91,15 +118,8 @@ class _InformationsFlowState extends State<InformationsFlow> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().user;
-    return ChangeNotifierProvider(
-      create: (_) {
-        final vm = UserInfoViewModel();
-        if (user != null && user.fullName != null) {
-          vm.setFullName(user.fullName!);
-        }
-        return vm;
-      },
+    return ChangeNotifierProvider.value(
+      value: _vm,
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
