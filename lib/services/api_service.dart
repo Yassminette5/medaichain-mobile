@@ -377,6 +377,95 @@ class ApiService {
     }
   }
 
+  // ========== UPLOAD PHOTO PROFIL LABORATOIRE ==========
+  static Future<String> uploadLabProfilePhoto(List<int> imageBytes, String fileName) async {
+    final token = await getAccessToken();
+    
+    debugPrint('🔵 API Service: Upload de la photo du profil lab...');
+    debugPrint('🔵 API Service: Nom du fichier: $fileName');
+    debugPrint('🔵 API Service: Taille: ${imageBytes.length} bytes');
+    
+    // Déterminer le Content-Type basé sur l'extension du fichier
+    String contentType = 'image/jpeg'; // Par défaut
+    final extension = fileName.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'gif':
+        contentType = 'image/gif';
+        break;
+      case 'webp':
+        contentType = 'image/webp';
+        break;
+    }
+    
+    debugPrint('🔵 API Service: Content-Type: $contentType');
+    
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/lab/profile/photo'),
+    );
+    
+    request.headers['Authorization'] = 'Bearer $token';
+    
+    // Créer le MultipartFile avec le Content-Type correct
+    final multipartFile = http.MultipartFile(
+      'image',
+      http.ByteStream.fromBytes(imageBytes),
+      imageBytes.length,
+      filename: fileName,
+      contentType: http.MediaType.parse(contentType),
+    );
+    
+    request.files.add(multipartFile);
+    
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      debugPrint('🔵 API Service: Upload response status: ${response.statusCode}');
+      debugPrint('🔵 API Service: Upload response body: ${response.body}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        // Le backend retourne 'profilePhoto' dans la réponse
+        final imageUrl = data['profilePhoto'] ?? 
+                         data['photoUrl'] ?? 
+                         data['photo'] ?? 
+                         data['imageUrl'] ?? 
+                         data['image'] ?? 
+                         '';
+        
+        // Construire l'URL complète si c'est un chemin relatif
+        final fullImageUrl = imageUrl.isNotEmpty && !imageUrl.startsWith('http')
+            ? '$baseUrl$imageUrl'
+            : imageUrl;
+        
+        debugPrint('✅ API Service: Photo uploadée avec succès: $fullImageUrl');
+        debugPrint('✅ API Service: Données complètes: $data');
+        return fullImageUrl;
+      } else if (response.statusCode == 401) {
+        // Token expiré, essayer de rafraîchir
+        debugPrint('⚠️ API Service: Token expiré, rafraîchissement...');
+        await refreshToken();
+        return uploadLabProfilePhoto(imageBytes, fileName);
+      } else {
+        final error = jsonDecode(response.body);
+        final errorMessage = error['message'] ?? 'Erreur lors de l\'upload de la photo';
+        debugPrint('❌ API Service: Erreur upload: $errorMessage');
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      debugPrint('❌ API Service: Exception lors de l\'upload: $e');
+      throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
+  }
+
   // ========== GESTION DES CATÉGORIES LABORATOIRE ==========
   static Future<List<String>> getLabCategories() async {
     final token = await getAccessToken();

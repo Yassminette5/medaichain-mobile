@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../widgets/appointment_detail_content.dart';
+import 'prescription_detail_web_screen.dart';
 
 /// Écran de prescriptions/demandes adapté pour le web
 class PrescriptionsWebScreen extends StatefulWidget {
@@ -16,7 +17,7 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
   List<Map<String, dynamic>> _appointments = [];
   List<Map<String, dynamic>> _filteredAppointments = [];
   bool _isLoading = true;
-  String _selectedFilter = 'Tous';
+  String _selectedFilter = 'En attente';
 
   @override
   void initState() {
@@ -39,7 +40,11 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
       if (mounted) {
         setState(() {
           _appointments = appointments;
-          _filteredAppointments = appointments;
+          // Filtrer uniquement les demandes en attente
+          _filteredAppointments = appointments.where((apt) {
+            final status = apt['status']?.toString().toLowerCase() ?? '';
+            return status == 'pending';
+          }).toList();
           _isLoading = false;
         });
       }
@@ -54,41 +59,34 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
   void _filterAppointments() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      if (query.isEmpty && _selectedFilter == 'Tous') {
-        _filteredAppointments = _appointments;
-      } else {
-        _filteredAppointments = _appointments.where((apt) {
-          // Filtre par recherche
-          final patientId = apt['patientId'];
-          String patientName = '';
-          String patientEmail = '';
-          
-          if (patientId != null && patientId is Map) {
-            final firstName = patientId['firstName']?.toString() ?? '';
-            final lastName = patientId['lastName']?.toString() ?? '';
-            patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
-            patientEmail = patientId['email']?.toString() ?? '';
-          }
-          
-          final matchesSearch = query.isEmpty ||
-              patientName.toLowerCase().contains(query) ||
-              patientEmail.toLowerCase().contains(query) ||
-              (apt['analysisType']?.toString().toLowerCase() ?? '').contains(query);
-          
-          // Filtre par statut
-          final status = apt['status']?.toString().toLowerCase() ?? '';
-          bool matchesFilter = true;
-          if (_selectedFilter == 'En attente') {
-            matchesFilter = status == 'pending';
-          } else if (_selectedFilter == 'Acceptées') {
-            matchesFilter = status == 'accepted';
-          } else if (_selectedFilter == 'Refusées') {
-            matchesFilter = status == 'rejected';
-          }
-          
-          return matchesSearch && matchesFilter;
-        }).toList();
-      }
+      // Toujours filtrer uniquement les demandes en attente
+      _filteredAppointments = _appointments.where((apt) {
+        // Filtre par statut - uniquement pending
+        final status = apt['status']?.toString().toLowerCase() ?? '';
+        if (status != 'pending') {
+          return false;
+        }
+        
+        // Filtre par recherche
+        if (query.isEmpty) {
+          return true;
+        }
+        
+        final patientId = apt['patientId'];
+        String patientName = '';
+        String patientEmail = '';
+        
+        if (patientId != null && patientId is Map) {
+          final firstName = patientId['firstName']?.toString() ?? '';
+          final lastName = patientId['lastName']?.toString() ?? '';
+          patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
+          patientEmail = patientId['email']?.toString() ?? '';
+        }
+        
+        return patientName.toLowerCase().contains(query) ||
+            patientEmail.toLowerCase().contains(query) ||
+            (apt['analysisType']?.toString().toLowerCase() ?? '').contains(query);
+      }).toList();
     });
   }
 
@@ -283,25 +281,6 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          // Filtres améliorés
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip('Tous', _selectedFilter == 'Tous'),
-                  const SizedBox(width: 10),
-                  _buildFilterChip('En attente', _selectedFilter == 'En attente'),
-                  const SizedBox(width: 10),
-                  _buildFilterChip('Acceptées', _selectedFilter == 'Acceptées'),
-                  const SizedBox(width: 10),
-                  _buildFilterChip('Refusées', _selectedFilter == 'Refusées'),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: 28),
           // Liste des demandes
           if (_isLoading)
@@ -461,7 +440,9 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
   }
 
   Widget _buildAppointmentsList() {
-    return Column(
+    return Wrap(
+      spacing: 20,
+      runSpacing: 20,
       children: _filteredAppointments.asMap().entries.map((entry) {
         final index = entry.key;
         final appointment = entry.value;
@@ -491,24 +472,25 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
         final analysisType = appointment['analysisType']?.toString() ?? '';
         final isPending = status.toLowerCase() == 'pending';
         
-        return Container(
-          margin: EdgeInsets.only(bottom: index == _filteredAppointments.length - 1 ? 0 : 20),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.cardShadow,
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-                spreadRadius: 0,
+        return SizedBox(
+          width: 380,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                width: 1.5,
               ),
-            ],
-          ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
@@ -679,15 +661,31 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(10),
+                                  width: 40,
+                                  height: 40,
                                   decoration: BoxDecoration(
                                     color: AppColors.info.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(
-                                    Icons.science_rounded,
-                                    size: 18,
-                                    color: AppColors.info,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.asset(
+                                      'assets/images/labo_icone.jpg',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: AppColors.info.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Icon(
+                                            Icons.science_rounded,
+                                            size: 18,
+                                            color: AppColors.info,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -722,143 +720,69 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Actions
-                    if (isPending)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                _showAppointmentDetails(appointment);
-                              },
-                              icon: const Icon(Icons.info_outline_rounded, size: 18),
-                              label: const Text('Détails'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primary,
-                                side: const BorderSide(
-                                  color: AppColors.primary,
-                                  width: 1.5,
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                _showAppointmentDetails(appointment);
-                              },
-                              icon: const Icon(Icons.visibility_rounded, size: 18),
-                              label: const Text(
-                                'Voir les détails',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                            ),
+                    // Bouton Voir les détails
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                            spreadRadius: 0,
                           ),
                         ],
-                      )
-                    else
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            _showAppointmentDetails(appointment);
-                          },
-                          icon: const Icon(Icons.visibility_rounded, size: 18),
-                          label: const Text(
-                            'Voir les détails',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showAppointmentDetails(appointment),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.visibility_rounded,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'Voir les détails',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
                           ),
                         ),
                       ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
+          ),
         );
+
       }).toList(),
     );
   }
 
   void _showAppointmentDetails(Map<String, dynamic> appointment) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 800,
-          constraints: const BoxConstraints(maxHeight: 700),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header de la dialog
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Détails du rendez-vous',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              // Contenu scrollable
-              Flexible(
-                child: SingleChildScrollView(
-                  child: AppointmentDetailContent(appointment: appointment),
-                ),
-              ),
-            ],
-          ),
-        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PrescriptionDetailWebScreen(appointment: appointment),
       ),
     ).then((refresh) {
       if (refresh == true) {

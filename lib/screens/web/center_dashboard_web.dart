@@ -10,6 +10,7 @@ import 'results_history_screen.dart';
 import 'digital_signature_screen.dart';
 import 'prescriptions_web_screen.dart';
 import 'center_profile_web_screen.dart';
+import 'patients_web_screen.dart';
 
 /// Dashboard web pour les centres d'analyse
 class CenterDashboardWeb extends StatefulWidget {
@@ -61,6 +62,15 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
           debugPrint('✅ Dashboard Web: Phone: ${labProfile['phone']}');
           debugPrint('✅ Dashboard Web: Localisation: ${labProfile['localisation']}');
           debugPrint('✅ Dashboard Web: Catégories: ${labProfile['categorie']}');
+          final profilePhotoPath = labProfile['profilePhoto'] ?? 
+                                   labProfile['photo'] ?? 
+                                   labProfile['photoUrl'] ?? 
+                                   labProfile['image'] ?? 
+                                   labProfile['imageUrl'] ?? 
+                                   labProfile['logo'] ?? 
+                                   labProfile['logoUrl'] ?? 
+                                   '';
+          debugPrint('✅ Dashboard Web: ProfilePhotoPath: $profilePhotoPath');
           _isLoadingProfile = false;
         });
       }
@@ -126,6 +136,12 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
       // Déconnexion gérée par le header
       return;
     }
+    
+    // Si on revient au dashboard, recharger le profil pour afficher les mises à jour
+    if (index == 0 && _selectedIndex != 0) {
+      _loadLabProfile();
+    }
+    
     setState(() {
       _selectedIndex = index;
     });
@@ -179,7 +195,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
       case 7:
         return const ResultsHistoryScreen();
       case 8:
-        return const CenterPatientsScreen();
+        return const PatientsWebScreen();
       case 9:
         return const CenterNotificationsScreen();
       case 10:
@@ -192,7 +208,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface,
       body: Row(
         children: [
           // Sidebar
@@ -228,108 +244,22 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
       );
     }
 
-    // Obtenir les appointments du jour sélectionné
-    final todayAppointments = _appointments.where((apt) {
-      try {
-        final aptDate = DateTime.parse(apt['appointmentDate'] ?? '');
-        return aptDate.year == _selectedDate.year &&
-               aptDate.month == _selectedDate.month &&
-               aptDate.day == _selectedDate.day;
-      } catch (e) {
-        return false;
-      }
-    }).toList();
-
-    // Calculer les statistiques de travail
-    final offlineWork = _acceptedCount; // RDV acceptés = travail hors ligne
-    final onlineWork = _pendingCount; // Demandes en attente = consultations en ligne
-    final labWork = _appointments.length; // Total des analyses
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Première ligne : Carte de bienvenue + Profil
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Carte de bienvenue (grande carte bleue)
-              Expanded(
-                flex: 2,
-                child: _buildWelcomeCard(),
-              ),
-              const SizedBox(width: 20),
-              // Carte de profil
-              Expanded(
-                flex: 1,
-                child: _buildProfileCard(),
-              ),
-            ],
+          // Carte de bienvenue
+          Expanded(
+            flex: 2,
+            child: _buildWelcomeCard(),
           ),
-          const SizedBox(height: 24),
-          // Deuxième ligne : Statistiques de travail
-          Row(
-            children: [
-              Expanded(
-                child: _buildWorkStatCard(
-                  'OFFLINE WORK',
-                  '$offlineWork rendez-vous',
-                  '-6% que la moyenne',
-                  AppColors.error,
-                  Icons.local_hospital_rounded,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildWorkStatCard(
-                  'ONLINE WORK',
-                  '$onlineWork consultations',
-                  '+12% que la moyenne',
-                  AppColors.success,
-                  Icons.video_call_rounded,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildWorkStatCard(
-                  'LABORATORY WORK',
-                  '$labWork analyses',
-                  '+0% que la moyenne',
-                  AppColors.info,
-                  Icons.science_rounded,
-                ),
-              ),
-            ],
+          const SizedBox(width: 20),
+          // Carte de profil
+          Expanded(
+            flex: 1,
+            child: _buildProfileCard(),
           ),
-          const SizedBox(height: 24),
-          // Troisième ligne : Calendrier + Événements planifiés + Plans terminés
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Calendrier
-              Expanded(
-                flex: 1,
-                child: _buildCalendarCard(),
-              ),
-              const SizedBox(width: 20),
-              // Événements planifiés
-              Expanded(
-                flex: 1,
-                child: _buildScheduledEventsCard(),
-              ),
-              const SizedBox(width: 20),
-              // Plans terminés
-              Expanded(
-                flex: 1,
-                child: _buildPlansDoneCard(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Liste des appointments du jour
-          if (todayAppointments.isNotEmpty)
-            _buildAppointmentsListCard(todayAppointments),
         ],
       ),
     );
@@ -358,13 +288,9 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     }
 
     return Container(
-      height: 280,
+      constraints: const BoxConstraints(minHeight: 180, maxHeight: 180),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -374,100 +300,45 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Image de fond avec pattern
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                'assets/images/labo.jpg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                      ),
-                    ),
-                  );
-                },
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$formattedDate $formattedTime',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          // Overlay pour la lisibilité
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF3B82F6).withValues(alpha: 0.9),
-                    const Color(0xFF2563EB).withValues(alpha: 0.9),
-                  ],
+            const SizedBox(height: 8),
+            Flexible(
+              child: Text(
+                '$greeting, ${_labName ?? 'Centre'}!',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-          // Contenu
-          Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$formattedDate $formattedTime',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '$greeting, ${_labName ?? 'Centre'}!',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Passez une excellente $weekday!',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                // Illustration (icône de labo)
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.science_rounded,
-                      size: 60,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              'Passez une excellente $weekday!',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -479,15 +350,29 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     final categories = _labProfile['categorie'] ?? [];
     final categoryList = categories is List ? List<String>.from(categories) : (categories.toString().isNotEmpty ? [categories.toString()] : []);
     final mainCategory = categoryList.isNotEmpty ? categoryList.first.toUpperCase() : 'LABORATOIRE';
+    // Le backend utilise 'profilePhoto' comme champ principal
+    final profilePhotoPath = _labProfile['profilePhoto'] ?? 
+                              _labProfile['photo'] ?? 
+                              _labProfile['photoUrl'] ?? 
+                              _labProfile['image'] ?? 
+                              _labProfile['imageUrl'] ?? 
+                              _labProfile['logo'] ?? 
+                              _labProfile['logoUrl'] ?? 
+                              '';
+    
+    // Construire l'URL complète si c'est un chemin relatif
+    // Le backend sert les fichiers statiques depuis /uploads/
+    final profileImage = profilePhotoPath.isNotEmpty && !profilePhotoPath.startsWith('http')
+        ? '${ApiService.baseUrl}$profilePhotoPath'
+        : profilePhotoPath;
+    
+    debugPrint('🔵 Dashboard Web: ProfilePhotoPath: $profilePhotoPath');
+    debugPrint('🔵 Dashboard Web: ProfileImage URL finale: $profileImage');
+    debugPrint('🔵 Dashboard Web: ProfileImage isNotEmpty: ${profileImage.isNotEmpty}');
 
     return Container(
-      height: 280,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -497,12 +382,19 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        children: [
+          // Header violet
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
@@ -510,134 +402,209 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white70,
+                    color: Colors.white,
                     letterSpacing: 1.2,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.white70),
-                  onPressed: () => _onItemSelected(10),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Avatar
-            Center(
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 3,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.local_hospital_rounded,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Nom du centre
-            Center(
-              child: Text(
-                _labName ?? 'Centre d\'Analyses',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Catégorie
-            Center(
-              child: Text(
-                mainCategory,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Localisation
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.location_on_rounded, size: 14, color: Colors.white70),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    localisation,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _onItemSelected(10),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.edit_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
-            ),
-            const Spacer(),
-            // Informations supplémentaires
-            if (phone.isNotEmpty || email.isNotEmpty) ...[
-              const Divider(color: Colors.white30, height: 1),
-              const SizedBox(height: 12),
-              if (phone.isNotEmpty)
-                _buildProfileInfo('Téléphone', phone),
-              if (email.isNotEmpty)
-                _buildProfileInfo('Email', email),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileInfo(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.white60,
-                fontWeight: FontWeight.w500,
-              ),
             ),
           ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          // Corps blanc
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Photo de profil circulaire
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      width: 3,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: profileImage.isNotEmpty
+                        ? Image.network(
+                            '$profileImage?t=${DateTime.now().millisecondsSinceEpoch}',
+                            fit: BoxFit.cover,
+                            cacheWidth: 200,
+                            cacheHeight: 200,
+                            headers: const {
+                              'Accept': 'image/*',
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                return child;
+                              }
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    strokeWidth: 2.5,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('❌ Dashboard Web: Erreur chargement image: $error');
+                              debugPrint('❌ Dashboard Web: URL: $profileImage');
+                              
+                              // Fallback : essayer la route API alternative
+                              if (profileImage.contains('/uploads/lab-profiles/')) {
+                                final filename = profileImage.split('/').last.split('?').first;
+                                final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/$filename';
+                                debugPrint('🔄 Dashboard Web: Tentative route API: $alternativeUrl');
+                                return Image.network(
+                                  '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 200,
+                                  cacheHeight: 200,
+                                  headers: const {
+                                    'Accept': 'image/*',
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: AppColors.primaryGradient,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.local_hospital_rounded,
+                                        size: 50,
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
+                              
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.local_hospital_rounded,
+                                  size: 50,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.local_hospital_rounded,
+                              size: 50,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Nom
+                Text(
+                  _labName ?? 'Centre d\'Analyses',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                // Localisation
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        localisation,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildDetailColumn(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
 
 
   Widget _buildWorkStatCard(String title, String metric, String comparison, Color color, IconData icon) {
@@ -714,11 +681,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -751,7 +714,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                   fontWeight: FontWeight.w600,
               fontSize: 14,
                 ),
-                dropdownColor: const Color(0xFF2563EB),
+                dropdownColor: AppColors.primary,
                 items: months.map((month) {
                   return DropdownMenuItem(
                     value: month,
@@ -832,7 +795,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                             fontSize: 12,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: isSelected
-                                ? const Color(0xFF2563EB)
+                                ? AppColors.primary
                                 : Colors.white,
                           ),
                         ),
