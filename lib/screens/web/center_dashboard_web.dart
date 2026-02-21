@@ -157,8 +157,6 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
         return 'Prescriptions médecins';
       case 3:
         return 'Gestion RDV en ligne';
-      case 4:
-        return 'Résultats';
       case 5:
         return 'Upload résultats';
       case 6:
@@ -186,8 +184,6 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
         return _buildPrescriptions();
       case 3:
         return _buildGestionRDV();
-      case 4:
-        return _buildResults();
       case 5:
         return const ResultsUploadScreen();
       case 6:
@@ -361,10 +357,19 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                               '';
     
     // Construire l'URL complète si c'est un chemin relatif
-    // Le backend sert les fichiers statiques depuis /uploads/
-    final profileImage = profilePhotoPath.isNotEmpty && !profilePhotoPath.startsWith('http')
-        ? '${ApiService.baseUrl}$profilePhotoPath'
-        : profilePhotoPath;
+    // Utiliser la route API qui gère mieux CORS
+    String profileImage = '';
+    if (profilePhotoPath.isNotEmpty) {
+      if (profilePhotoPath.startsWith('http')) {
+        profileImage = profilePhotoPath;
+      } else {
+        // Essayer d'abord la route API qui gère mieux CORS
+        // Format: /lab/uploads/profiles/filename.png
+        final filename = profilePhotoPath.split('/').last;
+        profileImage = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
+        debugPrint('🔵 Dashboard Web: URL image (route API): $profileImage');
+      }
+    }
     
     debugPrint('🔵 Dashboard Web: ProfilePhotoPath: $profilePhotoPath');
     debugPrint('🔵 Dashboard Web: ProfileImage URL finale: $profileImage');
@@ -476,11 +481,11 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                               debugPrint('❌ Dashboard Web: Erreur chargement image: $error');
                               debugPrint('❌ Dashboard Web: URL: $profileImage');
                               
-                              // Fallback : essayer la route API alternative
-                              if (profileImage.contains('/uploads/lab-profiles/')) {
+                              // Fallback : essayer la route statique si la route API échoue
+                              if (profileImage.contains('/lab/uploads/profiles/')) {
                                 final filename = profileImage.split('/').last.split('?').first;
-                                final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/$filename';
-                                debugPrint('🔄 Dashboard Web: Tentative route API: $alternativeUrl');
+                                final alternativeUrl = '${ApiService.baseUrl}/uploads/lab-profiles/$filename';
+                                debugPrint('🔄 Dashboard Web: Tentative route statique: $alternativeUrl');
                                 return Image.network(
                                   '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                   fit: BoxFit.cover,
@@ -1210,7 +1215,4 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     return const CenterPatientsScreen();
   }
 
-  Widget _buildResults() {
-    return const ResultsHistoryScreen();
-  }
 }

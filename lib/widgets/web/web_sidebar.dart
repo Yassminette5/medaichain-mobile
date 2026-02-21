@@ -116,12 +116,6 @@ class WebSidebar extends StatelessWidget {
                   ),
                   _buildMenuItem(
                     context,
-                    index: 4,
-                    icon: Icons.assignment_rounded,
-                    label: 'Résultats',
-                  ),
-                  _buildMenuItem(
-                    context,
                     index: 5,
                     icon: Icons.upload_file_rounded,
                     label: 'Upload résultats',

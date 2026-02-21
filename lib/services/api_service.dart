@@ -466,6 +466,158 @@ class ApiService {
     }
   }
 
+  // ========== UPLOAD RÉSULTATS D'ANALYSE ==========
+  static Future<Map<String, dynamic>> uploadAnalysisResult({
+    required String patientName,
+    required String patientEmail,
+    required String analysisType,
+    required DateTime analysisDate,
+    required List<int> fileBytes,
+    required String fileName,
+    String? analysisTypeOther,
+    String? notes,
+  }) async {
+    final token = await getAccessToken();
+    
+    debugPrint('🔵 API Service: Upload résultat d\'analyse...');
+    debugPrint('🔵 API Service: Patient: $patientName ($patientEmail)');
+    debugPrint('🔵 API Service: Type: $analysisType');
+    debugPrint('🔵 API Service: Date: $analysisDate');
+    debugPrint('🔵 API Service: Fichier: $fileName (${fileBytes.length} bytes)');
+    
+    // Déterminer le Content-Type basé sur l'extension du fichier
+    String contentType = 'application/pdf';
+    final extension = fileName.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'pdf':
+        contentType = 'application/pdf';
+        break;
+      case 'jpg':
+      case 'jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case 'png':
+        contentType = 'image/png';
+        break;
+      case 'doc':
+        contentType = 'application/msword';
+        break;
+      case 'docx':
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        break;
+    }
+    
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/lab/results'),
+    );
+    
+    request.headers['Authorization'] = 'Bearer $token';
+    
+    // Ajouter les champs du formulaire
+    request.fields['patientName'] = patientName;
+    request.fields['patientEmail'] = patientEmail;
+    request.fields['analysisType'] = analysisType;
+    request.fields['analysisDate'] = '${analysisDate.year}-${analysisDate.month.toString().padLeft(2, '0')}-${analysisDate.day.toString().padLeft(2, '0')}';
+    
+    if (analysisTypeOther != null && analysisTypeOther.isNotEmpty) {
+      request.fields['analysisTypeOther'] = analysisTypeOther;
+    }
+    
+    if (notes != null && notes.isNotEmpty) {
+      request.fields['notes'] = notes;
+    }
+    
+    // Créer le MultipartFile
+    final multipartFile = http.MultipartFile(
+      'file',
+      http.ByteStream.fromBytes(fileBytes),
+      fileBytes.length,
+      filename: fileName,
+      contentType: http.MediaType.parse(contentType),
+    );
+    
+    request.files.add(multipartFile);
+    
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      debugPrint('🔵 API Service: Upload response status: ${response.statusCode}');
+      debugPrint('🔵 API Service: Upload response body: ${response.body}');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        debugPrint('✅ API Service: Résultat uploadé avec succès');
+        return data;
+      } else if (response.statusCode == 401) {
+        debugPrint('⚠️ API Service: Token expiré, rafraîchissement...');
+        await refreshToken();
+        return uploadAnalysisResult(
+          patientName: patientName,
+          patientEmail: patientEmail,
+          analysisType: analysisType,
+          analysisDate: analysisDate,
+          fileBytes: fileBytes,
+          fileName: fileName,
+          analysisTypeOther: analysisTypeOther,
+          notes: notes,
+        );
+      } else {
+        final error = jsonDecode(response.body);
+        final errorMessage = error['message'] ?? 'Erreur lors de l\'upload du résultat';
+        debugPrint('❌ API Service: Erreur upload: $errorMessage');
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      debugPrint('❌ API Service: Exception lors de l\'upload: $e');
+      throw Exception('Erreur lors de l\'upload du résultat: $e');
+    }
+  }
+
+  // ========== RÉSULTATS D'ANALYSE ==========
+  static Future<List<Map<String, dynamic>>> getAnalysisResults({String? patientEmail}) async {
+    final token = await getAccessToken();
+    
+    String url = '$baseUrl/lab/results';
+    if (patientEmail != null && patientEmail.isNotEmpty) {
+      url += '?patientEmail=${Uri.encodeComponent(patientEmail)}';
+    }
+    
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data['results'] != null) {
+        return List<Map<String, dynamic>>.from(data['results']);
+      } else if (data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getAnalysisResults(patientEmail: patientEmail);
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ?? 
+                            errorData['error'] ?? 
+                            'Erreur de récupération des résultats';
+        throw Exception(errorMessage);
+      } catch (e) {
+        throw Exception('Erreur de récupération des résultats: ${response.statusCode}');
+      }
+    }
+  }
+
   // ========== GESTION DES CATÉGORIES LABORATOIRE ==========
   static Future<List<String>> getLabCategories() async {
     final token = await getAccessToken();

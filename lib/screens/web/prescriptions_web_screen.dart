@@ -766,11 +766,11 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                         ),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ),
         );
 

@@ -126,6 +126,7 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
     final patientId = patient['_id']?.toString() ?? 
                      patient['id']?.toString() ?? '';
     final patientName = _getPatientName(patient);
+    final patientEmail = _getPatientEmail(patient);
     
     if (patientId.isNotEmpty) {
       Navigator.push(
@@ -134,6 +135,7 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
           builder: (context) => PatientHistoryScreen(
             patientId: patientId,
             patientName: patientName,
+            patientEmail: patientEmail, // Passer l'email directement
           ),
         ),
       );

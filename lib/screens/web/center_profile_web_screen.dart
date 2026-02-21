@@ -115,11 +115,11 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
             if (profilePhotoPath.startsWith('http')) {
               _profileImageUrl = profilePhotoPath;
             } else {
-              // Le backend sert les fichiers statiques depuis /uploads/
-              // Option 1 : Fichiers statiques (recommandé)
-              // Format: /uploads/lab-profiles/filename.png
-              _profileImageUrl = '${ApiService.baseUrl}$profilePhotoPath';
-              debugPrint('🔵 Center Profile Web: URL image (fichiers statiques): $_profileImageUrl');
+              // Essayer d'abord la route API qui gère mieux CORS
+              // Format: /lab/uploads/profiles/filename.png
+              final filename = profilePhotoPath.split('/').last;
+              _profileImageUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
+              debugPrint('🔵 Center Profile Web: URL image (route API): $_profileImageUrl');
             }
           } else {
             _profileImageUrl = null;
@@ -622,7 +622,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                     // Fallback : essayer la route API alternative
                                     if (_profileImageUrl != null && _profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                       final filename = _profileImageUrl!.split('/').last.split('?').first;
-                                      final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/$filename';
+                                      final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
                                       debugPrint('🔄 Profile Card: Tentative route API: $alternativeUrl');
                                       return Image.network(
                                         '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
@@ -761,7 +761,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                     // Fallback : essayer la route API alternative
                                     if (_profileImageUrl != null && _profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                       final filename = _profileImageUrl!.split('/').last.split('?').first;
-                                      final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/$filename';
+                                      final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
                                       debugPrint('🔄 Profile Card: Tentative route API: $alternativeUrl');
                                       return Image.network(
                                         '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
@@ -810,14 +810,18 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                         // Fallback : essayer la route API alternative si disponible
                                         if (_profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                           final filename = _profileImageUrl!.split('/').last.split('?').first;
-                                          final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/$filename';
+                                          final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
                                           debugPrint('🔄 Center Profile Web: Tentative avec route API alternative: $alternativeUrl');
                                           return Image.network(
                                             '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                             fit: BoxFit.cover,
                                             cacheWidth: 240,
                                             cacheHeight: 240,
+                                            headers: const {
+                                              'Accept': 'image/*',
+                                            },
                                             errorBuilder: (context, error, stackTrace) {
+                                              debugPrint('❌ Center Profile Web: Erreur route API alternative: $error');
                                               return _buildDefaultAvatar();
                                             },
                                           );
