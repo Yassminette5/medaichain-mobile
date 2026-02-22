@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../models/user_info_view_model.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../patientnesrine/main_screen.dart';
 
 /// ----------------------
-/// Allergies Screen (Step 5 of 5)
+/// Allergies Screen (Step 5 of 6)
 /// ----------------------
 class AllergiesScreen extends StatefulWidget {
   final VoidCallback onNext;
@@ -20,96 +19,111 @@ class AllergiesScreen extends StatefulWidget {
 
 class _AllergiesScreenState extends State<AllergiesScreen> {
   final List<String> commonAllergies = [
-    "Arachides",
-    "Produits laitiers",
-    "Fruits de mer",
-    "Oeufs",
+    "Peanuts",
+    "Dairy",
+    "Seafood",
+    "Eggs",
     "Gluten",
-    "Soja",
+    "Soy",
     "Pollen",
-    "Pénicilline"
+    "Penicillin"
   ];
   final TextEditingController customController = TextEditingController();
+  final Color _brandColor = AppColors.primary;
+  final Color _accentColor = AppColors.secondary;
+
+  @override
+  void dispose() {
+    customController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<UserInfoViewModel>(context);
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 20),
         
         // Title
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              height: 1.2,
-            ),
-            children: const [
-              TextSpan(text: "Avez-vous des\n"),
-              TextSpan(
-                text: "Allergies ?",
-                style: TextStyle(color: AppColors.secondary),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: RichText(
+            textAlign: TextAlign.left,
+            text: TextSpan(
+              style: GoogleFonts.poppins(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.2,
               ),
-            ],
+              children: [
+                const TextSpan(text: "Do you have "),
+                TextSpan(
+                  text: "any allergies?",
+                  style: TextStyle(color: _accentColor),
+                ),
+              ],
+            ),
           ),
         ),
 
         const SizedBox(height: 12),
         
-        Text(
-          "Sélectionnez celles qui s'appliquent ou ajoutez-en d'autres.",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 14,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            "Select common allergies or add your own.",
+            style: GoogleFonts.poppins(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 14,
+            ),
           ),
         ),
 
         const SizedBox(height: 30),
 
-        // Common Allergies Chips
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          alignment: WrapAlignment.center,
-          children: commonAllergies.map((allergy) {
-            final selected = viewModel.allergies.contains(allergy);
-            return GestureDetector(
-              onTap: () {
-                if (selected) {
-                  viewModel.removeAllergy(allergy);
-                } else {
-                  viewModel.addAllergy(allergy);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.primary : Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: selected ? AppColors.primary : Colors.white.withValues(alpha: 0.2),
+        // Common Allergies Chips (Horizontal Scroll)
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            itemCount: commonAllergies.length,
+            itemBuilder: (context, index) {
+              final allergy = commonAllergies[index];
+              final selected = viewModel.allergies.contains(allergy);
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    if (selected) {
+                      viewModel.removeAllergy(allergy);
+                    } else {
+                      viewModel.addAllergy(allergy);
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: selected ? _brandColor : Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      allergy,
+                      style: GoogleFonts.poppins(
+                        color: selected ? Colors.white : Colors.white70,
+                        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
                   ),
-                  boxShadow: selected ? [
-                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 10)
-                  ] : [],
                 ),
-                child: Text(
-                  allergy,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+              );
+            },
+          ),
         ),
 
         const SizedBox(height: 30),
@@ -122,23 +136,23 @@ class _AllergiesScreenState extends State<AllergiesScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: TextField(
                     controller: customController,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: InputDecoration(
-                      hintText: "Autre allergie...",
-                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                      hintText: "Add your allergy...",
+                      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.2)),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 15),
               GestureDetector(
                 onTap: () {
                   final text = customController.text.trim();
@@ -148,73 +162,95 @@ class _AllergiesScreenState extends State<AllergiesScreen> {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(14),
+                    shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 10)
+                      BoxShadow(color: _brandColor.withValues(alpha: 0.3), blurRadius: 10)
                     ],
                   ),
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: const Icon(Icons.add, color: Colors.white, size: 28),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
 
-        // Selected Allergies Display (if any custom ones)
-        if (viewModel.allergies.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: SizedBox(
-               height: 40,
-               child: ListView(
-                 scrollDirection: Axis.horizontal,
-                 children: viewModel.allergies.where((a) => !commonAllergies.contains(a)).map((allergy) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.secondary.withOpacity(0.5)),
-                      ),
+        // Your Allergies List
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            "Your Allergies:",
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        Expanded(
+          child: viewModel.allergies.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    "No allergies selected yet.",
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: viewModel.allergies.length,
+                  itemBuilder: (context, index) {
+                    final allergy = viewModel.allergies.toList()[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(allergy, style: const TextStyle(color: Colors.white, fontSize: 13)),
-                          const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: () => viewModel.removeAllergy(allergy),
-                            child: const Icon(Icons.close, color: Colors.white, size: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              allergy,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => viewModel.removeAllergy(allergy),
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
                           ),
                         ],
                       ),
                     );
-                 }).toList(),
-               ),
-            ),
-          ),
+                  },
+                ),
+        ),
 
-        const Spacer(),
-
-        // Finish Button
-        Padding(
-          padding: const EdgeInsets.only(bottom: 30),
-          child: ScaleTransition(
-            scale: const AlwaysStoppedAnimation(1.0),
+        // Next Button (Standardized with Gender Screen)
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 30),
             child: Container(
               height: 70,
-              width: 180, // Wider for "Terminer"
+              width: 70,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.success, Color(0xFF34D399)]),
-                borderRadius: BorderRadius.circular(35),
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.success.withValues(alpha: 0.4), 
+                    color: AppColors.primary.withValues(alpha: 0.4), 
                     blurRadius: 20, 
                     spreadRadius: 5
                   )
@@ -222,24 +258,14 @@ class _AllergiesScreenState extends State<AllergiesScreen> {
               ),
               child: Material(
                 color: Colors.transparent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
+                shape: const CircleBorder(),
                 child: InkWell(
                   onTap: widget.onNext,
-                  borderRadius: BorderRadius.circular(35),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Terminer",
-                        style: GoogleFonts.poppins(
-                          color: Colors.white, 
-                          fontSize: 18, 
-                          fontWeight: FontWeight.bold
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.check_circle_outline, color: Colors.white, size: 24),
-                    ],
+                  customBorder: const CircleBorder(),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
               ),

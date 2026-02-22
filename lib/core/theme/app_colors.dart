@@ -12,7 +12,7 @@ class AppColors {
   static const Color primaryDark = Color(0xFF5A52E0);
 
   // Secondary Colors - Pastel Pink
-  static const Color secondary = Color(0xFFEC4899);
+  static const Color secondary = Color(0xFFFF6B9D);
   static const Color secondaryLight = Color(0xFFF9A8D4);
   static const Color secondaryDark = Color(0xFFBE185D);
 

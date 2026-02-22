@@ -57,15 +57,7 @@ class MedicineDetailScreen extends StatelessWidget {
                 _buildRemoveButton(context),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              "They bind to an ATP-dependent (KATP) channel on the cell membrane of pancreatic beta cells move manner to sulfonylureas but have a weaker.",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: AppColors.textGrey,
-                height: 1.6,
-              ),
-            ),
+
             const SizedBox(height: 24),
             Row(
               children: medicine.schedule.map((time) => _buildScheduleBadge(time)).toList(),

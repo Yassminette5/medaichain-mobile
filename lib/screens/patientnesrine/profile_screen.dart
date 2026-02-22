@@ -409,31 +409,7 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 36),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.verified, color: Colors.white, size: 18),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "NFT Verified",
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+
                           ],
                         ),
                         const SizedBox(height: 32),
@@ -447,51 +423,76 @@ class ProfileScreen extends StatelessWidget {
                               Text(
                                 "Medical ID Card",
                                 style: GoogleFonts.poppins(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withOpacity(0.7),
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 1.2,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.5,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               Text(
-                                user?.fullName ?? "Utilisateur",
+                                user?.fullName?.toUpperCase() ?? "UTILISATEUR",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
                                 ),
                                 child: Text(
                                   "ID: #${user?.id.substring(user.id.length - 8).toUpperCase() ?? 'UNKNOWN'}",
                                   style: GoogleFonts.poppins(
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.0,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
                                 ),
-                                child: Text(
-                                  "Poids: ${user?.weight ?? '-'} kg | Taille: ${user?.height ?? '-'} cm",
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.monitor_weight_outlined, color: Colors.white.withOpacity(0.8), size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "${user?.weight ?? '-'} kg",
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      child: Container(width: 1, height: 14, color: Colors.white.withOpacity(0.3)),
+                                    ),
+                                    Icon(Icons.height_rounded, color: Colors.white.withOpacity(0.8), size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "${user?.height ?? '-'} cm",
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -515,18 +516,25 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           child: Column(
                             children: [
-                              const Icon(
-                                Icons.qr_code_2,
-                                size: 200,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                "Scan for Medical Records",
-                                style: GoogleFonts.poppins(
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                ),
+                                child: const Icon(
+                                  Icons.qr_code_2,
+                                  size: 180,
                                   color: AppColors.primary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                "SCAN FOR MEDICAL RECORDS",
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.primary.withOpacity(0.7),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 2.0,
                                 ),
                               ),
                             ],
