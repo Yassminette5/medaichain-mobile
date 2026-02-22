@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../patientnesrine/document_list_screen.dart';
 import '../../core/theme/app_colors.dart';
+import 'medicines/medicines_list_view.dart';
+import 'medicines/add_medicine_screen.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});
@@ -82,7 +84,7 @@ class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProvider
                     unselectedLabelStyle: GoogleFonts.poppins(fontSize: 14),
                     tabs: const [
                       Tab(text: "Treatments"),
-                      Tab(text: "Files"),
+                      Tab(text: "Medical"),
                       Tab(text: "Timeline"),
                     ],
                   ),
@@ -90,8 +92,28 @@ class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProvider
               ),
             ),
 
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                   _buildTreatmentsTab(),
+                   const MedicinesListView(),
+                   _buildTimelineTab(),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddMedicineScreen()),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

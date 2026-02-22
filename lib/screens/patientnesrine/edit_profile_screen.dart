@@ -61,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           .toList();
 
       // Update user profile
-      await Provider.of<AuthProvider>(context, listen: false).updatePatientProfile(
+      await Provider.of<AuthProvider>(context, listen: false).updatePatientInformation(
         fullName: _fullNameController.text.trim(),
         gender: _genderController.text.trim(),
         age: age,

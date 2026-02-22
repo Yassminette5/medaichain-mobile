@@ -21,10 +21,22 @@ class _NameStepState extends State<NameStep> {
     super.initState();
     final model = Provider.of<UserInfoViewModel>(context, listen: false);
     _controller = TextEditingController(text: model.fullName);
+    
+    // Listen for changes in the model (e.g. when AuthProvider updates it in post-frame)
+    model.addListener(_onModelChanged);
+  }
+
+  void _onModelChanged() {
+    final model = Provider.of<UserInfoViewModel>(context, listen: false);
+    if (_controller.text != model.fullName) {
+      _controller.text = model.fullName;
+    }
   }
 
   @override
   void dispose() {
+    final model = Provider.of<UserInfoViewModel>(context, listen: false);
+    model.removeListener(_onModelChanged);
     _controller.dispose();
     super.dispose();
   }

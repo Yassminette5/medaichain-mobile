@@ -212,7 +212,7 @@ class ApiService {
   }
 
   // ========== PROFIL PATIENT (informations) ==========
-  static Future<User> updatePatientProfile({
+  static Future<User> updatePatientInformation({
     String? fullName,
     required String gender,
     required int age,
@@ -324,5 +324,54 @@ class ApiService {
   static Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
     return token != null;
+  }
+
+  // ========== MÉDICAMENTS ==========
+  static Future<List<dynamic>> getAllMedicines() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/medicines'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la récupération des médicaments');
+    }
+  }
+
+  static Future<dynamic> createMedicine(Map<String, dynamic> data) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/medicines'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur lors de la création du médicament');
+    }
+  }
+
+  static Future<void> deleteMedicine(String id) async {
+    final token = await getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/medicines/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Erreur lors de la suppression du médicament');
+    }
   }
 }

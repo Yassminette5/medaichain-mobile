@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/medicines_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/patientnesrine/homeScreen.dart';
@@ -34,6 +35,7 @@ class MEDAIChainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
+        ChangeNotifierProvider(create: (_) => MedicinesProvider()),
       ],
       child: MaterialApp(
         title: 'MEDAIChain',

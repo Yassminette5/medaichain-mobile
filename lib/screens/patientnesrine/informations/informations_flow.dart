@@ -79,8 +79,8 @@ class _InformationsFlowState extends State<InformationsFlow> {
     debugPrint('[InformationsFlow] _isSaving set to true');
 
     try {
-      debugPrint('[InformationsFlow] Calling updatePatientProfile...');
-      await context.read<AuthProvider>().updatePatientProfile(
+      debugPrint('[InformationsFlow] Calling updatePatientInformation...');
+      await context.read<AuthProvider>().updatePatientInformation(
         fullName: vm.fullName,
         gender: vm.gender,
         age: vm.age!,
@@ -88,7 +88,7 @@ class _InformationsFlowState extends State<InformationsFlow> {
         weight: vm.currentWeight,
         allergies: vm.allergies.toList(),
       );
-      debugPrint('[InformationsFlow] updatePatientProfile successful');
+      debugPrint('[InformationsFlow] updatePatientInformation successful');
     } catch (e) {
       debugPrint('[InformationsFlow] Profile save error: $e');
       if (mounted) {

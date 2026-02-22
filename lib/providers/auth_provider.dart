@@ -193,8 +193,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Mettre à jour le profil patient
-  Future<bool> updatePatientProfile({
+  // Mettre à jour les informations patient
+  Future<bool> updatePatientInformation({
     String? fullName,
     required String gender,
     required int age,
@@ -207,7 +207,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
     
     try {
-      final updatedUser = await ApiService.updatePatientProfile(
+      final updatedUser = await ApiService.updatePatientInformation(
         fullName: fullName,
         gender: gender,
         age: age,
