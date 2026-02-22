@@ -7,8 +7,8 @@ import '../models/doctor_profile_model.dart';
 
 class ApiService {
   // Changez cette URL pour votre backend
-  static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  // static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
+  // static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
+  static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
