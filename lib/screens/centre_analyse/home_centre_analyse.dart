@@ -194,7 +194,7 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
               const SizedBox(height: 16),
               _buildFilterButtons(),
               const SizedBox(height: 24),
-              _buildSectionTitle('Demandes de rendez-vous'),
+              _buildSectionTitle('Aperçu des rendez-vous'),
               const SizedBox(height: 16),
               _buildRecentAnalyses(),
             ],

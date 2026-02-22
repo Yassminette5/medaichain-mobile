@@ -104,12 +104,6 @@ class WebSidebar extends StatelessWidget {
                   ),
                   _buildMenuItem(
                     context,
-                    index: 3,
-                    icon: Icons.calendar_today_rounded,
-                    label: 'Gestion RDV',
-                  ),
-                  _buildMenuItem(
-                    context,
                     index: 2,
                     icon: Icons.description_rounded,
                     label: 'Prescriptions',
@@ -142,24 +136,40 @@ class WebSidebar extends StatelessWidget {
               ),
             ),
           ),
-          // Footer avec déconnexion
+          // Footer avec bouton de déconnexion premium
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.surface,
               border: Border(
                 top: BorderSide(
-                  color: AppColors.border,
+                  color: AppColors.border.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),
             ),
-            child: _buildMenuItem(
-              context,
-              index: -1,
-              icon: Icons.logout_rounded,
-              label: 'Déconnexion',
-              isLogout: true,
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => onItemSelected(-1),
+                icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+                label: const Text(
+                  'Déconnexion',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
             ),
           ),
         ],
