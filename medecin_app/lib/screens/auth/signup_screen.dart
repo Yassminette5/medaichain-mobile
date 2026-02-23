@@ -7,7 +7,6 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../onboarding/registration_success_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne
 class SignupScreen extends StatefulWidget {

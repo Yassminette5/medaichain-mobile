@@ -351,7 +351,7 @@ class PharmacyStatisticsPreview extends StatelessWidget {
                     children: [
                       const Text(
                         'Statistique Livraison',
-                        style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                       Text(
                         stats.deliveryTrends.period,
@@ -379,7 +379,7 @@ class PharmacyStatisticsPreview extends StatelessWidget {
               children: [
                 const Text(
                   'Médicaments les plus demandés',
-                  style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -487,7 +487,7 @@ class PharmacyStatisticsPreview extends StatelessWidget {
           Expanded(
             child: Text(
               category.name,
-              style: const TextStyle(color: const Color(0xFF2D3142), fontSize: 14),
+              style: const TextStyle(color: Color(0xFF2D3142), fontSize: 14),
             ),
           ),
           Text(
@@ -525,7 +525,7 @@ class PharmacyStatisticsPreview extends StatelessWidget {
               children: [
                 Text(
                   med.displayName.isNotEmpty ? med.displayName : med.name,
-                  style: const TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(

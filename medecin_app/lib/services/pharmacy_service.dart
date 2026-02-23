@@ -109,8 +109,13 @@ class PharmacyService {
     } else if (response.statusCode == 401) {
       await ApiService.refreshToken();
       return updateStock(pharmacyId, stockId, updates);
+    } else if (response.statusCode == 404) {
+      throw Exception('Médicament non trouvé');
+    } else if (response.statusCode == 400) {
+      final errorData = jsonDecode(response.body);
+      throw Exception('Erreur de validation: ${errorData['message'] ?? 'Données invalides'}');
     } else {
-      throw Exception('Failed to update stock');
+      throw Exception('Erreur lors de la mise à jour du stock (${response.statusCode}): ${response.body}');
     }
   }
 
@@ -353,6 +358,93 @@ class PharmacyService {
       return deleteRequest(pharmacyId, requestId);
     } else {
       throw Exception('Failed to delete request');
+    }
+  }
+
+  // ============ PHARMACY SETTINGS ============
+  static Future<Map<String, dynamic>> getPharmacyProfile() async {
+    final token = await ApiService.getAccessToken();
+    
+    final response = await http.get(
+      Uri.parse('$baseUrl/profiles/me'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getPharmacyProfile();
+    } else {
+      throw Exception('Failed to get pharmacy profile');
+    }
+  }
+
+  static Future<void> updatePharmacySettings(
+    String pharmacyId,
+    Map<String, dynamic> settings,
+  ) async {
+    final token = await ApiService.getAccessToken();
+    
+    final response = await http.put(
+      Uri.parse('$baseUrl/profiles/pharmacy'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(settings),
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return updatePharmacySettings(pharmacyId, settings);
+    } else {
+      final errorBody = response.body;
+      print('Error updating pharmacy settings: $errorBody');
+      throw Exception('Failed to update pharmacy settings: $errorBody');
+    }
+  }
+
+  static Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final token = await ApiService.getAccessToken();
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/change-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      final errorBody = jsonDecode(response.body);
+      if (errorBody['message']?.contains('refresh') == true) {
+        await ApiService.refreshToken();
+        return changePassword(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        );
+      } else {
+        throw Exception('Mot de passe actuel incorrect');
+      }
+    } else {
+      final errorBody = response.body;
+      print('Error changing password: $errorBody');
+      throw Exception('Erreur lors du changement de mot de passe');
     }
   }
 }

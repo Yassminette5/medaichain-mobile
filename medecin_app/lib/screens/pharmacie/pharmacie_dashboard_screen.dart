@@ -1,24 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/pharmacy_service.dart';
 import '../../models/pharmacy_dashboard.dart';
-import '../auth/login_screen.dart';
 import 'pharmacy_statistics_screen.dart';
 import 'pharmacy_stock_screen.dart';
 import 'prescription_details_screen.dart';
+import 'pharmacy_profile_screen.dart';
+import 'web/pharmacy_web_dashboard.dart';
 
-/// Pharmacie Dashboard Screen
-class PharmacieDashboardScreen extends StatefulWidget {
+/// Pharmacie Dashboard Screen - Automatically uses web version on web platform
+class PharmacieDashboardScreen extends StatelessWidget {
   const PharmacieDashboardScreen({super.key});
 
   @override
-  State<PharmacieDashboardScreen> createState() => _PharmacieDashboardScreenState();
+  Widget build(BuildContext context) {
+    // Automatically use web version when running on web
+    if (kIsWeb) {
+      return const PharmacyWebDashboard();
+    }
+    
+    // Use mobile version for mobile platforms
+    return const _PharmacieDashboardMobile();
+  }
 }
 
-class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
+/// Mobile version of Pharmacy Dashboard
+class _PharmacieDashboardMobile extends StatefulWidget {
+  const _PharmacieDashboardMobile();
+
+  @override
+  State<_PharmacieDashboardMobile> createState() => _PharmacieDashboardMobileState();
+}
+
+class _PharmacieDashboardMobileState extends State<_PharmacieDashboardMobile>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -136,15 +154,11 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
           children: [
             _buildIconButton(Icons.notifications_outlined, () {}),
             const SizedBox(width: 12),
-            _buildIconButton(Icons.logout_rounded, () async {
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-              await authProvider.logout();
-              if (mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
+            _buildIconButton(Icons.person_outline_rounded, () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PharmacyProfileScreen()),
+              );
             }),
           ],
         ),
@@ -401,14 +415,8 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
   Widget _buildServicesGrid() {
     final services = [
       {
-        'icon': Icons.qr_code_scanner_rounded,
-        'label': 'Scanner\nordonnance',
-        'color': const Color(0xFF4FACFE),
-        'onTap': () {},
-      },
-      {
         'icon': Icons.inventory_2_rounded,
-        'label': 'Stock',
+        'label': 'Catalogue',
         'color': const Color(0xFF10B981),
         'onTap': () {
           Navigator.push(
@@ -416,12 +424,6 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
             MaterialPageRoute(builder: (_) => const PharmacyStockScreen()),
           );
         },
-      },
-      {
-        'icon': Icons.people_rounded,
-        'label': 'Clients',
-        'color': const Color(0xFF7C3AED),
-        'onTap': () {},
       },
       {
         'icon': Icons.analytics_rounded,
@@ -434,15 +436,28 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
           );
         },
       },
+      {
+        'icon': Icons.person_rounded,
+        'label': 'Profil',
+        'color': const Color(0xFF7C3AED),
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PharmacyProfileScreen()),
+          );
+        },
+      },
     ];
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: services.map((service) {
-        return Expanded(
+        return Container(
+          width: 105,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
           child: GestureDetector(
             onTap: service['onTap'] as VoidCallback,
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
               padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
                 color: (service['color'] as Color).withValues(alpha: 0.1),
@@ -596,7 +611,9 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        request.medication.displayName,
+                        request.medications.length == 1
+                            ? request.medications.first.displayName
+                            : '${request.medications.length} médicaments',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -611,6 +628,20 @@ class _PharmacieDashboardScreenState extends State<PharmacieDashboardScreen>
                           color: AppColors.textSecondary,
                         ),
                       ),
+                      if (request.medications.length > 1) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          request.medications.map((m) => m.name).take(2).join(', ') + 
+                              (request.medications.length > 2 ? '...' : ''),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),

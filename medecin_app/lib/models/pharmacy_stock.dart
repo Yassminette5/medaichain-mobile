@@ -69,6 +69,7 @@ class MedicationStock {
   final int maxStock;
   final String unit;
   final StockLevel stockLevel;
+  final double? price;
 
   MedicationStock({
     required this.id,
@@ -78,6 +79,7 @@ class MedicationStock {
     required this.maxStock,
     this.unit = 'unités',
     required this.stockLevel,
+    this.price,
   });
 
   factory MedicationStock.fromJson(Map<String, dynamic> json) {
@@ -92,6 +94,7 @@ class MedicationStock {
         (e) => e.name == json['stockLevel'],
         orElse: () => StockLevel.normal,
       ),
+      price: json['price'] != null ? (json['price'] as num).toDouble() : null,
     );
   }
 
@@ -104,12 +107,14 @@ class MedicationStock {
       'maxStock': maxStock,
       'unit': unit,
       'stockLevel': stockLevel.name,
+      if (price != null) 'price': price,
     };
   }
 
   double get stockPercentage => (currentStock / maxStock) * 100;
   String get displayName => '$name $dosage';
   String get displayStock => '$currentStock $unit';
+  String get displayPrice => price != null ? '${price!.toStringAsFixed(2)} DA' : 'Prix non défini';
 }
 
 /// Enum for stock levels

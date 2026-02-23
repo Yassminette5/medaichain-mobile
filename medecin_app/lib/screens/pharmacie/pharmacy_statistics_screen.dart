@@ -1,19 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/pharmacy_statistics.dart';
 import '../../services/pharmacy_service.dart';
 import '../../providers/auth_provider.dart';
+import 'web/pharmacy_web_statistics.dart';
 
-class PharmacyStatisticsScreen extends StatefulWidget {
+/// Pharmacy Statistics Screen - Automatically uses web version on web platform
+class PharmacyStatisticsScreen extends StatelessWidget {
   const PharmacyStatisticsScreen({super.key});
 
   @override
-  State<PharmacyStatisticsScreen> createState() => _PharmacyStatisticsScreenState();
+  Widget build(BuildContext context) {
+    // Automatically use web version when running on web
+    if (kIsWeb) {
+      return const PharmacyWebStatistics();
+    }
+    
+    // Use mobile version for mobile platforms
+    return const _PharmacyStatisticsMobile();
+  }
 }
 
-class _PharmacyStatisticsScreenState extends State<PharmacyStatisticsScreen> {
+/// Mobile version of Pharmacy Statistics
+class _PharmacyStatisticsMobile extends StatefulWidget {
+  const _PharmacyStatisticsMobile();
+
+  @override
+  State<_PharmacyStatisticsMobile> createState() => _PharmacyStatisticsMobileState();
+}
+
+class _PharmacyStatisticsMobileState extends State<_PharmacyStatisticsMobile> {
   PharmacyStatistics? _statistics;
   bool _isLoading = true;
   String? _error;

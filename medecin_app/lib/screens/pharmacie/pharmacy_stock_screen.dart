@@ -1,19 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/pharmacy_stock.dart';
 import '../../services/pharmacy_service.dart';
 import '../../providers/auth_provider.dart';
+import 'web/pharmacy_web_stock.dart';
 
-class PharmacyStockScreen extends StatefulWidget {
+/// Pharmacy Stock Screen - Automatically uses web version on web platform
+class PharmacyStockScreen extends StatelessWidget {
   const PharmacyStockScreen({super.key});
 
   @override
-  State<PharmacyStockScreen> createState() => _PharmacyStockScreenState();
+  Widget build(BuildContext context) {
+    // Automatically use web version when running on web
+    if (kIsWeb) {
+      return const PharmacyWebStock();
+    }
+    
+    // Use mobile version for mobile platforms
+    return const _PharmacyStockMobile();
+  }
 }
 
-class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
+/// Mobile version of Pharmacy Stock
+class _PharmacyStockMobile extends StatefulWidget {
+  const _PharmacyStockMobile();
+
+  @override
+  State<_PharmacyStockMobile> createState() => _PharmacyStockMobileState();
+}
+
+class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
   PharmacyStock? _stock;
   String _selectedFilter = 'Tout';
   bool _isLoading = true;
@@ -65,16 +85,7 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
     
     var medications = _stock!.medications;
     
-    // Apply filter
-    if (_selectedFilter == 'Critique') {
-      medications = medications.where((m) => m.stockLevel == StockLevel.critical).toList();
-    } else if (_selectedFilter == 'Alerte') {
-      medications = medications.where((m) => m.stockLevel == StockLevel.alert).toList();
-    } else if (_selectedFilter == 'Normal') {
-      medications = medications.where((m) => m.stockLevel == StockLevel.normal).toList();
-    }
-    
-    // Apply search
+    // Apply search only
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       medications = medications.where((m) {
@@ -99,7 +110,7 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Gestion du Stock',
+          'Catalogue de Médicaments',
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 20,
@@ -108,8 +119,8 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
-            onPressed: _showSettings,
+            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+            onPressed: _loadStock,
           ),
         ],
       ),
@@ -133,8 +144,6 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
                 )
               : Column(
                   children: [
-                    _buildStockSummary(),
-                    _buildFilterChips(),
                     _buildSearchBar(),
                     Expanded(
                       child: _buildMedicationList(),
@@ -351,29 +360,30 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: medication.stockLevel.color.withValues(alpha: 0.1),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.medication_rounded,
-                  color: medication.stockLevel.color,
+                  color: Colors.white,
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      medication.displayName,
+                      medication.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -382,87 +392,54 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      medication.displayStock,
+                      medication.dosage,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4FACFE).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        medication.displayPrice,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4FACFE),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: medication.stockLevel.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  medication.stockLevel.displayName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: medication.stockLevel.color,
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: medication.stockPercentage / 100,
-              backgroundColor: medication.stockLevel.color.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation(medication.stockLevel.color),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${medication.stockPercentage.toStringAsFixed(0)}% du stock maximum',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Remove stock button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  onPressed: () => _showAdjustStockDialog(medication, isAdding: false),
-                  icon: const Icon(Icons.remove, color: Colors.red, size: 20),
-                  tooltip: 'Retirer du stock',
-                ),
+              _buildActionButton(
+                icon: Icons.qr_code,
+                label: 'QR Code',
+                color: const Color(0xFF4FACFE),
+                onTap: () => _showQRCode(medication),
               ),
-              const SizedBox(width: 16),
-              Text(
-                '${medication.currentStock}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
+              _buildActionButton(
+                icon: Icons.edit,
+                label: 'Modifier',
+                color: const Color(0xFF10B981),
+                onTap: () => _showEditMedicationDialog(medication),
               ),
-              const SizedBox(width: 16),
-              // Add stock button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  onPressed: () => _showAdjustStockDialog(medication, isAdding: true),
-                  icon: const Icon(Icons.add, color: Colors.green, size: 20),
-                  tooltip: 'Ajouter au stock',
-                ),
+              _buildActionButton(
+                icon: Icons.delete_outline,
+                label: 'Supprimer',
+                color: Colors.red,
+                onTap: () => _showDeleteConfirmation(medication),
               ),
             ],
           ),
@@ -471,86 +448,42 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
     );
   }
 
-  void _showSettings() {
-    if (_stock == null) return;
-    
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Paramètres du stock',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            SwitchListTile(
-              title: const Text('Notifications push'),
-              value: _stock!.settings.pushNotificationsEnabled,
-              onChanged: (value) async {
-                await _updateSettings({'pushNotificationsEnabled': value});
-              },
-            ),
-            SwitchListTile(
-              title: const Text('Rapports hebdomadaires'),
-              value: _stock!.settings.weeklyReportsEnabled,
-              onChanged: (value) async {
-                await _updateSettings({'weeklyReportsEnabled': value});
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Seuil critique: ${_stock!.settings.criticalStockThreshold} unités',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            Text(
-              'Seuil d\'alerte: ${_stock!.settings.alertStockThreshold} unités',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _updateSettings(Map<String, dynamic> updates) async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
-      await PharmacyService.updateStockSettings(pharmacyId, updates);
-      await _loadStock();
-      
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
   void _showAddMedicationDialog() {
     final nameController = TextEditingController();
     final dosageController = TextEditingController();
-    final currentStockController = TextEditingController();
-    final maxStockController = TextEditingController();
     final unitController = TextEditingController(text: 'boîtes');
+    final priceController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -584,38 +517,25 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
                   },
                 ),
                 TextFormField(
-                  controller: currentStockController,
-                  decoration: const InputDecoration(labelText: 'Stock actuel *'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Le stock actuel est requis';
-                    }
-                    final number = int.tryParse(value);
-                    if (number == null || number < 0) {
-                      return 'Entrez un nombre valide >= 0';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: maxStockController,
-                  decoration: const InputDecoration(labelText: 'Stock maximum *'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Le stock maximum est requis';
-                    }
-                    final number = int.tryParse(value);
-                    if (number == null || number < 1) {
-                      return 'Entrez un nombre valide >= 1';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
                   controller: unitController,
                   decoration: const InputDecoration(labelText: 'Unité'),
+                ),
+                TextFormField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Prix (DA)',
+                    hintText: 'Ex: 250.00',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      final price = double.tryParse(value);
+                      if (price == null || price < 0) {
+                        return 'Entrez un prix valide';
+                      }
+                    }
+                    return null;
+                  },
                 ),
               ],
             ),
@@ -629,13 +549,19 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
-                await _addMedication({
+                final data = <String, dynamic>{
                   'name': nameController.text.trim(),
                   'dosage': dosageController.text.trim(),
-                  'currentStock': int.parse(currentStockController.text),
-                  'maxStock': int.parse(maxStockController.text),
+                  'currentStock': 0,
+                  'maxStock': 100,
                   'unit': unitController.text.trim(),
-                });
+                };
+                
+                if (priceController.text.isNotEmpty) {
+                  data['price'] = double.parse(priceController.text);
+                }
+                
+                await _addMedication(data);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
@@ -658,7 +584,7 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Médicament ajouté avec succès')),
+          const SnackBar(content: Text('Médicament ajouté au catalogue')),
         );
       }
     } catch (e) {
@@ -670,63 +596,199 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
     }
   }
 
-  void _showAdjustStockDialog(MedicationStock medication, {required bool isAdding}) {
-    final quantityController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
+  void _showDeleteConfirmation(MedicationStock medication) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isAdding ? 'Ajouter au stock' : 'Retirer du stock'),
-        content: Form(
-          key: formKey,
+        title: const Text('Supprimer du catalogue'),
+        content: Text(
+          'Voulez-vous vraiment supprimer "${medication.displayName}" du catalogue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _deleteMedication(medication.id);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteMedication(String stockId) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
+      
+      await PharmacyService.deleteStock(pharmacyId, stockId);
+      await _loadStock();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Médicament supprimé du catalogue')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _showQRCode(MedicationStock medication) {
+    final qrData = '${medication.id}|${medication.name}|${medication.dosage}|${medication.price ?? 0}';
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.qr_code_2, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'QR Code',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF4FACFE).withValues(alpha: 0.3), width: 2),
+                ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 medication.displayName,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Text(
-                'Stock actuel: ${medication.currentStock} ${medication.unit}',
+                medication.displayPrice,
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: quantityController,
-                decoration: InputDecoration(
-                  labelText: 'Quantité',
-                  hintText: 'Entrez la quantité',
-                  suffixText: medication.unit,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'La quantité est requise';
-                  }
-                  final number = int.tryParse(value);
-                  if (number == null || number <= 0) {
-                    return 'Entrez un nombre valide > 0';
-                  }
-                  if (!isAdding && number > medication.currentStock) {
-                    return 'Quantité supérieure au stock actuel';
-                  }
-                  return null;
-                },
-              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showEditMedicationDialog(MedicationStock medication) {
+    final nameController = TextEditingController(text: medication.name);
+    final dosageController = TextEditingController(text: medication.dosage);
+    final unitController = TextEditingController(text: medication.unit);
+    final priceController = TextEditingController(
+      text: medication.price != null ? medication.price!.toStringAsFixed(2) : '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modifier le médicament'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nom *'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Le nom est requis';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: dosageController,
+                  decoration: const InputDecoration(labelText: 'Dosage *'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Le dosage est requis';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: unitController,
+                  decoration: const InputDecoration(labelText: 'Unité'),
+                ),
+                TextFormField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Prix (DA)',
+                    hintText: 'Ex: 250.00',
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  validator: (value) {
+                    if (value != null && value.isNotEmpty) {
+                      final price = double.tryParse(value);
+                      if (price == null || price < 0) {
+                        return 'Entrez un prix valide';
+                      }
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -737,40 +799,43 @@ class _PharmacyStockScreenState extends State<PharmacyStockScreen> {
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
-                final quantity = int.parse(quantityController.text);
-                final newStock = isAdding
-                    ? medication.currentStock + quantity
-                    : medication.currentStock - quantity;
+                final data = <String, dynamic>{
+                  'name': nameController.text.trim(),
+                  'dosage': dosageController.text.trim(),
+                  'unit': unitController.text.trim(),
+                };
                 
-                await _updateMedicationStock(medication.id, newStock);
+                if (priceController.text.isNotEmpty) {
+                  data['price'] = double.parse(priceController.text);
+                }
+                
+                await _updateMedication(medication.id, data);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isAdding ? Colors.green : Colors.red,
+              backgroundColor: const Color(0xFF10B981),
             ),
-            child: Text(isAdding ? 'Ajouter' : 'Retirer'),
+            child: const Text('Enregistrer'),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _updateMedicationStock(String stockId, int newStock) async {
+  Future<void> _updateMedication(String stockId, Map<String, dynamic> data) async {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
       
-      await PharmacyService.updateStock(pharmacyId, stockId, {
-        'currentStock': newStock,
-      });
+      await PharmacyService.updateStock(pharmacyId, stockId, data);
       await _loadStock();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Stock mis à jour avec succès')),
+          const SnackBar(content: Text('Médicament mis à jour')),
         );
       }
     } catch (e) {

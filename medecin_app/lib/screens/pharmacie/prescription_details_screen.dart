@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/pharmacy_dashboard.dart';
 import '../../services/pharmacy_service.dart';
@@ -23,13 +25,34 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
   final TextEditingController _noteController = TextEditingController();
   final Map<String, bool> _medicationValidation = {};
   bool _deliveryConfirmed = false;
+  bool _pharmacyOffersDelivery = false;
 
   @override
   void initState() {
     super.initState();
     _request = widget.request;
     // Initialize all medications as not validated
-    _medicationValidation[_request.medication.id] = false;
+    for (var medication in _request.medications) {
+      _medicationValidation[medication.id] = false;
+    }
+    _loadPharmacyInfo();
+  }
+
+  Future<void> _loadPharmacyInfo() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
+      
+      final dashboard = await PharmacyService.getDashboard(pharmacyId);
+      setState(() {
+        _pharmacyOffersDelivery = dashboard.pharmacyInfo.offersDelivery;
+      });
+    } catch (e) {
+      // If we can't load pharmacy info, assume no delivery
+      setState(() {
+        _pharmacyOffersDelivery = false;
+      });
+    }
   }
 
   @override
@@ -105,6 +128,14 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
                   const SizedBox(height: 20),
                   _buildPatientInfo(),
                   const SizedBox(height: 20),
+                  if (_request.patient.location != null) ...[
+                    _buildPatientLocationMap(),
+                    const SizedBox(height: 20),
+                  ],
+                  if (_request.prescriptionImageUrl != null) ...[
+                    _buildPrescriptionImage(),
+                    const SizedBox(height: 20),
+                  ],
                   _buildMedicationInfo(),
                   const SizedBox(height: 20),
                   _buildRequestInfo(),
@@ -225,6 +256,291 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
             const Divider(height: 24),
             _buildInfoRow('Téléphone', _request.patient.phoneNumber!),
           ],
+          if (_request.patient.location?.address != null) ...[
+            const Divider(height: 24),
+            _buildInfoRow('Adresse', _request.patient.location!.address!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPatientLocationMap() {
+    final location = _request.patient.location!;
+    
+    return _buildCard(
+      title: 'Localisation du patient',
+      icon: Icons.location_on_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 250,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(location.latitude, location.longitude),
+                initialZoom: 15.0,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.medaichain.medecin_app',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(location.latitude, location.longitude),
+                      width: 50,
+                      height: 50,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_pin_circle,
+                          color: Colors.red,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Localisation du patient pour la livraison',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionImage() {
+    return _buildCard(
+      title: 'Ordonnance',
+      icon: Icons.description_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () {
+              // Show full screen image
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4.0,
+                          child: Image.network(
+                            _request.prescriptionImageUrl!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      size: 60,
+                                      color: Colors.red,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Impossible de charger l\'image',
+                                      style: TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 40,
+                        right: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    _request.prescriptionImageUrl!,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppColors.background,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.broken_image,
+                              size: 60,
+                              color: Colors.red,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Image non disponible',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  // Overlay to indicate it's tappable
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.3),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.zoom_in,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Appuyez pour agrandir',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Ordonnance manuscrite fournie par le patient',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -232,37 +548,40 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
 
   Widget _buildMedicationInfo() {
     return _buildCard(
-      title: 'Médicaments',
+      title: 'Médicaments (${_request.medications.length})',
       icon: Icons.medication_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CheckboxListTile(
-            value: _medicationValidation[_request.medication.id] ?? false,
-            onChanged: (value) {
-              setState(() {
-                _medicationValidation[_request.medication.id] = value ?? false;
-              });
-            },
-            title: Text(
-              _request.medication.displayName,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+          ..._request.medications.map((medication) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: CheckboxListTile(
+              value: _medicationValidation[medication.id] ?? false,
+              onChanged: (value) {
+                setState(() {
+                  _medicationValidation[medication.id] = value ?? false;
+                });
+              },
+              title: Text(
+                medication.displayName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            subtitle: Text(
-              'Quantité: ${_request.medication.displayQuantity}',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
+              subtitle: Text(
+                'Quantité: ${medication.displayQuantity}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
               ),
+              activeColor: const Color(0xFF10B981),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
             ),
-            activeColor: const Color(0xFF10B981),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
+          )),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),
@@ -457,9 +776,84 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
     }
 
     final hasValidatedMedications = _medicationValidation.values.any((v) => v);
+    final showDeliverySection = _pharmacyOffersDelivery && _request.requestsDelivery && hasValidatedMedications;
 
     return Column(
       children: [
+        // Delivery Confirmation Section (only if all conditions met)
+        if (showDeliverySection) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF4FACFE).withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.local_shipping,
+                      color: Color(0xFF4FACFE),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Confirmation de livraison',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _deliveryConfirmed 
+                        ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                        : AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _deliveryConfirmed 
+                          ? const Color(0xFF10B981)
+                          : AppColors.textSecondary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _deliveryConfirmed,
+                        onChanged: (value) {
+                          setState(() {
+                            _deliveryConfirmed = value ?? false;
+                          });
+                        },
+                        activeColor: const Color(0xFF10B981),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Je confirme que les médicaments sont prêts pour la livraison',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        
         // Validation Section
         Container(
           padding: const EdgeInsets.all(16),
@@ -515,9 +909,10 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _validatePrescription(false),
+                      onPressed: _deliveryConfirmed ? null : () => _validatePrescription(false),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: _deliveryConfirmed ? Colors.grey : Colors.red,
+                        disabledBackgroundColor: Colors.grey,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -538,118 +933,15 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
             ],
           ),
         ),
-        
-        const SizedBox(height: 16),
-        
-        // Delivery Confirmation Toggle
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF4FACFE).withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.local_shipping,
-                    color: Color(0xFF4FACFE),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Confirmation de livraison',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (!hasValidatedMedications)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Color(0xFFF59E0B),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Veuillez cocher au moins un médicament disponible',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 12),
-              // Delivery Toggle
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _deliveryConfirmed 
-                      ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                      : AppColors.background,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _deliveryConfirmed 
-                        ? const Color(0xFF10B981)
-                        : AppColors.textSecondary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Checkbox(
-                      value: _deliveryConfirmed,
-                      onChanged: hasValidatedMedications 
-                          ? (value) {
-                              setState(() {
-                                _deliveryConfirmed = value ?? false;
-                              });
-                            }
-                          : null,
-                      activeColor: const Color(0xFF10B981),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Je confirme que le médicament est prêt pour la livraison',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: hasValidatedMedications 
-                              ? AppColors.textPrimary 
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
 
   Future<void> _validatePrescription(bool isValid) async {
-    if (!_deliveryConfirmed && isValid) {
+    final showDeliverySection = _pharmacyOffersDelivery && _request.requestsDelivery;
+    
+    // If delivery is requested and pharmacy offers it, require delivery confirmation for valid prescriptions
+    if (showDeliverySection && !_deliveryConfirmed && isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez confirmer la livraison avant de valider'),

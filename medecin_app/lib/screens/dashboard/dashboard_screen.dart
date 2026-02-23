@@ -247,7 +247,7 @@ class _HomeView extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const PatientMedicationRequestScreen(),
+                          builder: (context) => PatientMedicationRequestScreen(),
                         ),
                       );
                     },

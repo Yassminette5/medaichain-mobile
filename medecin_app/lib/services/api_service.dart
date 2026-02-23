@@ -6,8 +6,8 @@ import '../models/user_model.dart';
 class ApiService {
   // Changez cette URL pour votre backend
   //static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
-
+  //static const String baseUrl = 'http://192.168.1.148:3000'; // Pour iOS/Web
+static const String baseUrl = 'http://192.168.1.121:3000';
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
@@ -266,5 +266,34 @@ class ApiService {
   static Future<bool> isLoggedIn() async {
     final token = await getAccessToken();
     return token != null;
+  }
+
+  // ========== UPLOAD PRESCRIPTION IMAGE ==========
+  static Future<String> uploadPrescriptionImage(String filePath) async {
+    try {
+      final uri = Uri.parse('$baseUrl/pharmacy/upload/prescription');
+      final request = http.MultipartRequest('POST', uri);
+      
+      // Add the file
+      request.files.add(await http.MultipartFile.fromPath(
+        'prescription',
+        filePath,
+      ));
+
+      // Send the request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data['url'] as String;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['message'] ?? 'Erreur lors de l\'upload de l\'image');
+      }
+    } catch (e) {
+      print('❌ ApiService: Upload error: $e');
+      rethrow;
+    }
   }
 }

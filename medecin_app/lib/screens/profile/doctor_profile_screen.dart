@@ -226,7 +226,7 @@ class DoctorProfileScreen extends StatelessWidget {
             Switch(
               value: hasSwitch,
               onChanged: (_) {},
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
             )
           else
             Icon(Icons.chevron_right, color: AppColors.textSecondary),

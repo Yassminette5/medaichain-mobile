@@ -8,7 +8,6 @@ import '../../providers/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../centre_analyse/centre_analyse_dashboard_screen.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
-import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../onboarding/role_selection_screen.dart';
 

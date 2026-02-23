@@ -249,7 +249,7 @@ class DeliveryPreview extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text(
                         'Patient Address',
-                        style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -338,7 +338,7 @@ class DeliveryPreview extends StatelessWidget {
                   children: [
                     Text(
                       'Confirm Delivery',
-                      style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     SizedBox(width: 8),
                     Icon(Icons.check, color: Colors.white),
@@ -376,7 +376,7 @@ class DeliveryPreview extends StatelessWidget {
               children: [
                 Text(
                   med.displayName,
-                  style: const TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(

@@ -37,12 +37,14 @@ class PharmacyInfo {
   final String name;
   final int totalOrders;
   final int totalPackages;
+  final bool offersDelivery;
 
   PharmacyInfo({
     required this.id,
     required this.name,
     required this.totalOrders,
     required this.totalPackages,
+    this.offersDelivery = false,
   });
 
   factory PharmacyInfo.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,7 @@ class PharmacyInfo {
       name: json['name'] as String,
       totalOrders: json['totalOrders'] as int,
       totalPackages: json['totalPackages'] as int,
+      offersDelivery: json['offersDelivery'] as bool? ?? false,
     );
   }
 
@@ -60,6 +63,7 @@ class PharmacyInfo {
       'name': name,
       'totalOrders': totalOrders,
       'totalPackages': totalPackages,
+      'offersDelivery': offersDelivery,
     };
   }
 }
@@ -95,31 +99,50 @@ enum RequestStatus {
 class MedicationRequest {
   final String id;
   final Patient patient;
-  final RequestedMedication medication;
+  final List<RequestedMedication> medications;
   final RequestStatus status;
   final DateTime requestDate;
   final bool isUrgent;
+  final bool requestsDelivery;
+  final String? prescriptionImageUrl;
 
   MedicationRequest({
     required this.id,
     required this.patient,
-    required this.medication,
+    required this.medications,
     required this.status,
     required this.requestDate,
     this.isUrgent = false,
+    this.requestsDelivery = false,
+    this.prescriptionImageUrl,
   });
 
   factory MedicationRequest.fromJson(Map<String, dynamic> json) {
+    // Handle both old format (single medication) and new format (multiple medications)
+    List<RequestedMedication> medications;
+    if (json['medications'] != null) {
+      medications = (json['medications'] as List)
+          .map((item) => RequestedMedication.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } else if (json['medication'] != null) {
+      // Backward compatibility: convert single medication to list
+      medications = [RequestedMedication.fromJson(json['medication'] as Map<String, dynamic>)];
+    } else {
+      medications = [];
+    }
+
     return MedicationRequest(
       id: (json['id'] ?? json['_id']) as String,
       patient: Patient.fromJson(json['patient'] as Map<String, dynamic>),
-      medication: RequestedMedication.fromJson(json['medication'] as Map<String, dynamic>),
+      medications: medications,
       status: RequestStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => RequestStatus.enAttente,
       ),
       requestDate: DateTime.parse(json['requestDate'] as String),
       isUrgent: json['isUrgent'] as bool? ?? false,
+      requestsDelivery: json['requestsDelivery'] as bool? ?? false,
+      prescriptionImageUrl: json['prescriptionImageUrl'] as String?,
     );
   }
 
@@ -127,12 +150,23 @@ class MedicationRequest {
     return {
       'id': id,
       'patient': patient.toJson(),
-      'medication': medication.toJson(),
+      'medications': medications.map((m) => m.toJson()).toList(),
       'status': status.name,
       'requestDate': requestDate.toIso8601String(),
       'isUrgent': isUrgent,
+      'requestsDelivery': requestsDelivery,
+      if (prescriptionImageUrl != null) 'prescriptionImageUrl': prescriptionImageUrl,
     };
   }
+
+  // Helper getter for backward compatibility
+  RequestedMedication get medication => medications.isNotEmpty ? medications.first : RequestedMedication(
+    id: '',
+    name: 'N/A',
+    dosage: '',
+    quantity: 0,
+    unit: '',
+  );
 }
 
 /// Model for patient information
@@ -140,11 +174,13 @@ class Patient {
   final String id;
   final String name;
   final String? phoneNumber;
+  final PatientLocation? location;
 
   Patient({
     required this.id,
     required this.name,
     this.phoneNumber,
+    this.location,
   });
 
   factory Patient.fromJson(Map<String, dynamic> json) {
@@ -152,6 +188,9 @@ class Patient {
       id: json['id'] as String,
       name: json['name'] as String,
       phoneNumber: json['phoneNumber'] as String?,
+      location: json['location'] != null 
+          ? PatientLocation.fromJson(json['location'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -160,6 +199,36 @@ class Patient {
       'id': id,
       'name': name,
       'phoneNumber': phoneNumber,
+      if (location != null) 'location': location!.toJson(),
+    };
+  }
+}
+
+/// Model for patient location
+class PatientLocation {
+  final double latitude;
+  final double longitude;
+  final String? address;
+
+  PatientLocation({
+    required this.latitude,
+    required this.longitude,
+    this.address,
+  });
+
+  factory PatientLocation.fromJson(Map<String, dynamic> json) {
+    return PatientLocation(
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      address: json['address'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      if (address != null) 'address': address,
     };
   }
 }
@@ -233,13 +302,15 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
         MedicationRequest(
           id: '1',
           patient: Patient(id: '1', name: 'Jean Dupont', phoneNumber: '06 123 45 67'),
-          medication: RequestedMedication(
-            id: '1',
-            name: 'Amoxicilline',
-            dosage: '500mg',
-            quantity: 2,
-            unit: 'boîtes',
-          ),
+          medications: [
+            RequestedMedication(
+              id: '1',
+              name: 'Amoxicilline',
+              dosage: '500mg',
+              quantity: 2,
+              unit: 'boîtes',
+            ),
+          ],
           status: RequestStatus.tout,
           requestDate: DateTime.now(),
           isUrgent: false,
@@ -247,13 +318,15 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
         MedicationRequest(
           id: '2',
           patient: Patient(id: '2', name: 'Marie Curie', phoneNumber: '06 987 65 43'),
-          medication: RequestedMedication(
-            id: '2',
-            name: 'Paracetamol',
-            dosage: '1000mg',
-            quantity: 1,
-            unit: 'boîte + 2 blisters',
-          ),
+          medications: [
+            RequestedMedication(
+              id: '2',
+              name: 'Paracetamol',
+              dosage: '1000mg',
+              quantity: 1,
+              unit: 'boîte + 2 blisters',
+            ),
+          ],
           status: RequestStatus.urgent,
           requestDate: DateTime.now(),
           isUrgent: true,
@@ -261,13 +334,15 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
         MedicationRequest(
           id: '3',
           patient: Patient(id: '3', name: 'Pierre Martin', phoneNumber: '06 456 78 90'),
-          medication: RequestedMedication(
-            id: '3',
-            name: 'Ibuprofène',
-            dosage: '400mg',
-            quantity: 1,
-            unit: 'boîte + 5 blisters par jour',
-          ),
+          medications: [
+            RequestedMedication(
+              id: '3',
+              name: 'Ibuprofène',
+              dosage: '400mg',
+              quantity: 1,
+              unit: 'boîte + 5 blisters par jour',
+            ),
+          ],
           status: RequestStatus.enAttente,
           requestDate: DateTime.now(),
           isUrgent: false,
@@ -275,13 +350,15 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
         MedicationRequest(
           id: '4',
           patient: Patient(id: '4', name: 'Lucas Bernard', phoneNumber: '06 234 56 78'),
-          medication: RequestedMedication(
-            id: '4',
-            name: 'Sirop Toux Sèche',
-            dosage: '',
-            quantity: 1,
-            unit: 'flacon',
-          ),
+          medications: [
+            RequestedMedication(
+              id: '4',
+              name: 'Sirop Toux Sèche',
+              dosage: '',
+              quantity: 1,
+              unit: 'flacon',
+            ),
+          ],
           status: RequestStatus.termine,
           requestDate: DateTime.now().subtract(const Duration(hours: 2)),
           isUrgent: false,
@@ -366,7 +443,7 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
               children: [
                 const Text(
                   'Demandes de médicaments',
-                  style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                 ),
 
               ],
@@ -547,7 +624,7 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
               ),
               child: const Text(
                 'Détails',
-                style: TextStyle(color: const Color(0xFF2D3142), fontSize: 14, fontWeight: FontWeight.w600),
+                style: TextStyle(color: Color(0xFF2D3142), fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -644,14 +721,14 @@ class MedicationRequestDetailPreview extends StatelessWidget {
                       SizedBox(width: 8),
                       Text(
                         'Informations Patient',
-                        style: TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     request.patient.name,
-                    style: const TextStyle(color: const Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: Color(0xFF2D3142), fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   if (request.patient.phoneNumber != null)
