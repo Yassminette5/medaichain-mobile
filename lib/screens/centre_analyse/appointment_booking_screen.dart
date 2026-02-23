@@ -22,7 +22,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _analysisTypeController =
-  TextEditingController();
+      TextEditingController();
 
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
@@ -36,6 +36,9 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     "Analyse hormonale",
     "Analyse urinaire",
     "Échographie",
+    "Électrocardiogramme",
+    "Test de dépistage",
+    "Biopsie",
   ];
 
   @override
@@ -70,7 +73,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     }
 
     final appointmentDateTime =
-    DateTime.utc(parsedDate.year, parsedDate.month, parsedDate.day, 9, 0);
+        DateTime.utc(parsedDate.year, parsedDate.month, parsedDate.day, 9, 0);
 
     setState(() => _isLoading = true);
 
@@ -94,13 +97,19 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
           const SnackBar(
             content: Text('Rendez-vous créé avec succès'),
             backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
           ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      _showErrorSnackBar(e.toString());
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackBar(e.toString());
+      }
     }
   }
 
@@ -109,6 +118,10 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
       ),
     );
   }
@@ -117,51 +130,94 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primary),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: const Text(
+          'Prendre rendez-vous',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// HEADER GRADIENT VIOLET
+                // Header Card avec gradient
                 Container(
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF6A11CB),
-                        Color(0xFF9C27B0),
-                        Color(0xFFB721FF),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius:
-                    BorderRadius.vertical(bottom: Radius.circular(30)),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "Prendre rendez-vous",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.calendar_today_rounded,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Nouveau rendez-vous',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.centreName,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 32),
 
-                /// TYPE ANALYSE (AUTOCOMPLETE)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Type d'analyse",
-                    style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 10),
+                // Type d'analyse
+                _buildSectionTitle('Type d\'analyse', Icons.science_rounded),
+                const SizedBox(height: 12),
                 Autocomplete<String>(
                   optionsBuilder: (value) {
                     if (value.text.isEmpty) return _analysisTypes;
@@ -176,17 +232,133 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                     return TextFormField(
                       controller: controller,
                       focusNode: focusNode,
+                      onEditingComplete: onEditingComplete,
                       validator: (v) =>
-                      v == null || v.isEmpty ? "Champ requis" : null,
+                          v == null || v.isEmpty ? "Champ requis" : null,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
                       decoration: InputDecoration(
                         hintText: "Choisir ou taper une analyse...",
-                        prefixIcon: const Icon(Icons.science,
-                            color: Color(0xFF9C27B0)),
+                        hintStyle: TextStyle(color: AppColors.textLight),
+                        prefixIcon: Container(
+                          margin: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.science_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide.none),
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppColors.border,
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppColors.border,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppColors.error,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: AppColors.error,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 18,
+                        ),
+                      ),
+                    );
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 8,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.cardShadow,
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final option = options.elementAt(index);
+                              return InkWell(
+                                onTap: () => onSelected(option),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: index == 0
+                                        ? AppColors.primary.withValues(alpha: 0.05)
+                                        : Colors.transparent,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.science_rounded,
+                                        color: AppColors.primary,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          option,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -194,19 +366,16 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
                 const SizedBox(height: 24),
 
-                /// DATE PICKER MODERNE
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Date",
-                    style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 10),
+                // Date
+                _buildSectionTitle('Date du rendez-vous', Icons.calendar_today_rounded),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _dateController,
                   readOnly: true,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
                   onTap: () async {
                     DateTime? picked = await showDatePicker(
                       context: context,
@@ -216,79 +385,155 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                       builder: (context, child) {
                         return Theme(
                           data: Theme.of(context).copyWith(
-                            colorScheme: const ColorScheme.light(
-                              primary: Color(0xFF9C27B0),
+                            colorScheme: ColorScheme.light(
+                              primary: AppColors.primary,
+                              onPrimary: Colors.white,
+                              surface: AppColors.surface,
+                              onSurface: AppColors.textPrimary,
                             ),
+                            dialogBackgroundColor: AppColors.surface,
                           ),
                           child: child!,
                         );
                       },
                     );
 
-                    if (picked != null) {
-                      _dateController.text =
-                      "${picked.day}/${picked.month}/${picked.year}";
+                    if (picked != null && mounted) {
+                      setState(() {
+                        _dateController.text =
+                            "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+                      });
                     }
                   },
                   validator: (v) =>
-                  v == null || v.isEmpty ? "Sélectionnez une date" : null,
+                      v == null || v.isEmpty ? "Sélectionnez une date" : null,
                   decoration: InputDecoration(
                     hintText: "Choisir une date",
-                    prefixIcon: const Icon(Icons.calendar_today,
-                        color: Color(0xFF9C27B0)),
+                    hintStyle: TextStyle(color: AppColors.textLight),
+                    prefixIcon: Container(
+                      margin: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surface,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.border,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.border,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.error,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.error,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                /// NOTES
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Notes (optionnel)",
-                    style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 10),
+                // Notes
+                _buildSectionTitle('Notes (optionnel)', Icons.note_alt_rounded),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesController,
                   maxLines: 4,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                  ),
                   decoration: InputDecoration(
-                    hintText: "Ajouter des notes...",
-                    prefixIcon:
-                    const Icon(Icons.note_alt, color: Color(0xFF9C27B0)),
+                    hintText: "Ajouter des notes ou informations supplémentaires...",
+                    hintStyle: TextStyle(color: AppColors.textLight),
+                    prefixIcon: Container(
+                      margin: const EdgeInsets.only(bottom: 60),
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.note_alt_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surface,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.border,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.border,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 40),
 
-                /// BOUTON GRADIENT VIOLET
+                // Bouton d'envoi
                 Container(
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF6A11CB),
-                        Color(0xFF9C27B0),
-                        Color(0xFFB721FF),
-                      ],
-                    ),
+                    gradient: AppColors.primaryGradient,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.purple.withOpacity(0.4),
+                        color: AppColors.primary.withValues(alpha: 0.4),
                         blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
@@ -297,31 +542,68 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                     child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
                         : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Envoyer",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17)),
-                        SizedBox(width: 10),
-                        Icon(Icons.send, color: Colors.white)
-                      ],
-                    ),
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Envoyer la demande",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                            ],
+                          ),
                   ),
                 ),
+
+                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
