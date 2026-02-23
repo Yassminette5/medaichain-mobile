@@ -3,15 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
-import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../centre_analyse/centre_analyse_dashboard_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
-import '../patient/patient_dashboard_screen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
-
+import '../../models/user_model.dart';
+import 'role_router.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -393,18 +389,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
-        Widget dashboard;
-        final userRole = authProvider.user?.role.value ?? '';
-        if (userRole == 'centre_analyse') {
-          dashboard = const CentreAnalyseDashboardScreen();
-        } else if (userRole == 'pharmacie') {
-          dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == 'patient') {
-          dashboard = const PatientDashboardScreen();
-        } else {
-          dashboard = const DashboardScreen();
-        }
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => dashboard));
+        final role = authProvider.user?.role;
+        final homeScreen = RoleRouter.getHomeScreen(role ?? UserRole.patient);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => homeScreen),
+          (route) => false,
+        );
       } else {
         _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }

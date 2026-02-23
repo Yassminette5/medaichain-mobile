@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import '../dashboard/dashboard_screen.dart';
 import '../centre_analyse/centre_analyse_dashboard_screen.dart';
-import '../pharmacie/pharmacie_dashboard_screen.dart';
-import '../patient/patient_dashboard_screen.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Registration Success Screen - Premium Animated Design
@@ -521,10 +519,6 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
     Widget dashboard;
     if (widget.role == 'centre_analyse' || widget.role == "Centre d'analyse") {
       dashboard = const CentreAnalyseDashboardScreen();
-    } else if (widget.role == 'pharmacie' || widget.role == 'Pharmacie') {
-      dashboard = const PharmacieDashboardScreen();
-    } else if (widget.role == 'patient' || widget.role == 'Patient') {
-      dashboard = const PatientDashboardScreen();
     } else {
       dashboard = const DashboardScreen();
     }

@@ -39,6 +39,10 @@ dependencies:
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   fl_chart: ^0.63.0
+  table_calendar: ^3.1.2
+  intl: ^0.19.0
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
 
 dev_dependencies:
   flutter_test:

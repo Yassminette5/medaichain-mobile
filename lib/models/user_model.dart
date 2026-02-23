@@ -66,6 +66,14 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final String? fullName;
+  final String? firstName;
+  final String? lastName;
+  final int? age;
+  final int? height;
+  final int? weight;
+  final String? gender;
+  final List<String>? allergies;
 
   User({
     required this.id,
@@ -77,9 +85,38 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
+    this.fullName,
+    this.firstName,
+    this.lastName,
+    this.age,
+    this.height,
+    this.weight,
+    this.gender,
+    this.allergies,
   });
 
+  /// Returns the full name, or falls back to computed name or email prefix.
+  String get displayName {
+    if (fullName != null && fullName!.isNotEmpty) return fullName!;
+    final parts = <String>[];
+    if (firstName != null && firstName!.isNotEmpty) parts.add(firstName!);
+    if (lastName != null && lastName!.isNotEmpty) parts.add(lastName!);
+    if (parts.isNotEmpty) return parts.join(' ');
+    return email.split('@').first;
+  }
+
   factory User.fromJson(Map<String, dynamic> json) {
+    // Calculate age from dateOfBirth if available
+    int? age;
+    if (json['age'] != null) {
+      age = json['age'];
+    } else if (json['dateOfBirth'] != null) {
+      final dob = DateTime.tryParse(json['dateOfBirth']);
+      if (dob != null) {
+        age = DateTime.now().year - dob.year;
+      }
+    }
+
     return User(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
@@ -93,6 +130,16 @@ class User {
           : DateTime.now(),
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'])
+          : null,
+      fullName: json['fullName'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      age: age,
+      height: json['height'],
+      weight: json['weight'],
+      gender: json['gender'],
+      allergies: json['allergies'] != null
+          ? List<String>.from(json['allergies'])
           : null,
     );
   }

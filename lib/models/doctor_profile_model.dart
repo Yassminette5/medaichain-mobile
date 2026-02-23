@@ -85,6 +85,9 @@ class DoctorProfile {
   /// Nom complet du médecin
   String get fullName => 'Dr. $firstName $lastName';
 
+  /// Alias pour fullName (pour compatibilité)
+  String get displayName => fullName;
+
   /// Initiales pour l'avatar
   String get initials {
     final f = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';

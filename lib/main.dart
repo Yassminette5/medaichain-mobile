@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'models/user_model.dart';
 import 'providers/auth_provider.dart';
+import 'providers/calendar_provider.dart';
+import 'providers/patients_provider.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/centre_analyse/centre_analyse_dashboard_screen.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
-import 'screens/patient/patient_dashboard_screen.dart';
+import 'screens/patientnesrine/main_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
   
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
@@ -40,6 +44,8 @@ class MEDAIChainApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
+        ChangeNotifierProvider(create: (_) => CalendarProvider()),
+        ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
         title: 'MEDAIChain Admin',
@@ -83,7 +89,7 @@ class AuthWrapper extends StatelessWidget {
         return const PharmacieDashboardScreen();
       }
       if (authProvider.user?.role == UserRole.patient) {
-        return const PatientDashboardScreen();
+        return const MainScreen();
       }
       // Médecin ou Clinique → Dashboard médecin
       return const DashboardScreen();

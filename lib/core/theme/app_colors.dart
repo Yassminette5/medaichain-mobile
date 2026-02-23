@@ -134,6 +134,48 @@ class AppColors {
   // Biometric
   static const Color biometric = Color(0xFF10B981);
   static const Color biometricLight = Color(0xFFD1FAE5);
+
+  // Aliases used by patient screens
+  static const Color textDark = textPrimary;
+  static const Color textGrey = textSecondary;
+  static const Color textMedium = Color(0xFF6B7280); // alias for textSecondary
+  static const Color backgroundDark = Color(0xFFF1F5F9);
+
+  // Accent colors used by patient detail screens
+  static const Color accentCyan = Color(0xFF06B6D4);
+  static const Color accentOrange = Color(0xFFF97316);
+  static const Color accentPink = Color(0xFFEC4899);
+
+  // Accent gradient (similar to neonGradient but with teal/pink)
+  static const LinearGradient accentGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
+  );
+
+  // Shadow helpers
+  static List<BoxShadow> colored(Color c) => [
+        BoxShadow(color: c.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 4)),
+      ];
+  static List<BoxShadow> get medium => [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4)),
+      ];
+  static List<BoxShadow> get small => [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+      ];
+}
+
+/// Helper decoration utilities used by patient screens
+class AppStyles {
+  AppStyles._();
+
+  static BoxDecoration glassmorphic() => BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      );
 }
 
 /// Glassmorphism Card Widget
