@@ -7,7 +7,7 @@ import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
-import '../patients/centers_list_screen.dart';
+import '../centre_analyse/centers_list_screen.dart';
 import '../onboarding/welcome_screen.dart';
 import 'reset_password_screen.dart';
 import '../onboarding/role_selection_screen.dart';

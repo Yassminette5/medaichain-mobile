@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
@@ -16,8 +17,7 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
   List<String> _categories = [];
   String? _phone;
   String? _email;
-  // ignore: unused_field
-  String? _logoUrl;
+  String? _profilePhoto;
   bool _onlineBookingEnabled = true;
   bool _isActive = true;
   bool _isEditing = false;
@@ -73,7 +73,16 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
           }
           _phone = labProfile['phone'] ?? '';
           _email = labProfile['email'] ?? '';
-          _logoUrl = labProfile['logo'] ?? labProfile['logoUrl'] ?? labProfile['image'];
+          final profilePhotoPath = labProfile['profilePhoto'] ?? 
+                         labProfile['photo'] ?? 
+                         labProfile['photoUrl'] ?? 
+                         labProfile['image'] ?? 
+                         labProfile['imageUrl'] ?? 
+                         labProfile['logo'] ?? 
+                         labProfile['logoUrl'];
+          _profilePhoto = profilePhotoPath;
+          debugPrint('🔵 Profile: ProfilePhotoPath: $profilePhotoPath');
+          debugPrint('🔵 Profile: ProfilePhoto URL finale: ${_profilePhoto != null && _profilePhoto!.isNotEmpty ? _buildImageUrl(_profilePhoto!) : null}');
           _onlineBookingEnabled = labProfile['onlineBooking'] ?? labProfile['reservation_en_ligne'] ?? true;
           _isActive = labProfile['isActive'] ?? true;
           
@@ -260,34 +269,74 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
             padding: const EdgeInsets.all(4),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/labo.jpg',
-                width: 77,
-                height: 77,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  // Si l'image n'est pas trouvée, afficher un placeholder avec les initiales
-                  final initials = _labName?.split(' ').map((n) => n[0]).take(2).join().toUpperCase() ?? 'LY';
-                  return Container(
-                    width: 77,
-                    height: 77,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 28,
+              child: _profilePhoto != null && _profilePhoto!.isNotEmpty
+                  ? Image.network(
+                      _buildImageUrl(_profilePhoto!),
+                      width: 77,
+                      height: 77,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 77,
+                          height: 77,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('❌ Profile: Erreur chargement image: $error');
+                        // Si l'image n'est pas trouvée, afficher un placeholder avec les initiales
+                        final initials = _labName?.split(' ').map((n) => n[0]).take(2).join().toUpperCase() ?? 'LY';
+                        return Container(
+                          width: 77,
+                          height: 77,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 77,
+                      height: 77,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _labName?.split(' ').map((n) => n[0]).take(2).join().toUpperCase() ?? 'LY',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 28,
+                          ),
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -486,6 +535,21 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
         ],
       ),
     );
+  }
+
+  String _buildImageUrl(String profilePhotoPath) {
+    if (profilePhotoPath.isEmpty) return '';
+    
+    if (profilePhotoPath.startsWith('http')) {
+      return profilePhotoPath;
+    } else {
+      // Construire l'URL complète en extrayant le nom du fichier
+      // Format attendu: /lab/uploads/profiles/filename.png ou uploads/profiles/filename.png
+      final filename = profilePhotoPath.split('/').last;
+      final imageUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
+      debugPrint('🔵 Profile: Construction URL image: $imageUrl');
+      return imageUrl;
+    }
   }
 
   String _normalizeLocation(String location) {

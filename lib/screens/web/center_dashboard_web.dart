@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../widgets/web/web_sidebar.dart';
 import '../../widgets/web/web_header.dart';
 import '../centre_analyse/center_patients_screen.dart';
-import '../centre_analyse/center_notifications_screen.dart';
+import 'center_notifications_screen.dart';
 import 'results_upload_screen.dart';
 import 'results_history_screen.dart';
 import 'digital_signature_screen.dart';

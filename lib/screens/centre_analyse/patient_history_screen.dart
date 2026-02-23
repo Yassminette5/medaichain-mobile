@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
-
-// IMPORT WEB CORRECT
-import 'dart:html' as html show AnchorElement;
 
 /// Écran d'historique d'un patient
 class PatientHistoryScreen extends StatefulWidget {
@@ -172,12 +170,15 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  void _downloadFile(String url, String fileName) {
-    html.AnchorElement anchorElement =
-    html.AnchorElement(href: url);
-    anchorElement.download = fileName;
-    anchorElement.target = '_blank';
-    anchorElement.click();
+  Future<void> _downloadFile(String url, String fileName) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Erreur lors de l\'ouverture du fichier: $e');
+    }
   }
 
   @override
@@ -553,12 +554,18 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _buildActionButton(Icons.print_rounded, () {
-                          // Logique d'impression Web
+                    _buildActionButton(Icons.print_rounded, () async {
+                          // Logique d'impression/visualisation
                           if (result['file'] != null) {
-                            html.AnchorElement(href: _getFileUrl(result['file']))
-                              ..target = 'blank'
-                              ..click();
+                            final url = _getFileUrl(result['file']);
+                            try {
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            } catch (e) {
+                              debugPrint('Erreur lors de l\'ouverture du fichier: $e');
+                            }
                           }
                         }),
                         const SizedBox(width: 8),
@@ -648,11 +655,17 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           if (result['file'] != null) {
-                            html.AnchorElement(href: _getFileUrl(result['file']))
-                              ..target = '_blank'
-                              ..click();
+                            final url = _getFileUrl(result['file']);
+                            try {
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            } catch (e) {
+                              debugPrint('Erreur lors de l\'ouverture du fichier: $e');
+                            }
                           }
                         },
                         icon: const Icon(Icons.visibility_rounded, color: Colors.white),

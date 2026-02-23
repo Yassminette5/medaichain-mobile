@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/medical_card.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
-import '../onboarding/welcome_screen.dart';
+import '../auth/login_screen.dart';
 import 'center_profile_screen.dart';
 import 'manage_categories_screen.dart';
+import 'opening_hours_screen.dart';
 
 /// Écran des paramètres du centre d'analyse
 class CenterSettingsScreen extends StatefulWidget {
@@ -26,20 +28,49 @@ class _CenterSettingsScreenState extends State<CenterSettingsScreen> {
     _loadLabProfile();
   }
 
+  String? _profilePhoto;
+
   Future<void> _loadLabProfile() async {
     try {
       final labProfile = await ApiService.getLabProfile();
       if (mounted) {
         setState(() {
           _labName = labProfile['name'] ?? labProfile['centreName'] ?? labProfile['centre_name'];
+          final profilePhotoPath = labProfile['profilePhoto'] ?? 
+                         labProfile['photo'] ?? 
+                         labProfile['photoUrl'] ?? 
+                         labProfile['image'] ?? 
+                         labProfile['imageUrl'] ?? 
+                         labProfile['logo'] ?? 
+                         labProfile['logoUrl'];
+          _profilePhoto = profilePhotoPath;
+          debugPrint('🔵 Settings: ProfilePhotoPath: $profilePhotoPath');
+          debugPrint('🔵 Settings: ProfilePhoto URL finale: ${_profilePhoto != null ? _buildImageUrl(_profilePhoto!) : null}');
         });
       }
     } catch (e) {
+      debugPrint('❌ Settings: Erreur chargement profil: $e');
       if (mounted) {
         setState(() {
           _labName = null;
+          _profilePhoto = null;
         });
       }
+    }
+  }
+
+  String _buildImageUrl(String profilePhotoPath) {
+    if (profilePhotoPath.isEmpty) return '';
+    
+    if (profilePhotoPath.startsWith('http')) {
+      return profilePhotoPath;
+    } else {
+      // Construire l'URL complète en extrayant le nom du fichier
+      // Format attendu: /lab/uploads/profiles/filename.png ou uploads/profiles/filename.png
+      final filename = profilePhotoPath.split('/').last;
+      final imageUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
+      debugPrint('🔵 Settings: Construction URL image: $imageUrl');
+      return imageUrl;
     }
   }
 
@@ -78,65 +109,65 @@ class _CenterSettingsScreenState extends State<CenterSettingsScreen> {
     final initials = _labName?.split(' ').map((n) => n[0]).take(2).join().toUpperCase() ?? 'LC';
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15)],
       ),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
             ),
-            child: Center(
-              child: Text(
-                initials,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
-              ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: _profilePhoto != null && _profilePhoto!.isNotEmpty
+                  ? Image.network(
+                      _buildImageUrl(_profilePhoto!),
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('❌ Erreur chargement image: $error');
+                        return Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text(
+                        initials,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 28),
+                      ),
+                    ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _labName ?? 'Labo Central',
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Centre d\'Analyses',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.verified, color: Colors.white.withValues(alpha: 0.9), size: 14),
-                const SizedBox(width: 6),
-                const Text(
-                  'Certifié MEDAIChain',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 11),
-                ),
-              ],
+            child: Text(
+              _labName ?? 'Labo Central',
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -164,7 +195,12 @@ class _CenterSettingsScreenState extends State<CenterSettingsScreen> {
             );
           }),
           const SizedBox(height: 12),
-          _buildMenuItem(Icons.schedule_outlined, 'Horaires d\'ouverture', AppColors.diagnosis, () {}),
+          _buildMenuItem(Icons.schedule_outlined, 'Horaires d\'ouverture', AppColors.diagnosis, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OpeningHoursScreen()),
+            );
+          }),
         ],
       ),
     );
@@ -278,10 +314,10 @@ class _CenterSettingsScreenState extends State<CenterSettingsScreen> {
           // Déconnexion
           await context.read<AuthProvider>().logout();
           
-          // Naviguer vers l'écran d'accueil
+          // Naviguer vers l'écran de login
           if (context.mounted) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
               (route) => false,
             );
           }

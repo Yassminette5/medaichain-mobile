@@ -8,7 +8,7 @@ import 'utils/platform_utils.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/centre_analyse/home_centre_analyse.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
-import 'screens/patients/centers_list_screen.dart';
+import 'screens/centre_analyse/centers_list_screen.dart';
 import 'screens/web/login_web_screen.dart';
 import 'screens/web/center_dashboard_web.dart';
 

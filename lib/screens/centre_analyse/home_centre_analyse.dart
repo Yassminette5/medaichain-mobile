@@ -165,10 +165,9 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
-        index: _currentIndex,
+        index: _currentIndex == 0 ? 0 : (_currentIndex == 2 ? 1 : 2),
         children: [
           _buildHomePage(),
-          const CenterPatientsScreen(),
           const CenterNotificationsScreen(),
           const CenterSettingsScreen(),
         ],
@@ -223,7 +222,6 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(0, Icons.home_rounded, 'Accueil'),
-              _buildNavItem(1, Icons.people_rounded, 'Patients'),
               _buildNavItem(2, Icons.notifications_rounded, 'Notifications'),
               _buildNavItem(3, Icons.settings_rounded, 'Paramètres'),
             ],
@@ -280,15 +278,19 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF093FB), Color(0xFFF5576C)],
+          colors: [
+            AppColors.primary.withValues(alpha: 0.9),
+            AppColors.primary.withValues(alpha: 0.7),
+            AppColors.primaryDark.withValues(alpha: 0.8),
+          ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF5576C).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -696,7 +698,7 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: const Color(0xFFB794F6), // Violet clair
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
