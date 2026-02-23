@@ -97,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          "ID: #${user?.id.substring(user.id.length - 8).toUpperCase() ?? "UNKNOWN"}",
+                          "ID: #${(user?.id != null && user!.id.length >= 8) ? user.id.substring(user.id.length - 8).toUpperCase() : (user?.id?.toUpperCase() ?? 'UNKNOWN')}",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             color: Colors.white.withOpacity(0.95),
@@ -448,7 +448,7 @@ class ProfileScreen extends StatelessWidget {
                                   border: Border.all(color: Colors.white.withOpacity(0.2)),
                                 ),
                                 child: Text(
-                                  "ID: #${user?.id.substring(user.id.length - 8).toUpperCase() ?? 'UNKNOWN'}",
+                                  "ID: #${(user?.id != null && user!.id.length >= 8) ? user.id.substring(user.id.length - 8).toUpperCase() : (user?.id?.toUpperCase() ?? 'UNKNOWN')}",
                                   style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 14,
