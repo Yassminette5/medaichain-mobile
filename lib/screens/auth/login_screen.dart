@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 import '../patientnesrine/homeScreen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../patientnesrine/main_screen.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../centre_analyse/centre_analyse_dashboard_screen.dart';
+import '../centre_analyse/home_centre_analyse.dart';
+import '../pharmacie/pharmacie_dashboard_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -389,9 +396,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
+        final user = authProvider.user;
+        final userRole = user?.role ?? UserRole.patient;
+        final userEmail = user?.email ?? '';
+        
+        Widget dashboard;
+        
+        // Rediriger vers le bon dashboard selon le rôle
+        // Vérifier si c'est un admin par l'email (admin@medaichain.com)
+        if (userEmail.toLowerCase() == 'admin@medaichain.com' || 
+            userEmail.toLowerCase().contains('admin')) {
+          dashboard = const AdminDashboardScreen();
+        } else if (userRole == UserRole.centreAnalyse) {
+          // Sur mobile, utiliser HomeCentreAnalyse, sur web c'est géré par login_web_screen
+          dashboard = kIsWeb ? const CentreAnalyseDashboardScreen() : const HomeCentreAnalyse();
+        } else if (userRole == UserRole.pharmacie) {
+          dashboard = const PharmacieDashboardScreen();
+        } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {
+          dashboard = const DashboardScreen();
+        } else {
+          // Patient
+          dashboard = const MainScreen();
+        }
+        
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
+          MaterialPageRoute(builder: (_) => dashboard),
         );
       } else {
         _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');

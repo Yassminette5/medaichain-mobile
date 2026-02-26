@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
+import '../../services/api_service.dart';
 import '../patientnesrine/informations/informations_flow.dart';
+import '../onboarding/registration_success_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne — 2 étapes (Patient only)
 class SignupScreen extends StatefulWidget {
@@ -30,6 +33,11 @@ class _SignupScreenState extends State<SignupScreen>
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   int _currentStep = 0; // 0 = personal info, 1 = password + terms
+  
+  // Invitation parameters
+  String? _inviteToken;
+  String? _inviteRole;
+  String? _inviteEmail;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -42,6 +50,24 @@ class _SignupScreenState extends State<SignupScreen>
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+    
+    // Extract URL parameters if on web
+    if (kIsWeb) {
+      _extractUrlParameters();
+    }
+  }
+  
+  void _extractUrlParameters() {
+    // Get URL parameters from browser
+    final uri = Uri.base;
+    _inviteToken = uri.queryParameters['token'];
+    _inviteRole = uri.queryParameters['role'];
+    _inviteEmail = uri.queryParameters['email'];
+    
+    // Pre-fill email if from invitation
+    if (_inviteEmail != null && _inviteEmail!.isNotEmpty) {
+      _emailController.text = Uri.decodeComponent(_inviteEmail!);
+    }
   }
 
   @override
@@ -386,6 +412,7 @@ class _SignupScreenState extends State<SignupScreen>
             controller: controller,
             obscureText: isPassword && obscure,
             keyboardType: keyboardType,
+            readOnly: controller == _emailController && _inviteEmail != null && _inviteEmail!.isNotEmpty,
             style: const TextStyle(color: Colors.black, fontSize: 14),
             decoration: InputDecoration(
               hintText: hint,
@@ -682,34 +709,100 @@ class _SignupScreenState extends State<SignupScreen>
 
     setState(() => _isLoading = true);
 
-    // All users register as patient — simple, no role confusion
-    const UserRole role = UserRole.patient;
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      bool success = false;
 
-    final fullName = _nameController.text.trim();
+      // If invitation token exists, use completeInvite
+      if (_inviteToken != null && _inviteToken!.isNotEmpty) {
+        final fullName = _nameController.text.trim();
+        final nameParts = fullName.split(' ');
+        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-    final authProvider =
-        Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      phone: _phoneController.text.trim(),
-      role: role,
-      fullName: fullName,
-    );
+        // Convert role string to UserRole enum
+        UserRole role = UserRole.patient;
+        if (_inviteRole != null) {
+          switch (_inviteRole!.toLowerCase()) {
+            case 'medecin':
+              role = UserRole.medecin;
+              break;
+            case 'centre_analyse':
+              role = UserRole.centreAnalyse;
+              break;
+            case 'pharmacie':
+              role = UserRole.pharmacie;
+              break;
+            case 'clinique':
+              role = UserRole.clinique;
+              break;
+            default:
+              role = UserRole.patient;
+          }
+        }
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (success) {
-        // Navigate to the patient informations flow,
-        // which collects health data then goes to HomeScreen.
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (context) => const InformationsFlow()),
-          (route) => false,
+        // Call completeInvite API with role-specific fields
+        // Note: For invited users, the backend creates the profile automatically
+        // based on the role from the invitation token, so we only send basic info
+        final authResponse = await ApiService.completeInvite(
+          token: _inviteToken!,
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          phone: _phoneController.text.trim(),
+          firstName: firstName.isNotEmpty ? firstName : null,
+          lastName: lastName.isNotEmpty ? lastName : null,
+          // Additional fields can be added here if needed for specific roles
+          // The backend will create the appropriate profile based on the role in the token
         );
+
+        // Update auth provider
+        authProvider.setUser(authResponse.user);
+        success = true;
       } else {
-        _showErrorSnackBar(
-            authProvider.error ?? "Erreur d'inscription");
+        // Normal registration (patient only)
+        const UserRole role = UserRole.patient;
+        final fullName = _nameController.text.trim();
+        
+        success = await authProvider.register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          phone: _phoneController.text.trim(),
+          role: role,
+          fullName: fullName,
+        );
+      }
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (success) {
+          // Navigate based on role
+          if (_inviteToken != null && _inviteRole != null) {
+            // For invited users, navigate to registration success screen with role
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => RegistrationSuccessScreen(
+                  role: _inviteRole!,
+                ),
+              ),
+              (route) => false,
+            );
+          } else {
+            // Normal patient registration - go to informations flow
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (context) => const InformationsFlow()),
+              (route) => false,
+            );
+          }
+        } else {
+          _showErrorSnackBar(
+              authProvider.error ?? "Erreur d'inscription");
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorSnackBar(e.toString().replaceAll('Exception: ', ''));
       }
     }
   }

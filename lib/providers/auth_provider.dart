@@ -250,4 +250,12 @@ class AuthProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  // Définir l'utilisateur (pour completeInvite)
+  void setUser(User user) {
+    _user = user;
+    _isLoading = false;
+    _error = null;
+    notifyListeners();
+  }
 }

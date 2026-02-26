@@ -7,24 +7,33 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
-import 'package:madaichain/main.dart';
+import 'package:medaichainmobile/main.dart';
+import 'package:medaichainmobile/providers/auth_provider.dart';
+import 'package:medaichainmobile/providers/medicines_provider.dart';
+import 'package:medaichainmobile/providers/calendar_provider.dart';
+import 'package:medaichainmobile/providers/patients_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App launches successfully', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
+          ChangeNotifierProvider(create: (_) => MedicinesProvider()),
+          ChangeNotifierProvider(create: (_) => CalendarProvider()),
+          ChangeNotifierProvider(create: (_) => PatientsProvider()),
+        ],
+        child: const MEDAIChainApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Wait for the app to finish loading
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that the app has loaded (check for any widget from the app)
+    expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

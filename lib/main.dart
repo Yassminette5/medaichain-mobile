@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
@@ -10,9 +11,17 @@ import 'screens/dashboard_main_screen.dart';
 import 'core/theme/app_theme.dart' as patient_theme;
 import 'providers/auth_provider.dart';
 import 'providers/medicines_provider.dart';
+import 'providers/calendar_provider.dart';
+import 'providers/patients_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/login_web_screen.dart';
+import 'screens/auth/signup_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/patientnesrine/main_screen.dart';
+
+// Admin Imports
+import 'screens/admin/admin_login_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,17 +47,24 @@ class MEDAIChainApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (_) => MedicinesProvider()),
+        ChangeNotifierProvider(create: (_) => CalendarProvider()),
+        ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,
-        home: const AppLauncherScreen(),
+        initialRoute: '/',
         routes: {
-          '/login': (context) => const LoginScreen(),
+          '/': (context) => kIsWeb ? const LoginWebScreen() : const AppLauncherScreen(),
+          '/login': (context) => kIsWeb ? const LoginWebScreen() : const LoginScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
           '/patient_home': (context) => const AuthWrapper(),
+          '/admin': (context) => const AdminLoginScreen(),
+          '/admin/dashboard': (context) => const AdminDashboardScreen(),
+          '/signup.html': (context) => const SignupScreen(),
+          '/signup': (context) => const SignupScreen(),
         },
       ),
     );
