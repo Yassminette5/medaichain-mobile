@@ -28,12 +28,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchStats();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureAuthAndLoad();
+    });
+  }
+
+  Future<void> _ensureAuthAndLoad() async {
+    final ok = await _adminService.hasToken();
+    if (!ok) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+      );
+      return;
+    }
+
+    await _fetchStats();
   }
 
   Future<void> _fetchStats() async {
     setState(() => _isLoading = true);
     final stats = await _adminService.getStats();
+    if (!mounted) return;
+
+    // Si token absent/expiré → rediriger vers login admin
+    if (stats == null) {
+      await _logout();
+      return;
+    }
+
     setState(() {
       _stats = stats;
       _isLoading = false;
@@ -43,6 +66,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _fetchUsers() async {
     setState(() => _isLoading = true);
     final users = await _adminService.getUsers();
+    if (!mounted) return;
+
+    if (users == null) {
+      await _logout();
+      return;
+    }
+
     setState(() {
       _users = users;
       _isLoading = false;

@@ -2,7 +2,7 @@
 import '../../core/theme/app_colors.dart';
 
 
-/// Contenu des d├®tails d'un rendez-vous (sans Scaffold) pour utilisation dans dialog
+/// Contenu des détails d'un rendez-vous (sans Scaffold) pour utilisation dans dialog
 class AppointmentDetailContent extends StatelessWidget {
   final Map<String, dynamic> appointment;
 
@@ -32,8 +32,8 @@ class AppointmentDetailContent extends StatelessWidget {
     try {
       final date = DateTime.parse(dateString);
       final months = [
-        'Janvier', 'F├®vrier', 'Mars', 'Avril', 'Mai', 'Juin',
-        'Juillet', 'Ao├╗t', 'Septembre', 'Octobre', 'Novembre', 'D├®cembre'
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
@@ -87,7 +87,7 @@ class AppointmentDetailContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // En-t├¬te du document
+        // En-tête du document
         _buildDocumentHeader(),
         const SizedBox(height: 40),
         // Informations Patient
@@ -95,9 +95,9 @@ class AppointmentDetailContent extends StatelessWidget {
         const SizedBox(height: 16),
         _buildPatientInfo(patientFirstName, patientEmail, patientPhone),
         const SizedBox(height: 32),
-        // M├®decin R├®f├®rent (si disponible)
+        // Médecin Référent (si disponible)
         if (doctorId != null && doctorId is Map) ...[
-          _buildSectionHeader('M├ëDECIN R├ëF├ëRENT'),
+          _buildSectionHeader('MÉDECIN RÉFÉRENT'),
           const SizedBox(height: 16),
           _buildDoctorInfo(Map<String, dynamic>.from(doctorId)),
           const SizedBox(height: 32),
@@ -149,7 +149,7 @@ class AppointmentDetailContent extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Document de prescription m├®dicale',
+                'Document de prescription médicale',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -198,7 +198,7 @@ class AppointmentDetailContent extends StatelessWidget {
       rows.add(_buildTableRow('Email', email));
     }
     if (phone != null && phone.isNotEmpty) {
-      rows.add(_buildTableRow('T├®l├®phone', phone));
+      rows.add(_buildTableRow('Téléphone', phone));
     }
     
     return Table(
@@ -212,7 +212,7 @@ class AppointmentDetailContent extends StatelessWidget {
 
   Widget _buildDoctorInfo(Map<String, dynamic> doctor) {
     final doctorName = '${doctor['firstName'] ?? ''} ${doctor['lastName'] ?? ''}'.trim();
-    final specialty = doctor['specialty'] ?? doctor['specialite'] ?? 'Non sp├®cifi├®';
+    final specialty = doctor['specialty'] ?? doctor['specialite'] ?? 'Non spécifié';
 
     return Table(
       columnWidths: const {
@@ -220,8 +220,8 @@ class AppointmentDetailContent extends StatelessWidget {
         1: FlexColumnWidth(5),
       },
       children: [
-        _buildTableRow('Nom', doctorName.isNotEmpty ? 'Dr. $doctorName' : 'M├®decin'),
-        _buildTableRow('Sp├®cialit├®', specialty),
+        _buildTableRow('Nom', doctorName.isNotEmpty ? 'Dr. $doctorName' : 'Médecin'),
+        _buildTableRow('Spécialité', specialty),
       ],
     );
   }
@@ -295,7 +295,7 @@ class AppointmentDetailContent extends StatelessWidget {
           const SizedBox(height: 20),
         ],
         if (notes.isNotEmpty) ...[
-          _buildInfoLabel('Notes suppl├®mentaires'),
+          _buildInfoLabel('Notes supplémentaires'),
           const SizedBox(height: 8),
           _buildInfoValue(notes),
         ],

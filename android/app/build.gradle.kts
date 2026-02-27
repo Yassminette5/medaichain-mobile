@@ -7,8 +7,11 @@ plugins {
 
 android {
     namespace = "com.example.madaichain"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Plugins (ex: mobile_scanner) exigent compileSdk 36
+    compileSdk = 36
+
+    // Plugins Android exigent NDK 27.0.12077973
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -24,7 +27,8 @@ android {
         applicationId = "com.example.madaichain"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // mobile_scanner exige minSdk 23
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
-/// Types d'├®v├®nements m├®dicaux
+/// Types d'événements médicaux
 enum EventType {
   consultation,
   operation,
@@ -13,7 +13,7 @@ extension EventTypeExtension on EventType {
       case EventType.consultation:
         return 'Consultation';
       case EventType.operation:
-        return 'Op├®ration';
+        return 'Opération';
       case EventType.note:
         return 'Note';
     }
@@ -53,7 +53,7 @@ extension EventTypeExtension on EventType {
   }
 }
 
-/// Options d'alerte avant l'├®v├®nement
+/// Options d'alerte avant l'événement
 enum AlertOption {
   none,
   min5,
@@ -99,7 +99,7 @@ extension AlertOptionExtension on AlertOption {
   }
 }
 
-/// Mod├¿le d'├®v├®nement calendrier
+/// Modèle d'événement calendrier
 class CalendarEvent {
   final String id;
   final String title;

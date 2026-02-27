@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import '../dashboard/dashboard_screen.dart';
-import '../centre_analyse/centre_analyse_dashboard_screen.dart';
+import '../../screens/centre_analyse/home_centre_analyse.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Registration Success Screen - Premium Animated Design
@@ -518,7 +518,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
   void _navigateToDashboard() {
     Widget dashboard;
     if (widget.role == 'centre_analyse' || widget.role == "Centre d'analyse") {
-      dashboard = const CentreAnalyseDashboardScreen();
+      dashboard = const HomeCentreAnalyse();
     } else {
       dashboard = const DashboardScreen();
     }

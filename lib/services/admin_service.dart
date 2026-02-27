@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart';
 
 class AdminService {
   // Use 10.0.2.2 for Android emulator, localhost for Web/iOS
@@ -164,7 +165,20 @@ class AdminService {
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('admin_token');
+    // 1) Token dédié admin (flow AdminLoginScreen)
+    final adminToken = prefs.getString('admin_token');
+    if (adminToken != null && adminToken.isNotEmpty) return adminToken;
+
+    // 2) Fallback: token "normal" (flow AuthProvider/Login classique)
+    final accessToken = await ApiService.getAccessToken();
+    if (accessToken != null && accessToken.isNotEmpty) return accessToken;
+
+    return null;
+  }
+
+  Future<bool> hasToken() async {
+    final token = await _getToken();
+    return token != null && token.isNotEmpty;
   }
 
   Future<void> logout() async {

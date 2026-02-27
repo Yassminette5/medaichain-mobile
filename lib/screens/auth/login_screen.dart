@@ -6,12 +6,10 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
-import '../patientnesrine/homeScreen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../dashboard/dashboard_screen.dart';
-import '../centre_analyse/centre_analyse_dashboard_screen.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
@@ -409,7 +407,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           dashboard = const AdminDashboardScreen();
         } else if (userRole == UserRole.centreAnalyse) {
           // Sur mobile, utiliser HomeCentreAnalyse, sur web c'est géré par login_web_screen
-          dashboard = kIsWeb ? const CentreAnalyseDashboardScreen() : const HomeCentreAnalyse();
+          dashboard = kIsWeb ?  const HomeCentreAnalyse() : const  HomeCentreAnalyse();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
         } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../centre_analyse/centre_analyse_dashboard_screen.dart';
+import '../web/center_dashboard_web.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
@@ -431,7 +429,7 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
           dashboard = const AdminDashboardScreen();
         } else if (userRole == UserRole.centreAnalyse) {
           // Use web dashboard for center analysis on web platform
-          dashboard = const CentreAnalyseDashboardScreen();
+          dashboard = const CenterDashboardWeb();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
         } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {

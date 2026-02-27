@@ -16,6 +16,7 @@ dependencies:
   fl_chart: 0.68.0
   google_fonts: ^6.1.0
   http: ^1.2.0
+  http_parser: ^4.1.2
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   intl: ^0.20.0
