@@ -184,14 +184,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 children: [
                   _buildModernCheckbox(),
                   const SizedBox(width: 8),
-                  Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
-                  const Spacer(),
+                  Flexible(
+                    child: Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12), overflow: TextOverflow.ellipsis),
+                  ),
                   TextButton(
                     onPressed: _showForgotPasswordDialog,
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
                     child: ShaderMask(
                       shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13)),
+                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 12)),
                     ),
                   ),
                 ],

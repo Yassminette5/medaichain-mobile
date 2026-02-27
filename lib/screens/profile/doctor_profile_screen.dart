@@ -420,10 +420,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           // Déconnexion
           await context.read<AuthProvider>().logout();
           
-          // Naviguer vers l'écran d'accueil
+          // Naviguer vers la page de login
           if (context.mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/login',
               (route) => false,
             );
           }

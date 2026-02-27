@@ -8,7 +8,7 @@ import '../models/doctor_profile_model.dart';
 class ApiService {
   // Changez cette URL pour votre backend
   // static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
+  static const String baseUrl = 'http://127.0.0.1:3000'; // Pour iOS/Web
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -1105,6 +1105,110 @@ class ApiService {
     } else {
       throw Exception('Erreur de suppression de l\'événement');
     }
+  }
+
+  // ========== ADMISSIONS FILTRÉES ==========
+  static Future<List<dynamic>> getAdmissionsByDate(String date) async {
+    final response = await http.get(Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/admissions?date=$date'), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load admissions');
+  }
+
+  static Future<List<dynamic>> getAdmissionsByStatus(String status) async {
+    final response = await http.get(Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/admissions?status=$status'), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load admissions');
+  }
+
+  // ========== APPOINTMENTS FILTRÉS ==========
+  static Future<List<dynamic>> getAppointmentsByDate(String date) async {
+    final response = await http.get(Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/appointments?date=$date'), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load appointments');
+  }
+
+  static Future<List<dynamic>> getAppointmentsByDoctor(String doctorId) async {
+    final response = await http.get(Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/appointments?doctorId=$doctorId'), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load appointments');
+  }
+
+  // ========== FACTURATION (INVOICES) ==========
+  static Future<List<dynamic>> getInvoices({String? paymentStatus, String? patientId}) async {
+    String url = '$baseUrl/clinic-management/clinic/$clinicId/invoices';
+    final params = <String>[];
+    if (paymentStatus != null) params.add('paymentStatus=$paymentStatus');
+    if (patientId != null) params.add('patientId=$patientId');
+    if (params.isNotEmpty) url += '?${params.join('&')}';
+    final response = await http.get(Uri.parse(url), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load invoices');
+  }
+
+  static Future<Map<String, dynamic>> getInvoiceById(String invoiceId) async {
+    final response = await http.get(Uri.parse('$baseUrl/clinic-management/invoices/$invoiceId'), headers: clinicHeaders);
+    if (response.statusCode == 200) return json.decode(response.body);
+    throw Exception('Failed to load invoice');
+  }
+
+  static Future<Map<String, dynamic>> createInvoice({
+    required String patientId,
+    required String patientName,
+    String? doctorId,
+    String? doctorName,
+    String? appointmentId,
+    required List<Map<String, dynamic>> items,
+    double discount = 0,
+    double discountPercentage = 0,
+    String? paymentMethod,
+    String? notes,
+  }) async {
+    double subtotal = 0;
+    for (var item in items) {
+      item['total'] = (item['quantity'] ?? 1) * (item['unitPrice'] ?? 0);
+      subtotal += item['total'];
+    }
+    double discountAmount = discount > 0 ? discount : (subtotal * discountPercentage / 100);
+    double totalAmount = subtotal - discountAmount;
+
+    final body = <String, dynamic>{
+      'patientId': patientId,
+      'patientName': patientName,
+      'date': DateTime.now().toIso8601String(),
+      'items': items,
+      'subtotal': subtotal,
+      'discount': discountAmount,
+      'discountPercentage': discountPercentage,
+      'totalAmount': totalAmount,
+      'amountDue': totalAmount,
+    };
+    if (doctorId != null) body['doctorId'] = doctorId;
+    if (doctorName != null) body['doctorName'] = doctorName;
+    if (appointmentId != null) body['appointmentId'] = appointmentId;
+    if (paymentMethod != null) body['paymentMethod'] = paymentMethod;
+    if (notes != null) body['notes'] = notes;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/invoices'),
+      headers: clinicHeaders,
+      body: json.encode(body),
+    );
+    if (response.statusCode == 201) return json.decode(response.body);
+    throw Exception('Failed to create invoice: ${response.body}');
+  }
+
+  static Future<void> updateInvoice(String invoiceId, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/clinic-management/invoices/$invoiceId'),
+      headers: clinicHeaders,
+      body: json.encode(data),
+    );
+    if (response.statusCode != 200) throw Exception('Failed to update invoice');
+  }
+
+  static Future<void> deleteInvoice(String invoiceId) async {
+    final response = await http.delete(Uri.parse('$baseUrl/clinic-management/invoices/$invoiceId'), headers: clinicHeaders);
+    if (response.statusCode != 200) throw Exception('Failed to delete invoice');
   }
 
   // ========== PROFIL LABORATOIRE ==========

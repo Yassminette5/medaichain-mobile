@@ -17,7 +17,19 @@ class AppTheme {
   static const Color mediumBlue = Color(0xFF64B5F6); // Blue 300
   static const Color chainAccent = Color(0xFF26C6DA); // Cyan 400 - Accent blockchain
   
-  // Backward compatibility (les anciens noms pointent vers les nouvelles couleurs)
+  // Extended palette for premium dashboard
+  static const Color sidebarDark = Color(0xFF0A1628); // Deep navy for sidebar
+  static const Color sidebarHover = Color(0xFF132240); // Lighter navy for hover
+  static const Color sidebarActive = Color(0xFF1A3158); // Active item bg
+  static const Color surfaceCard = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFF94A3B8); // Slate 400
+  static const Color textTertiary = Color(0xFFCBD5E1); // Slate 300
+  static const Color dividerLight = Color(0xFFE2E8F0); // Slate 200
+  static const Color purple = Color(0xFF7C3AED); // Violet 600
+  static const Color pink = Color(0xFFEC4899); // Pink 500
+  static const Color indigo = Color(0xFF6366F1); // Indigo 500
+
+  // Backward compatibility
   static const Color primaryBlue = primaryMedical;
   static const Color primaryTeal = accentMedical;
 
@@ -29,9 +41,67 @@ class AppTheme {
   );
   
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF1565C0), Color(0xFF0097A7)], // Blue 800 to Cyan 700
+    colors: [Color(0xFF1565C0), Color(0xFF0097A7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient sidebarGradient = LinearGradient(
+    colors: [Color(0xFF0A1628), Color(0xFF0F2035)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient purpleGradient = LinearGradient(
+    colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient successGradient = LinearGradient(
+    colors: [Color(0xFF059669), Color(0xFF34D399)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient warningGradient = LinearGradient(
+    colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient errorGradient = LinearGradient(
+    colors: [Color(0xFFDC2626), Color(0xFFF87171)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Premium card decoration
+  static BoxDecoration get cardDecoration => BoxDecoration(
+    color: white,
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(color: dividerLight.withOpacity(0.5)),
+    boxShadow: [
+      BoxShadow(
+        color: const Color(0xFF0D47A1).withOpacity(0.04),
+        blurRadius: 24,
+        offset: const Offset(0, 8),
+      ),
+    ],
+  );
+
+  // Glassmorphism decoration
+  static BoxDecoration get glassDecoration => BoxDecoration(
+    color: white.withOpacity(0.7),
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(color: white.withOpacity(0.3)),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.03),
+        blurRadius: 20,
+        offset: const Offset(0, 4),
+      ),
+    ],
   );
 
   static ThemeData get lightTheme {
@@ -66,12 +136,12 @@ class AppTheme {
         ),
         bodyLarge: const TextStyle(
           fontSize: 16,
-          color: Color(0xFF334155), // Slate 700
+          color: Color(0xFF334155),
           height: 1.5,
         ),
         bodyMedium: const TextStyle(
           fontSize: 14,
-          color: Color(0xFF64748B), // Slate 500
+          color: Color(0xFF64748B),
         ),
       ),
 
@@ -126,7 +196,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: primaryMedical, width: 2),
         ),
-        prefixIconColor: const Color(0xFF94A3B8), // Slate 400
+        prefixIconColor: const Color(0xFF94A3B8),
       ),
 
       // Cards Premium
