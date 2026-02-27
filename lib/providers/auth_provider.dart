@@ -227,6 +227,40 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // Mettre à jour les informations patient
+  Future<bool> updatePatientInformation({
+    String? fullName,
+    required String gender,
+    required int age,
+    required int height,
+    required int weight,
+    required List<String> allergies,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await ApiService.updatePatientInformation(
+        fullName: fullName,
+        gender: gender,
+        age: age,
+        height: height,
+        weight: weight,
+        allergies: allergies,
+      );
+      _user = updatedUser;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   // Récupérer le profil médecin
   Future<void> fetchDoctorProfile() async {
     try {

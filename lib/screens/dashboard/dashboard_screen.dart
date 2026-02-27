@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/calendar_provider.dart';
+import '../../providers/patients_provider.dart';
+import '../../models/calendar_event_model.dart';
 import '../patients/patient_access_request_screen.dart';
 import '../patients/patient_medical_record_screen.dart';
 import '../ai/ai_decision_support_screen.dart';
 import '../profile/doctor_profile_screen.dart';
+import '../agenda/agenda_screen.dart';
+import '../patientnesrine/notifications_screen.dart';
+import '../consultations/new_consultation_screen.dart';
+import '../consultations/all_consultations_screen.dart';
 
 /// Tableau de Bord Moderne avec Navigation
 class DashboardScreen extends StatefulWidget {
@@ -18,9 +26,14 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
 
+  void navigateToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   final List<Widget> _pages = [
     const _HomeView(),
     const _PatientsView(),
+    const AgendaScreen(),
     const AiDecisionSupportScreen(),
     const DoctorProfileScreen(),
   ];
@@ -47,8 +60,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               _buildNavItem(0, Icons.dashboard_rounded, 'Accueil'),
               _buildNavItem(1, Icons.people_rounded, 'Patients'),
-              _buildNavItem(2, Icons.auto_awesome, 'IA'),
-              _buildNavItem(3, Icons.person_rounded, 'Profil'),
+              _buildNavItem(2, Icons.calendar_month_rounded, 'Agenda'),
+              _buildNavItem(3, Icons.auto_awesome, 'IA'),
+              _buildNavItem(4, Icons.person_rounded, 'Profil'),
             ],
           ),
         ),
@@ -103,6 +117,10 @@ class _HomeView extends StatelessWidget {
             children: [
               _buildHeader(context),
               const SizedBox(height: 28),
+              _buildNotificationsSection(context),
+              const SizedBox(height: 28),
+              _buildUpcomingEvents(context),
+              const SizedBox(height: 28),
               _buildStatsGrid(context),
               const SizedBox(height: 28),
               _buildQuickActions(context),
@@ -119,9 +137,12 @@ class _HomeView extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final calendarProvider = Provider.of<CalendarProvider>(context);
     final doctorProfile = authProvider.doctorProfile;
-    final doctorName = doctorProfile?.fullName ?? 'Dr. Docteur';
+    final doctorName = doctorProfile?.displayName ?? 'Dr. Docteur';
     final initials = doctorProfile?.initials ?? 'DR';
+    final todayEvents = calendarProvider.getEventsForDay(DateTime.now());
+    final eventCount = todayEvents.length;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -182,32 +203,427 @@ class _HomeView extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-            ),
-            child: Stack(
-              children: [
-                const Icon(Icons.notifications_outlined, size: 24, color: Colors.white),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 2),
+          GestureDetector(
+            onTap: () {
+              // Navigate to Notifications screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications_outlined, size: 24, color: Colors.white),
+                  if (eventCount > 0)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Text(
+                          '$eventCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsSection(BuildContext context) {
+    final calendarProvider = Provider.of<CalendarProvider>(context);
+    final alertEvents = calendarProvider.eventsWithAlerts;
+
+    if (alertEvents.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Show max 4 alerts
+    final displayAlerts = alertEvents.take(4).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.warning.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.warning, AppColors.warning.withValues(alpha: 0.7)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Notifications',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${alertEvents.length} alerte${alertEvents.length > 1 ? 's' : ''} active${alertEvents.length > 1 ? 's' : ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${alertEvents.length}',
+                  style: TextStyle(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...displayAlerts.map((event) => _buildNotificationItem(context, event)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationItem(BuildContext context, CalendarEvent event) {
+    final now = DateTime.now();
+    final diff = event.dateTime.difference(now);
+    String timeLabel;
+    if (diff.inDays > 0) {
+      timeLabel = 'Dans ${diff.inDays}j';
+    } else if (diff.inHours > 0) {
+      timeLabel = 'Dans ${diff.inHours}h';
+    } else if (diff.inMinutes > 0) {
+      timeLabel = 'Dans ${diff.inMinutes}min';
+    } else {
+      timeLabel = 'Maintenant';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: event.type.lightColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: event.type.color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.alarm_rounded, color: AppColors.warning, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: event.type.color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        event.type.displayName,
+                        style: TextStyle(
+                          color: event.type.color,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.notifications_outlined, size: 12, color: AppColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Text(
+                      event.alertBefore.displayName,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [event.type.color, event.type.color.withValues(alpha: 0.7)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              timeLabel,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEvents(BuildContext context) {
+    final calendarProvider = Provider.of<CalendarProvider>(context);
+    final allUpcoming = calendarProvider.upcomingEvents;
+
+    if (allUpcoming.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Show max 3
+    final displayEvents = allUpcoming.take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Prochains rendez-vous',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AllConsultationsScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Voir tout',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...displayEvents.map((event) => _buildEventCard(context, event)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventCard(BuildContext context, CalendarEvent event) {
+    final isToday = event.dateTime.year == DateTime.now().year &&
+        event.dateTime.month == DateTime.now().month &&
+        event.dateTime.day == DateTime.now().day;
+    final timeStr = DateFormat('HH:mm').format(event.dateTime);
+    final dateStr = isToday ? "Aujourd'hui" : DateFormat('EEE d MMM', 'fr_FR').format(event.dateTime);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: event.type.lightColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: event.type.color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: event.type.color,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(event.type.icon, color: Colors.white, size: 16),
+                Text(
+                  timeStr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      event.type.displayName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: event.type.color,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '• $dateStr',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                if (event.patientName != null && event.patientName!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_outline, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          event.patientName!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (event.alertBefore != AlertOption.none)
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.alarm_rounded, color: Colors.orange, size: 18),
+            ),
         ],
       ),
     );
@@ -445,47 +861,69 @@ class _HomeView extends StatelessWidget {
 
   Widget _buildModernActionButton(BuildContext context, IconData icon, String label, Color color, Gradient gradient) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+      child: GestureDetector(
+        onTap: () {
+          // Action selon le label
+          if (label.contains('Consult')) {
+            _showAddConsultationDialog(context);
+          } else if (label.contains('Planifier')) {
+            // Naviguer vers l'agenda
+            final dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
+            dashboardState?.navigateToTab(2);
+          }
+          // Ajouter d'autres actions selon les besoins
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: gradient,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                height: 1.3,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 12),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showAddConsultationDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NewConsultationScreen(),
       ),
     );
   }
@@ -640,6 +1078,10 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildTodayConsultations(BuildContext context) {
+    final calendarProvider = Provider.of<CalendarProvider>(context);
+    final todayEvents = calendarProvider.getEventsForDay(DateTime.now());
+    todayEvents.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -677,11 +1119,37 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernConsultationItem(context, 'Pierre Dubois', '09:00', 'Suivi diabète', AppColors.primary, true),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Sophie Laurent', '10:30', 'Bilan général', AppColors.secondary, false),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Marc Petit', '14:00', 'Contrôle cardiaque', AppColors.error, false),
+          if (todayEvents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(Icons.event_available, size: 48, color: AppColors.textLight),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Aucun événement aujourd'hui",
+                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...todayEvents.map((event) {
+              final isEnCours = event.dateTime.isBefore(DateTime.now()) && 
+                  (event.endTime != null ? event.endTime!.isAfter(DateTime.now()) : event.dateTime.add(const Duration(minutes: 30)).isAfter(DateTime.now()));
+              final timeStr = DateFormat('HH:mm').format(event.dateTime);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildModernConsultationItem(
+                  context, 
+                  event.patientName ?? event.title, 
+                  timeStr, 
+                  event.type.displayName, 
+                  event.type.color, 
+                  isEnCours
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -801,18 +1269,48 @@ class _HomeView extends StatelessWidget {
   }
 }
 
-class _PatientsView extends StatelessWidget {
+class _PatientsView extends StatefulWidget {
   const _PatientsView();
 
   @override
+  State<_PatientsView> createState() => _PatientsViewState();
+}
+
+class _PatientsViewState extends State<_PatientsView> {
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Charger les patients au démarrage
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<PatientsProvider>(context, listen: false).loadPatients();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final patientsProvider = Provider.of<PatientsProvider>(context);
+    final patients = _searchQuery.isEmpty
+        ? patientsProvider.patients
+        : patientsProvider.searchPatients(_searchQuery);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Patients', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Patients', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => patientsProvider.loadPatients(),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -821,8 +1319,9 @@ class _PatientsView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 15)],
               ),
-              child: const TextField(
-                decoration: InputDecoration(
+              child: TextField(
+                onChanged: (value) => setState(() => _searchQuery = value),
+                decoration: const InputDecoration(
                   hintText: 'Rechercher un patient...',
                   prefixIcon: Icon(Icons.search, color: AppColors.textLight),
                   border: InputBorder.none,
@@ -830,20 +1329,86 @@ class _PatientsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildPatientCard(context, 'Jean Dupont', 'Diabète Type 2', AppColors.warning),
-                  _buildPatientCard(context, 'Marie Martin', 'Hypertension', AppColors.error),
-                  _buildPatientCard(context, 'Pierre Dubois', 'Soins généraux', AppColors.success),
-                  _buildPatientCard(context, 'Sophie Laurent', 'Cardiologie', AppColors.prescription),
-                ],
+            if (patientsProvider.isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (patientsProvider.error != null)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Erreur de chargement',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        patientsProvider.error!,
+                        style: TextStyle(color: AppColors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => patientsProvider.loadPatients(),
+                        child: const Text('Réessayer'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (patients.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.people_outline, size: 64, color: AppColors.textLight),
+                      const SizedBox(height: 16),
+                      Text(
+                        _searchQuery.isEmpty ? 'Aucun patient' : 'Aucun résultat',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: patients.length,
+                  itemBuilder: (context, index) {
+                    final patient = patients[index];
+                    return _buildPatientCard(
+                      context,
+                      patient.fullName,
+                      patient.chronicDiseases.isNotEmpty
+                          ? patient.chronicDiseases.join(', ')
+                          : 'Soins généraux',
+                      _getColorForIndex(index),
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getColorForIndex(int index) {
+    final colors = [
+      AppColors.warning,
+      AppColors.error,
+      AppColors.success,
+      AppColors.prescription,
+      AppColors.primary,
+      AppColors.secondary,
+    ];
+    return colors[index % colors.length];
   }
 
   Widget _buildPatientCard(BuildContext context, String name, String condition, Color color) {

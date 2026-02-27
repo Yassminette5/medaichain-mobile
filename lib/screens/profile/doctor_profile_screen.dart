@@ -92,7 +92,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   Widget _buildProfileHeader(DoctorProfile? profile, String? email) {
     final initials = profile?.initials ?? '?';
-    final fullName = profile?.fullName ?? 'Médecin';
+    final fullName = profile?.displayName ?? 'Médecin';
     final speciality = profile?.speciality ?? 'Spécialité non définie';
     final isVerified = profile?.isVerified ?? false;
 
