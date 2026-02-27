@@ -3,10 +3,8 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
-import '../../utils/platform_utils.dart';
 import 'center_dashboard_web.dart';
 import '../onboarding/welcome_screen.dart';
-import '../pharmacie/web/pharmacy_web_dashboard.dart';
 import '../dashboard_main_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../dashboard/dashboard_screen.dart' as medecin_dash;
@@ -330,8 +328,8 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
           debugPrint('✅ Redirection vers CenterDashboardWeb');
           destination = const CenterDashboardWeb();
         } else if (role == UserRole.pharmacie) {
-          debugPrint('✅ Redirection vers PharmacyWebDashboard');
-          destination = const PharmacyWebDashboard();
+          debugPrint('✅ Redirection vers medecin_dash.DashboardScreen (Pharmacy en developpement)');
+          destination = const medecin_dash.DashboardScreen();
         } else if (role == UserRole.clinique) {
           debugPrint('✅ Redirection vers DashboardMainScreen');
           destination = const DashboardMainScreen();

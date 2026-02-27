@@ -26,9 +26,9 @@ import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 
 // Medical / Pharmacy / Centre
-import 'screens/pharmacie/web/pharmacy_web_dashboard.dart';
+// import 'screens/pharmacie/web/pharmacy_web_dashboard.dart';
 import 'screens/web/center_dashboard_web.dart';
-import 'screens/web/login_web_screen.dart';
+import 'screens/web/login_web_screen.dart' as web_login;
 import 'screens/dashboard/dashboard_screen.dart' as medecin;
 import 'models/user_model.dart';
 
@@ -66,12 +66,12 @@ class MEDAIChainApp extends StatelessWidget {
         theme: clinique_theme.AppTheme.lightTheme,
         initialRoute: kIsWeb ? '/login' : '/',
         routes: {
-          '/': (context) => kIsWeb ? const LoginWebScreen() : const AppLauncherScreen(),
-          '/login': (context) => kIsWeb ? const LoginWebScreen() : const LoginScreen(),
+          '/': (context) => kIsWeb ? const web_login.LoginWebScreen() : const AppLauncherScreen(),
+          '/login': (context) => kIsWeb ? const web_login.LoginWebScreen() : const LoginScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
           '/patient_home': (context) => const AuthWrapper(),
-          '/pharmacie': (context) => const PharmacyWebDashboard(),
+          // '/pharmacie': (context) => const PharmacyWebDashboard(),
           '/centre_analyse': (context) => const CenterDashboardWeb(),
           '/admin': (context) => const AdminLoginScreen(),
           '/admin/dashboard': (context) => const AdminDashboardScreen(),
@@ -214,7 +214,6 @@ class AppLauncherScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: Colors.white, size: 28),
->>>>>>> Stashed changes
             ),
             const SizedBox(width: 16),
             Expanded(
