@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,13 +8,54 @@ import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 
 class ApiService {
-  // Changez cette URL pour votre backend
-  // static const String baseUrl = 'http://10.0.2.2:3000'; // Pour émulateur Android
-  static const String baseUrl = 'http://localhost:3000'; // Pour iOS/Web
+  /// Base URL backend:
+  /// - Web: localhost
+  /// - Android emulator: 10.0.2.2 (loopback vers la machine hôte)
+  /// - Autres (iOS/desktop): localhost (à adapter si device physique)
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:3000';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
+    return 'http://localhost:3000';
+  }
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
+  static const String _rememberMeKey = 'remember_me';
+
+  // En mode "rememberMe = false", on garde la session uniquement en mémoire (valable jusqu’à fermeture de l’app)
+  static String? _memAccessToken;
+  static String? _memRefreshToken;
+  static User? _memUser;
+
+  static Future<void> setRememberMe(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_rememberMeKey, value);
+
+    if (!value) {
+      // Si l'utilisateur ne veut pas être mémorisé: supprimer toute session persistée
+      await prefs.remove(_accessTokenKey);
+      await prefs.remove(_refreshTokenKey);
+      await prefs.remove(_userKey);
+    }
+  }
+
+  static Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    final v = prefs.getBool(_rememberMeKey);
+    if (v != null) return v;
+
+    // Compat: si des tokens existent déjà (ancienne version), considérer rememberMe=true
+    return prefs.containsKey(_accessTokenKey) || prefs.containsKey(_refreshTokenKey) || prefs.containsKey(_userKey);
+  }
+
+  /// À appeler au démarrage: si rememberMe=false, on purge les tokens persistés.
+  static Future<void> enforceRememberPolicyOnStartup() async {
+    final remember = await getRememberMe();
+    if (!remember) {
+      await logout();
+    }
+  }
 
   // ========== COMPLÉTER INVITATION ==========
   static Future<AuthResponse> completeInvite({
@@ -59,8 +101,10 @@ class ApiService {
     if (response.statusCode == 201 || response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
-      await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
-      await _saveUser(authResponse.user);
+      // Pour complete-invite: on persiste la session (flow d'inscription)
+      await setRememberMe(true);
+      await _saveTokens(authResponse.accessToken, authResponse.refreshToken, persist: true);
+      await _saveUser(authResponse.user, persist: true);
       return authResponse;
     } else {
       final error = jsonDecode(response.body);
@@ -120,8 +164,10 @@ class ApiService {
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
-      await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
-      await _saveUser(authResponse.user);
+      // Inscription: on persiste la session
+      await setRememberMe(true);
+      await _saveTokens(authResponse.accessToken, authResponse.refreshToken, persist: true);
+      await _saveUser(authResponse.user, persist: true);
       return authResponse;
     } else {
       final error = jsonDecode(response.body);
@@ -133,6 +179,7 @@ class ApiService {
   static Future<AuthResponse> login({
     required String email,
     required String password,
+    bool rememberMe = true,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
@@ -146,8 +193,9 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final authResponse = AuthResponse.fromJson(data);
-      await _saveTokens(authResponse.accessToken, authResponse.refreshToken);
-      await _saveUser(authResponse.user);
+      await setRememberMe(rememberMe);
+      await _saveTokens(authResponse.accessToken, authResponse.refreshToken, persist: rememberMe);
+      await _saveUser(authResponse.user, persist: rememberMe);
       return authResponse;
     } else {
       final error = jsonDecode(response.body);
@@ -195,7 +243,7 @@ class ApiService {
   // ========== RAFRAÎCHIR TOKEN ==========
   static Future<void> refreshToken() async {
     final prefs = await SharedPreferences.getInstance();
-    final refreshToken = prefs.getString(_refreshTokenKey);
+    final refreshToken = prefs.getString(_refreshTokenKey) ?? _memRefreshToken;
 
     if (refreshToken == null) {
       throw Exception('Non connecté');
@@ -209,7 +257,8 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      await _saveTokens(data['accessToken'], data['refreshToken']);
+      final remember = await getRememberMe();
+      await _saveTokens(data['accessToken'], data['refreshToken'], persist: remember);
     } else {
       await logout();
       throw Exception('Session expirée');
@@ -301,7 +350,8 @@ class ApiService {
       final updatedUser = User.fromJson(data);
       
       // 2. Save to SharedPreferences
-      await _saveUser(updatedUser);
+      final remember = await getRememberMe();
+      await _saveUser(updatedUser, persist: remember);
       return updatedUser;
     } else {
       final error = jsonDecode(response.body);
@@ -436,6 +486,9 @@ class ApiService {
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userKey);
+    _memAccessToken = null;
+    _memRefreshToken = null;
+    _memUser = null;
   }
 
   // ========== MÉDICAMENTS ==========
@@ -705,13 +758,22 @@ class ApiService {
   }
 
   // ========== HELPERS ==========
-  static Future<void> _saveTokens(String accessToken, String refreshToken) async {
+  static Future<void> _saveTokens(String accessToken, String refreshToken, {required bool persist}) async {
+    // Toujours mettre en mémoire pour la session courante
+    _memAccessToken = accessToken;
+    _memRefreshToken = refreshToken;
+
+    if (!persist) return;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_accessTokenKey, accessToken);
     await prefs.setString(_refreshTokenKey, refreshToken);
   }
 
-  static Future<void> _saveUser(User user) async {
+  static Future<void> _saveUser(User user, {required bool persist}) async {
+    _memUser = user;
+    if (!persist) return;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, jsonEncode({
       'id': user.id,
@@ -733,7 +795,7 @@ class ApiService {
 
   static Future<String?> getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_accessTokenKey);
+    return prefs.getString(_accessTokenKey) ?? _memAccessToken;
   }
 
   static Future<User?> getSavedUser() async {
@@ -742,7 +804,7 @@ class ApiService {
     if (userData != null) {
       return User.fromJson(jsonDecode(userData));
     }
-    return null;
+    return _memUser;
   }
 
   static Future<bool> isLoggedIn() async {

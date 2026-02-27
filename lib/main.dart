@@ -13,6 +13,7 @@ import 'providers/auth_provider.dart';
 import 'providers/medicines_provider.dart';
 import 'providers/calendar_provider.dart';
 import 'providers/patients_provider.dart';
+import 'services/api_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/login_web_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -23,8 +24,11 @@ import 'screens/patientnesrine/main_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
+  await ApiService.enforceRememberPolicyOnStartup();
   
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -56,7 +60,8 @@ class MEDAIChainApp extends StatelessWidget {
         theme: clinique_theme.AppTheme.lightTheme,
         initialRoute: '/',
         routes: {
-          '/': (context) => kIsWeb ? const LoginWebScreen() : const AppLauncherScreen(),
+          // Mobile: onboarding si pas de session mémorisée, sinon aller direct à l'app
+          '/': (context) => kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
           '/login': (context) => kIsWeb ? const LoginWebScreen() : const LoginScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
@@ -65,6 +70,8 @@ class MEDAIChainApp extends StatelessWidget {
           '/admin/dashboard': (context) => const AdminDashboardScreen(),
           '/signup.html': (context) => const SignupScreen(),
           '/signup': (context) => const SignupScreen(),
+          // Ancien écran de sélection (si besoin plus tard)
+          '/launcher': (context) => const AppLauncherScreen(),
         },
       ),
     );
@@ -102,7 +109,7 @@ class AppLauncherScreen extends StatelessWidget {
                   gradient: const LinearGradient(colors: [Color(0xFF2E5BFF), Color(0xFF0030E5)]),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF2E5BFF).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                    BoxShadow(color: const Color(0xFF2E5BFF).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
                 child: const Row(
@@ -132,7 +139,7 @@ class AppLauncherScreen extends StatelessWidget {
                   gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF10B981).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                    BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
                 child: const Row(

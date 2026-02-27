@@ -137,6 +137,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> login({
     required String email,
     required String password,
+    bool rememberMe = true,
   }) async {
     _isLoading = true;
     _error = null;
@@ -146,6 +147,7 @@ class AuthProvider with ChangeNotifier {
       final response = await ApiService.login(
         email: email,
         password: password,
+        rememberMe: rememberMe,
       );
       _user = response.user;
       // Charger le profil médecin si applicable

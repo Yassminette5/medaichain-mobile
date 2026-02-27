@@ -4,9 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 class AdminService {
-  // Use 10.0.2.2 for Android emulator, localhost for Web/iOS
-  // But since we are targeting WEB, we must use localhost:3000
-  static const String baseUrl = 'http://localhost:3000';
+  // Réutiliser la même baseUrl que l'app (web=localhost, android emulator=10.0.2.2)
+  static String get baseUrl => ApiService.baseUrl;
 
   Future<String?> login(String email, String password) async {
     try {
@@ -52,6 +51,7 @@ class AdminService {
         return jsonDecode(response.body);
       }
     } catch (e) {
+      // ignore: avoid_print
       print('Error fetching stats: $e');
     }
     return null;
@@ -74,6 +74,7 @@ class AdminService {
         return jsonDecode(response.body);
       }
     } catch (e) {
+      // ignore: avoid_print
       print('Error fetching users: $e');
     }
     return null;
