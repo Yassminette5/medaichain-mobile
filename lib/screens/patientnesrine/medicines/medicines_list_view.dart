@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/medicines_provider.dart';
 import '../../../models/medicine_model.dart';
-import 'add_medicine_screen.dart';
 import 'medicine_detail_screen.dart';
 
 class MedicinesListView extends StatefulWidget {
@@ -97,14 +96,14 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                 boxShadow: isSelected 
                   ? [
                       BoxShadow(
-                        color: AppColors.secondary.withOpacity(0.4),
+                          color: AppColors.secondary.withValues(alpha: 0.4),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
                     ]
                   : [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -119,7 +118,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : AppColors.textDark.withOpacity(0.8),
+                      color: isSelected ? Colors.white : AppColors.textDark.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -128,7 +127,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? Colors.white.withOpacity(0.9) : AppColors.textGrey,
+                      color: isSelected ? Colors.white.withValues(alpha: 0.9) : AppColors.textGrey,
                     ),
                   ),
                 ],
@@ -157,7 +156,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? AppColors.primary : AppColors.textGrey.withOpacity(0.6),
+                    color: isSelected ? AppColors.primary : AppColors.textGrey.withValues(alpha: 0.6),
                   ),
                 ),
                 if (isSelected)
@@ -170,7 +169,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                       borderRadius: BorderRadius.circular(2),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         )
@@ -234,7 +233,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -265,6 +264,8 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                       fontWeight: FontWeight.bold,
                       color: AppColors.textDark,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (med.dosage.isNotEmpty)
                     Text(
@@ -273,9 +274,13 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                         fontSize: 13,
                         color: AppColors.textGrey,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: med.schedule.map((time) => _buildBadge(time)).toList(),
                   ),
                 ],
@@ -296,18 +301,22 @@ class _MedicinesListViewState extends State<MedicinesListView> {
     final color = time.contains('breakfast') ? const Color(0xFF4ECDC4) : const Color(0xFFFF9B71);
     
     return Container(
-      margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        label[0].toUpperCase() + label.substring(1),
-        style: GoogleFonts.poppins(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 140),
+        child: Text(
+          label[0].toUpperCase() + label.substring(1),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
         ),
       ),
     );

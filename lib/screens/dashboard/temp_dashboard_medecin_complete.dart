@@ -139,7 +139,7 @@ class _HomeView extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final calendarProvider = Provider.of<CalendarProvider>(context);
     final doctorProfile = authProvider.doctorProfile;
-    final doctorName = doctorProfile?.displayName ?? 'Dr. Docteur';
+    final doctorName = doctorProfile?.fullName ?? 'Dr. Docteur';
     final initials = doctorProfile?.initials ?? 'DR';
     final todayEvents = calendarProvider.getEventsForDay(DateTime.now());
     final eventCount = todayEvents.length;
@@ -840,7 +840,7 @@ class _HomeView extends StatelessWidget {
               _buildModernActionButton(
                 context,
                 Icons.video_call_outlined,
-                'Appel\nVid├®o',
+                'Appel\nVidéo',
                 AppColors.diagnosis,
                 LinearGradient(colors: [AppColors.diagnosis, AppColors.diagnosis.withValues(alpha: 0.7)]),
               ),
@@ -959,7 +959,7 @@ class _HomeView extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    "Demandes d'acc├¿s",
+                    "Demandes d'accès",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -981,9 +981,9 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernRequestItem('Jean Dupont', 'Acc├¿s urgence', AppColors.error, 'URGENT'),
+          _buildModernRequestItem('Jean Dupont', 'Accès urgence', AppColors.error, 'URGENT'),
           const SizedBox(height: 12),
-          _buildModernRequestItem('Marie Martin', 'Historique m├®dical', AppColors.warning, 'HAUTE'),
+          _buildModernRequestItem('Marie Martin', 'Historique médical', AppColors.warning, 'HAUTE'),
         ],
       ),
     );
@@ -1115,11 +1115,11 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernConsultationItem(context, 'Pierre Dubois', '09:00', 'Suivi diab├¿te', AppColors.primary, true),
+          _buildModernConsultationItem(context, 'Pierre Dubois', '09:00', 'Suivi diabète', AppColors.primary, true),
           const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Sophie Laurent', '10:30', 'Bilan g├®n├®ral', AppColors.secondary, false),
+          _buildModernConsultationItem(context, 'Sophie Laurent', '10:30', 'Bilan général', AppColors.secondary, false),
           const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Marc Petit', '14:00', 'Contr├┤le cardiaque', AppColors.error, false),
+          _buildModernConsultationItem(context, 'Marc Petit', '14:00', 'Contrôle cardiaque', AppColors.error, false),
         ],
       ),
     );
@@ -1252,7 +1252,7 @@ class _PatientsViewState extends State<_PatientsView> {
   @override
   void initState() {
     super.initState();
-    // Charger les patients au d├®marrage
+    // Charger les patients au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<PatientsProvider>(context, listen: false).loadPatients();
     });
@@ -1324,7 +1324,7 @@ class _PatientsViewState extends State<_PatientsView> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => patientsProvider.loadPatients(),
-                        child: const Text('R├®essayer'),
+                        child: const Text('Réessayer'),
                       ),
                     ],
                   ),
@@ -1339,7 +1339,7 @@ class _PatientsViewState extends State<_PatientsView> {
                       const Icon(Icons.people_outline, size: 64, color: AppColors.textLight),
                       const SizedBox(height: 16),
                       Text(
-                        _searchQuery.isEmpty ? 'Aucun patient' : 'Aucun r├®sultat',
+                        _searchQuery.isEmpty ? 'Aucun patient' : 'Aucun résultat',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -1357,7 +1357,7 @@ class _PatientsViewState extends State<_PatientsView> {
                       patient.fullName,
                       patient.chronicDiseases.isNotEmpty
                           ? patient.chronicDiseases.join(', ')
-                          : 'Soins g├®n├®raux',
+                          : 'Soins généraux',
                       _getColorForIndex(index),
                     );
                   },

@@ -6,7 +6,7 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
-import '../patientnesrine/homeScreen.dart';
+import '../../services/api_service.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../patientnesrine/main_screen.dart';
@@ -41,6 +41,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _animController, curve: const Interval(0, 0.6, curve: Curves.easeOut)));
     _slideAnim = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(CurvedAnimation(parent: _animController, curve: const Interval(0.2, 1, curve: Curves.easeOutCubic)));
     _animController.forward();
+
+    // Charger l'état "remember me" sauvegardé
+    Future.microtask(() async {
+      final remember = await ApiService.getRememberMe();
+      if (!mounted) return;
+      setState(() => _rememberMe = remember);
+    });
   }
 
   @override
@@ -149,7 +156,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+        // Réduire le blur (surtout sur émulateur) pour éviter jank / crash GPU
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -392,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.login(email: email, password: password);
+    final success = await authProvider.login(email: email, password: password, rememberMe: _rememberMe);
 
     if (mounted) {
       setState(() => _isLoading = false);

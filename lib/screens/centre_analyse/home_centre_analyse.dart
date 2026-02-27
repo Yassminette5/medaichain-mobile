@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
-import 'center_patients_screen.dart';
 import 'center_notifications_screen.dart';
 import 'center_settings_screen.dart';
 import 'appointment_detail_screen.dart';
@@ -164,6 +163,8 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      // Réduit fortement les animations d'insets clavier (source fréquente de jank/timeout sur émulateur)
+      resizeToAvoidBottomInset: false,
       body: IndexedStack(
         index: _currentIndex == 0 ? 0 : (_currentIndex == 2 ? 1 : 2),
         children: [
@@ -178,25 +179,30 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
 
   Widget _buildHomePage() {
     return SafeArea(
-      child: FadeTransition(
-        opacity: _fadeAnim,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildWelcomeCard(),
-              const SizedBox(height: 24),
-              _buildSearchBar(),
-              const SizedBox(height: 16),
-              _buildFilterButtons(),
-              const SizedBox(height: 24),
-              _buildSectionTitle('Aperçu des rendez-vous'),
-              const SizedBox(height: 16),
-              _buildRecentAnalyses(),
-            ],
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 24),
+                _buildWelcomeCard(),
+                const SizedBox(height: 24),
+                _buildSearchBar(),
+                const SizedBox(height: 16),
+                _buildFilterButtons(),
+                const SizedBox(height: 24),
+                _buildSectionTitle('Aperçu des rendez-vous'),
+                const SizedBox(height: 16),
+                _buildRecentAnalyses(),
+              ],
+            ),
           ),
         ),
       ),
@@ -235,9 +241,9 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
+        if (_currentIndex == index) return;
+        FocusScope.of(context).unfocus();
+        setState(() => _currentIndex = index);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -354,6 +360,12 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
       ),
       child: TextField(
         controller: _searchController,
+        autofocus: false,
+        enableSuggestions: false,
+        autocorrect: false,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (_) => FocusScope.of(context).unfocus(),
+        onTapOutside: (_) => FocusScope.of(context).unfocus(),
         decoration: InputDecoration(
           hintText: 'Rechercher une prescription, patient...',
           hintStyle: TextStyle(
