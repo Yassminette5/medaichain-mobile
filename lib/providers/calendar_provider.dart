@@ -56,10 +56,12 @@ class CalendarProvider with ChangeNotifier {
 
   /// Get events for a specific day
   List<CalendarEvent> getEventsForDay(DateTime day) {
+    final targetDay = day.toLocal();
     final dayEvents = _events.where((event) {
-      return event.dateTime.year == day.year &&
-          event.dateTime.month == day.month &&
-          event.dateTime.day == day.day;
+      final eventDay = event.dateTime.toLocal();
+      return eventDay.year == targetDay.year &&
+          eventDay.month == targetDay.month &&
+          eventDay.day == targetDay.day;
     }).toList()
       ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
     return dayEvents;
