@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import '../dashboard/dashboard_screen.dart';
-import '../web/center_dashboard_web.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../core/theme/app_colors.dart';
+import '../auth/login_screen.dart';
+import '../auth/login_web_screen.dart';
 
 /// Registration Success Screen - Premium Animated Design
 class RegistrationSuccessScreen extends StatefulWidget {
@@ -302,7 +303,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
         ),
         const SizedBox(height: 12),
         Text(
-          'Félicitations ! Votre espace sécurisé\nMEDAIChain est prêt.',
+          'Votre compte a été créé avec succès.\nVous pouvez vous connecter avec vos identifiants.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
@@ -454,7 +455,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
           ],
         ),
         child: ElevatedButton(
-          onPressed: _navigateToDashboard,
+          onPressed: _navigateToLogin,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
@@ -466,7 +467,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Commencer',
+                'Aller à la connexion',
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -515,15 +516,10 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
     );
   }
 
-  void _navigateToDashboard() {
-    Widget dashboard;
-    if (widget.role == 'centre_analyse' || widget.role == "Centre d'analyse") {
-      dashboard = const CenterDashboardWeb();
-    } else {
-      dashboard = const DashboardScreen();
-    }
+  void _navigateToLogin() {
+    final Widget screen = kIsWeb ? const LoginWebScreen() : const LoginScreen();
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => dashboard),
+      MaterialPageRoute(builder: (context) => screen),
       (route) => false,
     );
   }

@@ -192,7 +192,7 @@ class _CenterDetailScreenState extends State<CenterDetailScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Image.asset(
-                  'assets/images/labo_icone.jpg',
+                  'assets/images/labo.jpg',
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,

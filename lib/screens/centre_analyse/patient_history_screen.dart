@@ -141,6 +141,51 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     return path.split('/').last;
   }
 
+  String _prettyAnalysisType(String raw) {
+    final v = raw.trim().toLowerCase();
+    switch (v) {
+      case 'analyse_sanguin':
+      case 'analyse sanguine':
+        return 'Analyse sanguine';
+      case 'scanner':
+        return 'Scanner';
+      case 'radiologie':
+        return 'Radiologie';
+      case 'imagerie':
+        return 'Imagerie';
+      case 'biologie':
+        return 'Biologie';
+      case 'autre':
+        return 'Autre';
+      default:
+        if (v.isEmpty) return 'Analyse';
+        return v[0].toUpperCase() + v.substring(1);
+    }
+  }
+
+  String _formatShortDateForFile(dynamic dateInput) {
+    DateTime? date;
+    if (dateInput is DateTime) {
+      date = dateInput;
+    } else {
+      try {
+        date = DateTime.parse(dateInput.toString());
+      } catch (_) {
+        return 'date';
+      }
+    }
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y$m$d';
+  }
+
+  String _friendlyFileDisplayName(Map<String, dynamic> result) {
+    final type = _prettyAnalysisType(result['type']?.toString() ?? '');
+    final dateLabel = _formatDate(result['date'] ?? result['createdAt']);
+    return 'Rapport $type • $dateLabel.pdf';
+  }
+
   String _getFileUrl(String? path) {
     if (path == null || path.isEmpty) return '';
     if (path.startsWith('http')) return path;
@@ -374,7 +419,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Widget _buildResultCard(Map<String, dynamic> result) {
     final isSelected = _selectedResult?['id'] == result['id'];
     final dateStr = _formatDate(result['date'] ?? result['createdAt']);
-    final fileName = _getFileName(result['file']);
+    final rawFileName = _getFileName(result['file']);
+    final typeLabel = _prettyAnalysisType(result['type']?.toString() ?? 'Analyse');
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -383,10 +429,10 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withValues(alpha: 0.04) : AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.2),
               width: isSelected ? 2 : 1,
@@ -404,11 +450,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   _getAnalysisIcon(result['type']),
@@ -422,41 +468,72 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result['type'] ?? 'Analyse',
+                      typeLabel,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      fileName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Text(
+                            'PDF',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            dateStr,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Tooltip(
+                          message: rawFileName,
+                          child: Icon(
+                            Icons.info_outline_rounded,
+                            size: 16,
+                            color: AppColors.textLight,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                dateStr,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textLight,
-                  fontWeight: FontWeight.w600,
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary.withValues(alpha: 0.10) : AppColors.background,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border.withValues(alpha: 0.25)),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: isSelected ? AppColors.primary : AppColors.textLight,
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: isSelected ? AppColors.primary : AppColors.textLight,
+                ),
               ),
             ],
           ),
@@ -527,8 +604,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
     final result = _selectedResult!;
     final dateStr = _formatDate(result['date'] ?? result['createdAt']);
-    final fileName = _getFileName(result['file']);
-    final analysisType = result['type'] ?? 'Analyse médicale';
+    final rawFileName = _getFileName(result['file']);
+    final displayFileName = _friendlyFileDisplayName(result);
+    final analysisType = _prettyAnalysisType(result['type']?.toString() ?? 'Analyse médicale');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
@@ -617,10 +695,20 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
                             ),
                             Text(
-                              fileName,
+                              displayFileName,
                               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Tooltip(
+                              message: rawFileName,
+                              child: Text(
+                                rawFileName,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),

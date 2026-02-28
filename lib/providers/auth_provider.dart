@@ -229,8 +229,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-
-
   // Récupérer le profil médecin
   Future<void> fetchDoctorProfile() async {
     try {

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../services/admin_service.dart';
 import 'admin_login_screen.dart';
+import '../auth/login_web_screen.dart';
 
 class _ChartData {
   final String label;
@@ -25,6 +27,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   List<dynamic>? _users;
   bool _isLoading = false;
 
+  void _goToLogin() {
+    if (!mounted) return;
+
+    // Web: revenir vers l'écran de login web (demandé)
+    if (kIsWeb) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginWebScreen()),
+        (route) => false,
+      );
+      return;
+    }
+
+    // Mobile/desktop: garder le login admin dédié
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -36,10 +56,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _ensureAuthAndLoad() async {
     final ok = await _adminService.hasToken();
     if (!ok) {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
-      );
+      _goToLogin();
       return;
     }
 
@@ -81,11 +98,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _logout() async {
     await _adminService.logout();
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
-      );
-    }
+    _goToLogin();
   }
 
   @override

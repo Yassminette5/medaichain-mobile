@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/medical_card.dart';
 
@@ -148,9 +148,9 @@ class PatientMedicalRecordScreen extends StatelessWidget {
       child: Row(
         children: [
           _buildVitalItem('❤️', '72', 'bpm', 'Rythme'),
-          _buildVitalItem('🩸', '120/80', 'mmHg', 'Tension'),
+          _buildVitalItem('🩺', '120/80', 'mmHg', 'Tension'),
           _buildVitalItem('🌡️', '36.8', '°C', 'Temp.'),
-          _buildVitalItem('💨', '16', '/min', 'Resp.'),
+          _buildVitalItem('🫁', '16', '/min', 'Resp.'),
         ],
       ),
     );
@@ -328,3 +328,5 @@ class PatientMedicalRecordScreen extends StatelessWidget {
     );
   }
 }
+
+

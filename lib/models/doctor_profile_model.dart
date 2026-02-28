@@ -1,4 +1,4 @@
-/// Modèle du profil médecin (depuis le backend)
+﻿/// Modèle du profil médecin (depuis le backend)
 class DoctorProfile {
   final String? id;
   final String? userId;
@@ -47,18 +47,49 @@ class DoctorProfile {
   });
 
   factory DoctorProfile.fromJson(Map<String, dynamic> json) {
+    String pickString(List<String> keys) {
+      for (final k in keys) {
+        final v = json[k];
+        if (v is String && v.trim().isNotEmpty) return v.trim();
+      }
+      return '';
+    }
+
+    Map<String, dynamic>? pickMap(List<String> keys) {
+      for (final k in keys) {
+        final v = json[k];
+        if (v is Map<String, dynamic>) return v;
+      }
+      return null;
+    }
+
+    final location = pickMap(['location', 'adresse', 'addressObj', 'clinicLocation']);
+
+    final fullName = pickString(['fullName', 'name', 'doctorName']);
+    String firstName = pickString(['firstName', 'prenom', 'first_name']);
+    String lastName = pickString(['lastName', 'nom', 'last_name', 'familyName']);
+    if (firstName.isEmpty && lastName.isEmpty && fullName.isNotEmpty) {
+      final parts = fullName.split(RegExp(r'\s+')).where((p) => p.trim().isNotEmpty).toList();
+      if (parts.isNotEmpty) {
+        firstName = parts.first;
+        if (parts.length > 1) lastName = parts.sublist(1).join(' ');
+      }
+    }
+
+    final speciality = pickString(['speciality', 'specialty', 'specialite', 'specialité']);
+
     return DoctorProfile(
       id: json['_id']?.toString() ?? json['id']?.toString(),
       userId: json['userId']?.toString(),
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
-      speciality: json['speciality'] ?? '',
+      firstName: firstName,
+      lastName: lastName,
+      speciality: speciality,
       subSpeciality: json['subSpeciality'],
-      licenseNumber: json['licenseNumber'],
-      hospital: json['hospital'],
-      clinicAddress: json['clinicAddress'],
-      city: json['city'],
-      wilaya: json['wilaya'],
+      licenseNumber: (json['licenseNumber'] ?? json['licenceNumber'] ?? json['license'] ?? json['numeroLicence'])?.toString(),
+      hospital: (json['hospital'] ?? json['clinicName'] ?? json['hopital'])?.toString(),
+      clinicAddress: (json['clinicAddress'] ?? json['address'] ?? json['adresse'] ?? location?['address'] ?? location?['adresse'])?.toString(),
+      city: (json['city'] ?? location?['city'] ?? location?['ville'])?.toString(),
+      wilaya: (json['wilaya'] ?? location?['wilaya'] ?? location?['gouvernorat'])?.toString(),
       yearsOfExperience: json['yearsOfExperience'] != null
           ? (json['yearsOfExperience'] as num).toInt()
           : null,
@@ -71,13 +102,13 @@ class DoctorProfile {
       workingDays: json['workingDays'] != null
           ? List<String>.from(json['workingDays'])
           : [],
-      workingHoursStart: json['workingHoursStart'],
-      workingHoursEnd: json['workingHoursEnd'],
+      workingHoursStart: (json['workingHoursStart'] ?? json['openingTime'] ?? json['startTime'])?.toString(),
+      workingHoursEnd: (json['workingHoursEnd'] ?? json['closingTime'] ?? json['endTime'])?.toString(),
       bio: json['bio'],
       profilePhoto: json['profilePhoto'],
-      isVerified: json['isVerified'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+      isVerified: (json['isVerified'] ?? json['verified'] ?? false) == true,
+      createdAt: (json['createdAt'] ?? json['created_at']) != null
+          ? DateTime.tryParse((json['createdAt'] ?? json['created_at']).toString())
           : null,
     );
   }
@@ -95,3 +126,4 @@ class DoctorProfile {
     return '$f$l';
   }
 }
+

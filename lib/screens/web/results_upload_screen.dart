@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_colors.dart';
@@ -121,17 +121,31 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+        // Backend: PDF uniquement
+        allowedExtensions: ['pdf'],
         allowMultiple: false,
       );
 
       if (result != null && result.files.single.bytes != null) {
+        final picked = result.files.single;
+        final name = picked.name.toLowerCase();
+        final ext = name.contains('.') ? name.split('.').last : '';
+        if (ext != 'pdf') {
+          _showErrorDialog(
+            title: 'Format non autorisé',
+            message: 'Seul le format PDF est accepté.',
+          );
+          return;
+        }
         setState(() {
-          _selectedFile = result.files.single;
+          _selectedFile = picked;
         });
       }
     } catch (e) {
-      _showErrorSnackBar('Erreur lors de la sélection du fichier: $e');
+      _showErrorDialog(
+        title: 'Erreur',
+        message: 'Erreur lors de la sélection du fichier: $e',
+      );
     }
   }
 
@@ -141,24 +155,38 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     }
 
     if (_selectedFile == null || _selectedFile!.bytes == null) {
-      _showErrorSnackBar('Veuillez sélectionner un fichier');
+      _showErrorDialog(title: 'Fichier manquant', message: 'Veuillez sélectionner un fichier PDF.');
+      return;
+    }
+
+    // Double sécurité côté front
+    final fileName = _selectedFile!.name.toLowerCase();
+    final ext = fileName.contains('.') ? fileName.split('.').last : '';
+    if (ext != 'pdf') {
+      _showErrorDialog(
+        title: 'Format non autorisé',
+        message: 'Seul le format PDF est accepté.',
+      );
       return;
     }
 
     if (_selectedAnalysisType == null) {
-      _showErrorSnackBar('Veuillez sélectionner un type d\'analyse');
+      _showErrorDialog(title: 'Champ requis', message: 'Veuillez sélectionner un type d\'analyse.');
       return;
     }
 
     if (_selectedStartDate == null) {
-      _showErrorSnackBar('Veuillez sélectionner une date d\'analyse');
+      _showErrorDialog(title: 'Champ requis', message: 'Veuillez sélectionner une date d\'analyse.');
       return;
     }
 
     // Si "Autre" est sélectionné, vérifier que le champ personnalisé est rempli
     if (_selectedAnalysisType == 'autre' &&
         (_analysisTypeOtherController.text.isEmpty)) {
-      _showErrorSnackBar('Veuillez spécifier le type d\'analyse personnalisé');
+      _showErrorDialog(
+        title: 'Champ requis',
+        message: 'Veuillez spécifier le type d\'analyse personnalisé.',
+      );
       return;
     }
 
@@ -188,7 +216,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Erreur lors de l\'upload: $e');
+        _showErrorDialog(title: 'Upload échoué', message: e.toString());
       }
     } finally {
       if (mounted) {
@@ -210,13 +238,37 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     });
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
+  Future<void> _showErrorDialog({required String title, required String message}) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.errorLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(title)),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -871,7 +923,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'txt, docx, pdf, jpeg, xlsx - Up to 50MB',
+                  'PDF uniquement (jusqu’à 50MB)',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
