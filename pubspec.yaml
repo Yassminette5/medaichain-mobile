@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   cupertino_icons: ^1.0.8
   mobile_scanner: ^7.1.4
   table_calendar: ^3.2.0
@@ -17,7 +19,10 @@ dependencies:
   google_fonts: ^6.1.0
   http: ^1.2.0
   http_parser: ^4.1.2
+  flutter_map: ^8.2.1
+  latlong2: ^0.9.1
   provider: ^6.1.1
+  qr_flutter: ^4.1.0
   shared_preferences: ^2.2.2
   intl: ^0.20.0
   url_launcher: ^6.2.5

@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
+import 'login_screen.dart';
+import 'login_web_screen.dart';
 import '../patientnesrine/informations/informations_flow.dart';
 import '../onboarding/registration_success_screen.dart';
 
@@ -744,7 +746,7 @@ class _SignupScreenState extends State<SignupScreen>
         // Call completeInvite API with role-specific fields
         // Note: For invited users, the backend creates the profile automatically
         // based on the role from the invitation token, so we only send basic info
-        final authResponse = await ApiService.completeInvite(
+        await ApiService.completeInvite(
           token: _inviteToken!,
           email: _emailController.text.trim(),
           password: _passwordController.text,
@@ -755,8 +757,9 @@ class _SignupScreenState extends State<SignupScreen>
           // The backend will create the appropriate profile based on the role in the token
         );
 
-        // Update auth provider
-        authProvider.setUser(authResponse.user);
+        // Le backend peut retourner des tokens. On force la déconnexion ici pour que l'utilisateur
+        // se connecte explicitement avec ses identifiants (UX demandée).
+        await ApiService.logout();
         success = true;
       } else {
         // Normal registration (patient only)
@@ -777,13 +780,35 @@ class _SignupScreenState extends State<SignupScreen>
         if (success) {
           // Navigate based on role
           if (_inviteToken != null && _inviteRole != null) {
-            // For invited users, navigate to registration success screen with role
+            // Pour les invités (clinique/centre/pharmacie/médecin): afficher un message clair
+            // puis rediriger vers la connexion (UX demandée).
+            await showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (dialogContext) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  title: const Text('Compte créé ✅'),
+                  content: const Text(
+                    'Votre compte a été créé avec succès.\n'
+                    'Vous pouvez maintenant vous connecter avec vos identifiants.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                      },
+                      child: const Text('Aller à la connexion'),
+                    ),
+                  ],
+                );
+              },
+            );
+
+            if (!mounted) return;
+            final Widget login = kIsWeb ? const LoginWebScreen() : const LoginScreen();
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => RegistrationSuccessScreen(
-                  role: _inviteRole!,
-                ),
-              ),
+              MaterialPageRoute(builder: (_) => login),
               (route) => false,
             );
           } else {

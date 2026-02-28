@@ -63,6 +63,34 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     return null;
   }
 
+  String _toBackendAnalysisType(String input) {
+    final v = input.trim().toLowerCase();
+    if (v.isEmpty) return 'autre';
+
+    // Normalisation simple (sans dépendances): gérer les libellés UI et les valeurs backend
+    switch (v) {
+      case 'analyse sanguine':
+      case 'analyse_sanguin':
+      case 'analyse sanguin':
+        return 'analyse_sanguin';
+      case 'scanner':
+        return 'scanner';
+      case 'radiologie':
+        return 'radiologie';
+      case 'imagerie':
+        return 'imagerie';
+      case 'biologie':
+        return 'biologie';
+      case 'irm':
+      case 'échographie':
+      case 'echographie':
+        // Le backend ne liste pas IRM/échographie séparément; on les regroupe sous imagerie
+        return 'imagerie';
+      default:
+        return 'autre';
+    }
+  }
+
   Future<void> _createAppointment() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -78,15 +106,16 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final backendType = _toBackendAnalysisType(_analysisTypeController.text);
       final appointmentData = {
-        'analysisType': _analysisTypeController.text.trim(),
+        // Backend attend une valeur enum: analyse_sanguin | scanner | radiologie | imagerie | biologie | autre
+        'analysisType': backendType,
         'appointmentDate': appointmentDateTime.toIso8601String(),
         'centreName': widget.centreName,
-        'labId': widget.labId,
-        'notes': _notesController.text.trim().isNotEmpty
-            ? _notesController.text.trim()
-            : null,
-        'status': 'pending',
+        // Champs du backend (optionnels mais présents dans la doc)
+        'hasCurrentTreatment': false,
+        'hasAllergies': false,
+        if (_notesController.text.trim().isNotEmpty) 'notes': _notesController.text.trim(),
       };
 
       await ApiService.createLabAppointment(appointmentData);
@@ -162,61 +191,38 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Card avec gradient
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(
-                          Icons.calendar_today_rounded,
-                          color: Colors.white,
-                          size: 40,
+                // Header: image seule (sans container autour)
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: SizedBox(
+                      height: 160,
+                      width: double.infinity,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        clipBehavior: Clip.antiAlias,
+                        child: Image.asset(
+                          'assets/images/rendevu.jpg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.calendar_today_rounded,
+                                color: AppColors.primary,
+                                size: 44,
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Nouveau rendez-vous',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.centreName,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
                 // Type d'analyse
-                _buildSectionTitle('Type d\'analyse', Icons.science_rounded),
+                _buildSectionTitle('Type d\'analyse'),
                 const SizedBox(height: 12),
                 Autocomplete<String>(
                   optionsBuilder: (value) {
@@ -242,18 +248,9 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                       decoration: InputDecoration(
                         hintText: "Choisir ou taper une analyse...",
                         hintStyle: TextStyle(color: AppColors.textLight),
-                        prefixIcon: Container(
-                          margin: const EdgeInsets.all(12),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.science_rounded,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
+                        prefixIcon: _buildInputPrefixIcon(
+                          icon: Icons.science_rounded,
+                          iconColor: AppColors.prescription,
                         ),
                         filled: true,
                         fillColor: AppColors.surface,
@@ -367,7 +364,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                 const SizedBox(height: 24),
 
                 // Date
-                _buildSectionTitle('Date du rendez-vous', Icons.calendar_today_rounded),
+                _buildSectionTitle('Date du rendez-vous'),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _dateController,
@@ -410,18 +407,9 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                   decoration: InputDecoration(
                     hintText: "Choisir une date",
                     hintStyle: TextStyle(color: AppColors.textLight),
-                    prefixIcon: Container(
-                      margin: const EdgeInsets.all(12),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today_rounded,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
+                    prefixIcon: _buildInputPrefixIcon(
+                      icon: Icons.calendar_today_rounded,
+                      iconColor: AppColors.info,
                     ),
                     filled: true,
                     fillColor: AppColors.surface,
@@ -470,7 +458,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                 const SizedBox(height: 24),
 
                 // Notes
-                _buildSectionTitle('Notes (optionnel)', Icons.note_alt_rounded),
+                _buildSectionTitle('Notes (optionnel)'),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesController,
@@ -482,13 +470,12 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                   decoration: InputDecoration(
                     hintText: "Ajouter des notes ou informations supplémentaires...",
                     hintStyle: TextStyle(color: AppColors.textLight),
-                    prefixIcon: Container(
-                      margin: const EdgeInsets.only(bottom: 60),
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.note_alt_rounded,
-                        color: AppColors.primary,
-                        size: 20,
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.only(bottom: 60),
+                      child: _buildInputPrefixIcon(
+                        icon: Icons.note_alt_rounded,
+                        iconColor: AppColors.secondary,
+                        noMargin: true,
                       ),
                     ),
                     filled: true,
@@ -583,27 +570,45 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: AppColors.textPrimary,
-          ),
-        ),
+  LinearGradient _softVioletIconGradient() {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        AppColors.accentPurple.withValues(alpha: 0.95),
+        AppColors.accentBlue.withValues(alpha: 0.65),
       ],
+    );
+  }
+
+  Widget _buildInputPrefixIcon({
+    required IconData icon,
+    required Color iconColor,
+    bool noMargin = false,
+  }) {
+    return Container(
+      margin: noMargin ? EdgeInsets.zero : const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        gradient: _softVioletIconGradient(),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.14),
+          width: 1,
+        ),
+      ),
+      child: Icon(icon, color: iconColor, size: 20),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 }

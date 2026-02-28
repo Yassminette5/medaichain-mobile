@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/medical_card.dart';
@@ -179,3 +179,4 @@ class _PatientAccessRequestScreenState extends State<PatientAccessRequestScreen>
     );
   }
 }
+

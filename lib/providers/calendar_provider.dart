@@ -10,8 +10,8 @@ class CalendarProvider with ChangeNotifier {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   bool _isLoading = false;
-  bool _initialized = false;
   final NotificationService _notificationService = NotificationService();
+  final Map<String, List<CalendarEvent>> _monthCache = {};
 
   List<CalendarEvent> get events => _events;
   DateTime get selectedDay => _selectedDay;
@@ -30,27 +30,26 @@ class CalendarProvider with ChangeNotifier {
 
     // Try loading from API first, fallback to local
     try {
-      await _loadEventsFromApi();
-      debugPrint('­ƒôà CalendarProvider: loaded ${_events.length} events from API');
+      await loadEventsForMonth(_focusedDay);
+      debugPrint('CalendarProvider: loaded ${_events.length} events from API');
     } catch (e) {
-      debugPrint('­ƒôà API load failed, loading from local: $e');
+      debugPrint('CalendarProvider: API load failed, loading from local: $e');
       try {
         await _loadEventsLocally();
-        debugPrint('­ƒôà CalendarProvider: loaded ${_events.length} events from local storage');
+        debugPrint('CalendarProvider: loaded ${_events.length} events from local storage');
       } catch (e2) {
-        debugPrint('­ƒôà CalendarProvider init error: $e2');
+        debugPrint('CalendarProvider: init error: $e2');
       }
     }
 
     _isLoading = false;
-    _initialized = true;
     notifyListeners();
 
     // Init notifications in background (non-blocking)
     try {
       await _notificationService.init();
     } catch (e) {
-      debugPrint('­ƒôà Notification init error: $e');
+      debugPrint('CalendarProvider: notification init error: $e');
     }
   }
 
@@ -97,6 +96,35 @@ class CalendarProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  String _monthKey(DateTime day) => '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}';
+
+  /// Load events for a given month using backend endpoint GET /appointments/month.
+  /// Results are cached per month and merged into [_events].
+  Future<void> loadEventsForMonth(DateTime day) async {
+    final key = _monthKey(day);
+
+    // Avoid duplicate loads
+    if (_monthCache.containsKey(key) && _monthCache[key]!.isNotEmpty) {
+      _events = _monthCache.values.expand((e) => e).toList();
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final monthJson = await ApiService.getCalendarEventsByMonth(year: day.year, month: day.month);
+      final monthEvents = monthJson.map((j) => CalendarEvent.fromApiJson(j)).toList();
+      _monthCache[key] = monthEvents;
+      _events = _monthCache.values.expand((e) => e).toList();
+      await _saveEventsLocally();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Add a new event
   Future<void> addEvent(CalendarEvent event) async {
     // 1. Try saving to API first
@@ -106,15 +134,15 @@ class CalendarProvider with ChangeNotifier {
       final response = await ApiService.createCalendarEvent(apiJson);
       // Use the API response to get the MongoDB _id
       savedEvent = CalendarEvent.fromApiJson(response);
-      debugPrint('­ƒôà addEvent: saved to API with id ${savedEvent.id}');
+      debugPrint('CalendarProvider: addEvent saved to API with id ${savedEvent.id}');
     } catch (e) {
-      debugPrint('­ƒôà addEvent: API save failed, saving locally only: $e');
+      debugPrint('CalendarProvider: addEvent API save failed, saving locally only: $e');
       // Keep the local event as-is
     }
 
     // 2. Add to in-memory list
     _events.add(savedEvent);
-    debugPrint('­ƒôà addEvent: added "${savedEvent.title}" ÔÇö total events: ${_events.length}');
+    debugPrint('CalendarProvider: addEvent added "${savedEvent.title}" — total events: ${_events.length}');
 
     // 3. Save to local storage
     await _saveEventsLocally();
@@ -135,14 +163,14 @@ class CalendarProvider with ChangeNotifier {
         final apiJson = updatedEvent.toApiJson();
         final response = await ApiService.updateCalendarEvent(updatedEvent.id, apiJson);
         updatedEvent = CalendarEvent.fromApiJson(response);
-        debugPrint('­ƒôà updateEvent: updated on API "${updatedEvent.title}"');
+        debugPrint('CalendarProvider: updateEvent updated on API "${updatedEvent.title}"');
       } catch (e) {
-        debugPrint('­ƒôà updateEvent: API update failed, saving locally only: $e');
+        debugPrint('CalendarProvider: updateEvent API update failed, saving locally only: $e');
       }
 
       // 2. Update in-memory
       _events[index] = updatedEvent;
-      debugPrint('­ƒôà updateEvent: updated "${updatedEvent.title}"');
+      debugPrint('CalendarProvider: updateEvent updated "${updatedEvent.title}"');
 
       // 3. Save locally
       await _saveEventsLocally();
@@ -159,14 +187,14 @@ class CalendarProvider with ChangeNotifier {
     // 1. Try deleting from API
     try {
       await ApiService.deleteCalendarEvent(eventId);
-      debugPrint('­ƒôà deleteEvent: deleted from API');
+      debugPrint('CalendarProvider: deleteEvent deleted from API');
     } catch (e) {
-      debugPrint('­ƒôà deleteEvent: API delete failed, removing locally only: $e');
+      debugPrint('CalendarProvider: deleteEvent API delete failed, removing locally only: $e');
     }
 
     // 2. Remove from in-memory list
     _events.removeWhere((e) => e.id == eventId);
-    debugPrint('­ƒôà deleteEvent: removed event ÔÇö total events: ${_events.length}');
+    debugPrint('CalendarProvider: deleteEvent removed event — total events: ${_events.length}');
 
     // 3. Save locally
     await _saveEventsLocally();
@@ -182,10 +210,12 @@ class CalendarProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      await _loadEventsFromApi();
-      debugPrint('­ƒôà refresh: loaded ${_events.length} events from API');
+      // Refresh current focused month (preprod backend)
+      _monthCache.remove(_monthKey(_focusedDay));
+      await loadEventsForMonth(_focusedDay);
+      debugPrint('CalendarProvider: refresh loaded ${_events.length} events from API');
     } catch (e) {
-      debugPrint('­ƒôà refresh: API failed, loading from local: $e');
+      debugPrint('CalendarProvider: refresh API failed, loading from local: $e');
       await _loadEventsLocally();
     }
 
@@ -195,12 +225,15 @@ class CalendarProvider with ChangeNotifier {
 
   // ==================== API ====================
 
+  // Legacy fallback: load all events (older backends without month endpoint)
+  // ignore: unused_element
   Future<void> _loadEventsFromApi() async {
     final token = await ApiService.getAccessToken();
     if (token == null) {
       throw Exception('Not authenticated');
     }
 
+    // Legacy fallback: load all events
     final jsonList = await ApiService.getCalendarEvents();
     _events = jsonList.map((json) => CalendarEvent.fromApiJson(json)).toList();
 
@@ -216,9 +249,9 @@ class CalendarProvider with ChangeNotifier {
       final jsonList = _events.map((e) => e.toJson()).toList();
       final jsonString = jsonEncode(jsonList);
       await prefs.setString(_storageKey, jsonString);
-      debugPrint('­ƒôà Saved ${_events.length} events to local storage');
+      debugPrint('CalendarProvider: saved ${_events.length} events to local storage');
     } catch (e) {
-      debugPrint('­ƒôà ERROR saving events: $e');
+      debugPrint('CalendarProvider: ERROR saving events: $e');
     }
   }
 
@@ -231,13 +264,13 @@ class CalendarProvider with ChangeNotifier {
         _events = jsonList
             .map((json) => CalendarEvent.fromJson(json as Map<String, dynamic>))
             .toList();
-        debugPrint('­ƒôà Loaded ${_events.length} events from local storage');
+        debugPrint('CalendarProvider: loaded ${_events.length} events from local storage');
       } else {
-        debugPrint('­ƒôà No events found in local storage');
+        debugPrint('CalendarProvider: no events found in local storage');
         _events = [];
       }
     } catch (e) {
-      debugPrint('­ƒôà ERROR loading events: $e');
+      debugPrint('CalendarProvider: ERROR loading events: $e');
       _events = [];
     }
   }
@@ -249,7 +282,7 @@ class CalendarProvider with ChangeNotifier {
       try {
         await _notificationService.scheduleEventAlert(event);
       } catch (e) {
-        debugPrint('­ƒôà Notification schedule error: $e');
+        debugPrint('CalendarProvider: notification schedule error: $e');
       }
     });
   }
@@ -259,7 +292,7 @@ class CalendarProvider with ChangeNotifier {
       try {
         await _notificationService.cancelEventAlert(eventId);
       } catch (e) {
-        debugPrint('­ƒôà Notification cancel error: $e');
+        debugPrint('CalendarProvider: notification cancel error: $e');
       }
     });
   }

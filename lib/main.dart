@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
@@ -24,8 +25,20 @@ import 'screens/patientnesrine/main_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 
+// Web dashboards (routes compat *.html)
+import 'screens/web/medecin_web_dashboard.dart';
+import 'screens/web/center_dashboard_web.dart';
+import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
+  // Sans "rewrite" côté serveur, la navigation en path (/xxx) peut afficher une 404.
+  // Avec HashUrlStrategy, l'URL reste /#/xxx et évite ces 404.
+  if (kIsWeb) {
+    setUrlStrategy(const HashUrlStrategy());
+  }
 
   // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
   await ApiService.enforceRememberPolicyOnStartup();
@@ -70,6 +83,12 @@ class MEDAIChainApp extends StatelessWidget {
           '/admin/dashboard': (context) => const AdminDashboardScreen(),
           '/signup.html': (context) => const SignupScreen(),
           '/signup': (context) => const SignupScreen(),
+
+          // Compat: certains liens anciens pointent vers des pages *.html (éviter une navigation cassée)
+          '/clinique_dashboard.html': (context) => const MedecinWebDashboard(),
+          '/centre_dashboard.html': (context) => const CenterDashboardWeb(),
+          '/centre_analyse_dashboard.html': (context) => const CenterDashboardWeb(),
+          '/pharmacie_dashboard.html': (context) => const PharmacieDashboardScreen(),
           // Ancien écran de sélection (si besoin plus tard)
           '/launcher': (context) => const AppLauncherScreen(),
         },

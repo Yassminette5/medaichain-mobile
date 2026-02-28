@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/web/web_sidebar.dart';
 import '../../widgets/web/web_header.dart';
+import '../auth/login_web_screen.dart';
 import '../centre_analyse/center_patients_screen.dart';
 import 'center_notifications_screen.dart';
 import 'results_upload_screen.dart';
@@ -202,9 +203,15 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
             child: const Text('Annuler'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              context.read<AuthProvider>().logout();
+              await context.read<AuthProvider>().logout();
+              if (!mounted) return;
+              // Retourner à l'écran de login web (sans changer l'URL -> évite 404 si l'app est servie derrière un backend sans rewrite)
+              Navigator.of(this.context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginWebScreen()),
+                (route) => false,
+              );
             },
             child: const Text('Déconnexion', style: TextStyle(color: AppColors.error)),
           ),
@@ -525,49 +532,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                     letterSpacing: 1.2,
                   ),
                 ),
-                Row(
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _onItemSelected(10),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.edit_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _onItemSelected(-1),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.logout_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox.shrink(),
               ],
             ),
           ),

@@ -8,6 +8,7 @@ import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../web/medecin_web_dashboard.dart';
+import '../dashboard_main_screen.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 
@@ -432,9 +433,11 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
           dashboard = const CenterDashboardWeb();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {
-          // Use web dashboard for medecin on web platform
+        } else if (userRole == UserRole.medecin) {
           dashboard = const MedecinWebDashboard();
+        } else if (userRole == UserRole.clinique) {
+          // Dashboard clinique (module clinique)
+          dashboard = const DashboardMainScreen();
         } else {
           dashboard = const MainScreen();
         }
