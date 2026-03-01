@@ -575,8 +575,8 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        AppColors.accentPurple.withValues(alpha: 0.95),
-        AppColors.accentBlue.withValues(alpha: 0.65),
+        AppColors.categoryPurple.withValues(alpha: 0.95),
+        AppColors.categoryBlue.withValues(alpha: 0.65),
       ],
     );
   }

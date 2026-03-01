@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../theme/app_theme.dart';
-import '../../services/api_service.dart';
+import 'package:medaichainmobile/clinique/theme/app_theme.dart';
+import 'package:medaichainmobile/services/api_service.dart';
 
 class AppointmentsCalendarView extends StatefulWidget {
   const AppointmentsCalendarView({super.key});
@@ -709,7 +709,7 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
     );
   }
 
-  // ======= CREATE APPOINTMENT DIALOG =======
+  // ======= PREMIUM CREATE APPOINTMENT DIALOG =======
   void _showCreateAppointmentDialog() {
     final nameCtrl = TextEditingController();
     final reasonCtrl = TextEditingController(text: 'Consultation');
@@ -717,166 +717,355 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
     String selectedTime = '09:00';
     String? selectedDoctorId;
     String? selectedDoctorName;
+    int _currentStep = 0;
+    bool isLoading = false;
+
+    final consultTypes = [
+      {'icon': Icons.medical_services_rounded, 'label': 'Consultation', 'color': const Color(0xFF2563EB)},
+      {'icon': Icons.healing_rounded, 'label': 'Suivi', 'color': const Color(0xFF059669)},
+      {'icon': Icons.vaccines_rounded, 'label': 'Vaccination', 'color': const Color(0xFF7C3AED)},
+      {'icon': Icons.emergency_rounded, 'label': 'Urgence', 'color': const Color(0xFFDC2626)},
+      {'icon': Icons.monitor_heart_rounded, 'label': 'Contrôle', 'color': const Color(0xFF0891B2)},
+      {'icon': Icons.biotech_rounded, 'label': 'Analyse', 'color': const Color(0xFFDB2777)},
+    ];
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.add_circle_rounded, color: AppTheme.primaryMedical, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Text('Nouveau Rendez-vous', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 18, color: AppTheme.darkNavy)),
-            ],
-          ),
-          content: SizedBox(
-            width: 450,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 560, maxHeight: 700),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF0A1628).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 16)),
+                BoxShadow(color: AppTheme.primaryMedical.withOpacity(0.08), blurRadius: 80, offset: const Offset(0, 30)),
+              ],
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Patient', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameCtrl,
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13),
-                  decoration: _inputDecor('Nom du patient', Icons.person_rounded),
-                ),
-                const SizedBox(height: 16),
-                Text('Motif', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: reasonCtrl,
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13),
-                  decoration: _inputDecor('Motif de consultation', Icons.local_hospital_rounded),
-                ),
-                const SizedBox(height: 16),
-                if (_doctors.isNotEmpty) ...[
-                  Text('Médecin', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12)),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedDoctorId,
-                        isExpanded: true,
-                        hint: Text('Choisir un médecin', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary)),
-                        items: _doctors.map((d) => DropdownMenuItem(
-                          value: d['_id'].toString(),
-                          child: Text('${d['fullName']} (${d['speciality'] ?? ''})', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
-                        )).toList(),
-                        onChanged: (val) {
-                          setDialogState(() {
-                            selectedDoctorId = val;
-                            final matches = _doctors.where((d) => d['_id'].toString() == val).toList();
-                            selectedDoctorName = matches.isNotEmpty ? matches.first['fullName'] : null;
-                          });
-                        },
+                // ── HEADER ──
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF0A1628), Color(0xFF1E3A5F), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
+                            child: const Icon(Icons.event_available_rounded, color: Colors.white, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('Planifier un RDV', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
+                              const SizedBox(height: 2),
+                              Text('Étape ${_currentStep + 1} sur 2 — ${_currentStep == 0 ? 'Patient & Médecin' : 'Date & Heure'}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                            ]),
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.pop(dialogContext),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.close_rounded, color: Colors.white, size: 18)),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: List.generate(2, (i) => Expanded(
+                          child: Container(margin: EdgeInsets.only(right: i < 1 ? 6 : 0), height: 3, decoration: BoxDecoration(color: i <= _currentStep ? Colors.white : Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(2))),
+                        )),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── CONTENT ──
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _currentStep == 0
+                          ? Column(
+                              key: const ValueKey('cal_step1'),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Patient
+                                Row(children: [
+                                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.person_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                  const SizedBox(width: 12),
+                                  Text('Patient', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                ]),
+                                const SizedBox(height: 12),
+                                TextField(controller: nameCtrl, style: GoogleFonts.plusJakartaSans(fontSize: 14), decoration: _inputDecor('Nom du patient *', Icons.person_outline_rounded)),
+                                const SizedBox(height: 18),
+                                // Type
+                                Row(children: [
+                                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.category_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                  const SizedBox(width: 12),
+                                  Text('Type de consultation', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                ]),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: consultTypes.map((t) {
+                                    final isSelected = reasonCtrl.text == t['label'];
+                                    return InkWell(
+                                      onTap: () => setDialogState(() => reasonCtrl.text = t['label'] as String),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? (t['color'] as Color).withOpacity(0.1) : AppTheme.background,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(color: isSelected ? t['color'] as Color : Colors.grey.withOpacity(0.1), width: isSelected ? 2 : 1),
+                                        ),
+                                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                          Icon(t['icon'] as IconData, size: 16, color: isSelected ? t['color'] as Color : AppTheme.textSecondary),
+                                          const SizedBox(width: 6),
+                                          Text(t['label'] as String, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? t['color'] as Color : AppTheme.textSecondary)),
+                                        ]),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 18),
+                                // Doctor
+                                if (_doctors.isNotEmpty) ...[
+                                  Row(children: [
+                                    Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.medical_services_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                    const SizedBox(width: 12),
+                                    Text('Médecin', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                  ]),
+                                  const SizedBox(height: 10),
+                                  ..._doctors.map((d) {
+                                    final name = d['fullName'] ?? d['doctorId']?['fullName'] ?? 'Médecin';
+                                    final spec = d['speciality'] ?? 'Général';
+                                    final isSelected = selectedDoctorId == d['_id']?.toString();
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: InkWell(
+                                        onTap: () => setDialogState(() { selectedDoctorId = d['_id']?.toString(); selectedDoctorName = name; }),
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          padding: const EdgeInsets.all(14),
+                                          decoration: BoxDecoration(
+                                            color: isSelected ? AppTheme.primaryMedical.withOpacity(0.06) : Colors.white,
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(color: isSelected ? AppTheme.primaryMedical : Colors.grey.withOpacity(0.12), width: isSelected ? 2 : 1),
+                                          ),
+                                          child: Row(children: [
+                                            Container(width: 40, height: 40, decoration: BoxDecoration(gradient: isSelected ? AppTheme.primaryGradient : null, color: isSelected ? null : AppTheme.background, borderRadius: BorderRadius.circular(10)), child: Center(child: Text('Dr', style: GoogleFonts.plusJakartaSans(color: isSelected ? Colors.white : AppTheme.textSecondary, fontWeight: FontWeight.w800, fontSize: 13)))),
+                                            const SizedBox(width: 12),
+                                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                              Text('Dr. $name', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
+                                              Text(spec, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppTheme.textSecondary)),
+                                            ])),
+                                            if (isSelected) const Icon(Icons.check_circle_rounded, color: AppTheme.primaryMedical, size: 22),
+                                          ]),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ],
+                            )
+                          : Column(
+                              key: const ValueKey('cal_step2'),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Date
+                                Row(children: [
+                                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.calendar_today_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                  const SizedBox(width: 12),
+                                  Text('Date du rendez-vous', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                ]),
+                                const SizedBox(height: 12),
+                                InkWell(
+                                  onTap: () async {
+                                    final picked = await showDatePicker(context: ctx, initialDate: selectedDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light(primary: AppTheme.primaryMedical)), child: child!));
+                                    if (picked != null) setDialogState(() => selectedDate = picked);
+                                  },
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryMedical.withOpacity(0.06),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(color: AppTheme.primaryMedical.withOpacity(0.2)),
+                                    ),
+                                    child: Row(children: [
+                                      Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.calendar_today_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                      const SizedBox(width: 14),
+                                      Text(DateFormat('EEEE dd MMMM yyyy', 'fr_FR').format(selectedDate), style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.darkNavy)),
+                                      const Spacer(),
+                                      const Icon(Icons.edit_calendar_rounded, size: 18, color: AppTheme.primaryMedical),
+                                    ]),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                // Time
+                                Row(children: [
+                                  Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.08), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.schedule_rounded, size: 16, color: AppTheme.primaryMedical)),
+                                  const SizedBox(width: 12),
+                                  Text('Créneau horaire', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                ]),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: _timeSlots.map((time) {
+                                    final isSelected = selectedTime == time;
+                                    final isMorning = int.parse(time.split(':')[0]) < 12;
+                                    return InkWell(
+                                      onTap: () => setDialogState(() => selectedTime = time),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 150),
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: isSelected ? AppTheme.primaryMedical : AppTheme.background,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: isSelected ? AppTheme.primaryMedical : Colors.grey.withOpacity(0.12)),
+                                          boxShadow: isSelected ? [BoxShadow(color: AppTheme.primaryMedical.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 2))] : [],
+                                        ),
+                                        child: Column(children: [
+                                          Icon(isMorning ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded, size: 12, color: isSelected ? Colors.white.withOpacity(0.7) : AppTheme.textSecondary.withOpacity(0.4)),
+                                          const SizedBox(height: 2),
+                                          Text(time, style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : AppTheme.darkNavy)),
+                                        ]),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 20),
+                                // Summary
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(colors: [AppTheme.primaryMedical.withOpacity(0.04), AppTheme.primaryMedical.withOpacity(0.01)]),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppTheme.primaryMedical.withOpacity(0.1)),
+                                  ),
+                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Text('Récapitulatif', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                                    const SizedBox(height: 10),
+                                    _summaryItem(Icons.person_rounded, 'Patient', nameCtrl.text),
+                                    _summaryItem(Icons.category_rounded, 'Type', reasonCtrl.text),
+                                    _summaryItem(Icons.medical_services_rounded, 'Médecin', selectedDoctorName != null ? 'Dr. $selectedDoctorName' : 'Non assigné'),
+                                    _summaryItem(Icons.calendar_today_rounded, 'Date', DateFormat('dd/MM/yyyy').format(selectedDate)),
+                                    _summaryItem(Icons.access_time_rounded, 'Heure', selectedTime),
+                                  ]),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Date', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: () async {
-                              final picked = await showDatePicker(context: ctx, initialDate: selectedDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
-                              if (picked != null) setDialogState(() => selectedDate = picked);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12)),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.calendar_today_rounded, size: 16, color: AppTheme.primaryMedical),
-                                  const SizedBox(width: 10),
-                                  Text(DateFormat('dd/MM/yyyy').format(selectedDate), style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ),
+                ),
+
+                // ── ACTIONS ──
+                Container(
+                  padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
+                  decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1)))),
+                  child: Row(
+                    children: [
+                      if (_currentStep > 0)
+                        Expanded(child: OutlinedButton.icon(
+                          onPressed: () => setDialogState(() => _currentStep--),
+                          icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                          label: Text('Retour', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: Colors.grey.withOpacity(0.3))),
+                        ))
+                      else
+                        Expanded(child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: Colors.grey.withOpacity(0.3))),
+                          child: Text('Annuler', style: GoogleFonts.plusJakartaSans(color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                        )),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton.icon(
+                          onPressed: isLoading ? null : () async {
+                            if (_currentStep == 0) {
+                              if (nameCtrl.text.isEmpty || selectedDoctorId == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez remplir tous les champs requis')));
+                                return;
+                              }
+                              setDialogState(() => _currentStep = 1);
+                            } else {
+                              setDialogState(() => isLoading = true);
+                              try {
+                                await ApiService.createAppointment(
+                                  doctorId: selectedDoctorId!,
+                                  date: selectedDate.toIso8601String().split('T')[0],
+                                  timeSlot: '$selectedTime - ${_addMinutes(selectedTime, 30)}',
+                                  reason: reasonCtrl.text,
+                                  patientName: nameCtrl.text,
+                                  doctorName: selectedDoctorName,
+                                );
+                                if (dialogContext.mounted) Navigator.pop(dialogContext);
+                                _loadData();
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Row(children: [const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20), const SizedBox(width: 10), const Text('RDV planifié avec succès !')]),
+                                  backgroundColor: AppTheme.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), margin: const EdgeInsets.all(16),
+                                ));
+                              } catch (e) {
+                                setDialogState(() => isLoading = false);
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
+                              }
+                            }
+                          },
+                          icon: isLoading
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : Icon(_currentStep == 0 ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 18),
+                          label: Text(_currentStep == 0 ? 'Continuer' : 'Confirmer le RDV', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: _currentStep == 0 ? AppTheme.primaryMedical : AppTheme.success,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Heure', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(12)),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: selectedTime,
-                                isExpanded: true,
-                                items: _timeSlots.map((t) => DropdownMenuItem(value: t, child: Text(t, style: GoogleFonts.plusJakartaSans(fontSize: 13)))).toList(),
-                                onChanged: (v) => setDialogState(() => selectedTime = v!),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Annuler', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: AppTheme.textSecondary))),
-            ElevatedButton.icon(
-              onPressed: () async {
-                if (nameCtrl.text.isEmpty || selectedDoctorId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Veuillez remplir tous les champs requis')),
-                  );
-                  return;
-                }
-                try {
-                  await ApiService.createAppointment(
-                    doctorId: selectedDoctorId!,
-                    date: selectedDate.toIso8601String().split('T')[0],
-                    timeSlot: '$selectedTime - ${_addMinutes(selectedTime, 30)}',
-                    reason: reasonCtrl.text,
-                    patientName: nameCtrl.text,
-                    doctorName: selectedDoctorName,
-                  );
-                  Navigator.pop(ctx);
-                  _loadData();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
-                }
-              },
-              icon: const Icon(Icons.save_rounded, size: 18),
-              label: Text('Créer', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryMedical,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
         ),
+      ),
+    );
+  }
+
+  Widget _summaryItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(padding: const EdgeInsets.all(5), decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.06), borderRadius: BorderRadius.circular(6)), child: Icon(icon, size: 12, color: AppTheme.primaryMedical)),
+          const SizedBox(width: 10),
+          SizedBox(width: 70, child: Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppTheme.textSecondary))),
+          Expanded(child: Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.darkNavy))),
+        ],
       ),
     );
   }

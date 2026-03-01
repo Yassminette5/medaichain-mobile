@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/app_theme.dart';
-import '../../services/api_service.dart';
+import 'package:medaichainmobile/clinique/theme/app_theme.dart';
+import 'package:medaichainmobile/services/api_service.dart';
 
 class WaitingRoomView extends StatefulWidget {
   const WaitingRoomView({super.key});

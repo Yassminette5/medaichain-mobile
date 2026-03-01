@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/app_theme.dart';
-import '../../services/api_service.dart';
+import 'package:medaichainmobile/clinique/theme/app_theme.dart';
+import 'package:medaichainmobile/services/api_service.dart';
 import 'package:intl/intl.dart';
 
 class InvoicesView extends StatefulWidget {
@@ -513,10 +513,17 @@ class _InvoicesViewState extends State<InvoicesView> {
                 onPressed: () async {
                   if (nameCtrl.text.isEmpty) return;
                   try {
+                    // Nettoyage strict des items pour éviter les problèmes de whitelisting du backend
+                    final cleanItems = items.map((item) => {
+                      'label': item['label'],
+                      'quantity': item['quantity'],
+                      'unitPrice': item['unitPrice'],
+                    }).toList();
+
                     await ApiService.createInvoice(
-                      patientId: ApiService.clinicId,
+                      patientId: ApiService.generateObjectId(),
                       patientName: nameCtrl.text,
-                      items: items,
+                      items: cleanItems,
                       paymentMethod: paymentMethod,
                     );
                     Navigator.pop(ctx);

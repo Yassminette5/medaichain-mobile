@@ -10,7 +10,9 @@ import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../web/medecin_web_dashboard.dart';
-import '../dashboard_main_screen.dart';
+import '../clinique/web/dashboard_main_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../clinique/mobile/home_admin_clinique_mobile.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 
@@ -438,8 +440,8 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
         } else if (userRole == UserRole.medecin) {
           dashboard = const MedecinWebDashboard();
         } else if (userRole == UserRole.clinique) {
-          // Dashboard clinique (module clinique)
-          dashboard = const DashboardMainScreen();
+          // Dashboard clinique (mobile vs web)
+          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
         } else {
           dashboard = const MainScreen();
         }

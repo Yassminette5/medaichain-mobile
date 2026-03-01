@@ -1,0 +1,1287 @@
+Analyzing medaichain-mobile...                                  
+
+  error • Target of URI doesn't exist: 'screens/dashboard_main_screen.dart' • lib/main.dart:11:8 • uri_does_not_exist
+  error • The name 'DashboardMainScreen' isn't a class • lib/main.dart:83:44 • creation_with_non_type
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/main.dart:222:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/main.dart:230:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/main.dart:248:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/main.dart:254:63 • deprecated_member_use
+   info • Dangling library doc comment • lib/medecin/medecin.dart:1:1 • dangling_library_doc_comments
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/medecin/screens/agenda/add_consultation_dialog.dart:373:25 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/medecin/screens/prescription/create_prescription_screen.dart:124:17 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/medecin/screens/profile/doctor_profile_screen.dart:389:15 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:265:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:328:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:512:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:523:67 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:523:100 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:561:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:572:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:649:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:692:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:692:102 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_dashboard_screen.dart:739:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_login_screen.dart:66:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_login_screen.dart:124:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/admin/admin_login_screen.dart:145:64 • deprecated_member_use
+  error • Target of URI doesn't exist: '../clinique/home_admin_clinique_mobile.dart' • lib/screens/auth/login_screen.dart:18:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../dashboard_main_screen.dart' • lib/screens/auth/login_screen.dart:19:8 • uri_does_not_exist
+  error • The name 'DashboardMainScreen' isn't a class • lib/screens/auth/login_screen.dart:429:38 • creation_with_non_type
+  error • The name 'HomeAdminCliniqueMobile' isn't a class • lib/screens/auth/login_screen.dart:429:68 • creation_with_non_type
+  error • Target of URI doesn't exist: '../dashboard_main_screen.dart' • lib/screens/auth/login_web_screen.dart:13:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../clinique/home_admin_clinique_mobile.dart' • lib/screens/auth/login_web_screen.dart:15:8 • uri_does_not_exist
+warning • The declaration '_buildBackgroundDecoration' isn't referenced • lib/screens/auth/login_web_screen.dart:178:10 • unused_element
+  error • The name 'DashboardMainScreen' isn't a class • lib/screens/auth/login_web_screen.dart:444:38 • creation_with_non_type
+  error • The name 'HomeAdminCliniqueMobile' isn't a class • lib/screens/auth/login_web_screen.dart:444:68 • creation_with_non_type
+   info • The private field _codeVerified could be 'final' • lib/screens/auth/reset_password_screen.dart:24:8 • prefer_final_fields
+warning • The value of the field '_codeVerified' isn't used • lib/screens/auth/reset_password_screen.dart:24:8 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:125:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:134:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:146:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:149:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:165:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:174:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:175:76 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:179:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:184:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:196:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:205:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:206:76 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:210:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:215:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:229:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/auth/reset_password_screen.dart:231:58 • deprecated_member_use
+  error • Target of URI doesn't exist: '../dashboard_main_screen.dart' • lib/screens/auth/role_router.dart:4:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../clinique/home_admin_clinique_mobile.dart' • lib/screens/auth/role_router.dart:10:8 • uri_does_not_exist
+  error • The name 'DashboardMainScreen' isn't a class • lib/screens/auth/role_router.dart:28:31 • creation_with_non_type
+  error • The name 'HomeAdminCliniqueMobile' isn't a class • lib/screens/auth/role_router.dart:28:61 • creation_with_non_type
+warning • Unused import: '../onboarding/registration_success_screen.dart' • lib/screens/auth/signup_screen.dart:13:8 • unused_import
+warning • The value of the local variable 'role' isn't used • lib/screens/auth/signup_screen.dart:726:18 • unused_local_variable
+   info • 'dialogBackgroundColor' is deprecated and shouldn't be used. Use DialogThemeData.backgroundColor instead. This feature was deprecated after v3.27.0-0.1.pre • lib/screens/centre_analyse/appointment_booking_screen.dart:391:29 • deprecated_member_use
+warning • The value of the local variable 'hour' isn't used • lib/screens/centre_analyse/center_notifications_screen.dart:267:13 • unused_local_variable
+warning • The value of the local variable 'hour' isn't used • lib/screens/centre_analyse/center_notifications_screen.dart:291:13 • unused_local_variable
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/centre_analyse/center_profile_screen.dart:421:13 • deprecated_member_use
+   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/centre_analyse/center_settings_screen.dart:2:8 • unnecessary_import
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/centre_analyse/center_settings_screen.dart:282:15 • deprecated_member_use
+   info • The private field _openingHours could be 'final' • lib/screens/centre_analyse/opening_hours_screen.dart:15:24 • prefer_final_fields
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/centre_analyse/opening_hours_screen.dart:188:35 • deprecated_member_use
+warning • The declaration '_formatShortDateForFile' isn't referenced • lib/screens/centre_analyse/patient_history_screen.dart:166:10 • unused_element
+  error • Target of URI doesn't exist: '../../core/theme/app_colors.dart' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:2:8 • uri_does_not_exist
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:18:24 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:30:18 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:33:22 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:69:59 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:78:61 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:91:39 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:98:22 • invalid_constant
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:98:22 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/home_admin_clinique_mobile.dart:106:22 • undefined_identifier
+  error • Target of URI doesn't exist: '../../../core/theme/app_colors.dart' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:2:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../../services/api_service.dart' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:3:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:28:28 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:59:24 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:61:26 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:67:20 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:86:32 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:139:51 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:153:81 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:162:58 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:180:53 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:187:24 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:217:21 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:219:21 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:240:28 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:248:28 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:270:24 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:296:36 • undefined_identifier
+  error • Undefined name 'AppColors' • lib/screens/clinique/mobile/tabs/global_planning_tab.dart:302:53 • undefined_identifier
+  error • Target of URI doesn't exist: '../providers/auth_provider.dart' • lib/screens/clinique/web/dashboard_main_screen.dart:5:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../services/api_service.dart' • lib/screens/clinique/web/dashboard_main_screen.dart:6:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../theme/app_theme.dart' • lib/screens/clinique/web/dashboard_main_screen.dart:7:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../widgets/medical_animated_background.dart' • lib/screens/clinique/web/dashboard_main_screen.dart:8:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/dashboard_main_screen.dart:75:29 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:107:24 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/dashboard_main_screen.dart:117:27 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:117:27 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:131:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:135:40 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:162:44 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:177:56 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:189:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:214:36 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:233:47 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:241:38 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:249:42 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:264:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:275:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:277:66 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:285:43 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:317:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:324:65 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/dashboard_main_screen.dart:346:45 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:365:38 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:376:42 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:383:93 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:389:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:404:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:406:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:411:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:418:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:428:89 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:437:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:439:105 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:449:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:454:75 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:465:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:472:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:488:38 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/dashboard_main_screen.dart:491:88 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:491:88 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/dashboard_main_screen.dart:500:40 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:500:40 • undefined_identifier
+  error • The method 'MedicalAnimatedBackground' isn't defined for the type '_DashboardMainScreenState' • lib/screens/clinique/web/dashboard_main_screen.dart:512:26 • undefined_method
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:549:23 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:554:35 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:557:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:570:33 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:574:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:582:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:582:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:591:60 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:602:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:608:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:634:24 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/dashboard_main_screen.dart:637:62 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:637:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:640:104 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/dashboard_main_screen.dart:660:15 • undefined_identifier
+  error • The name 'AuthProvider' isn't a type, so it can't be used as a type argument • lib/screens/clinique/web/dashboard_main_screen.dart:661:34 • non_type_as_type_argument
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/dashboard_main_screen.dart:667:32 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/appointments_calendar_view.dart:4:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/appointments_calendar_view.dart:5:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:38:34 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:40:29 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:100:48 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:101:70 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:101:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:106:100 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:115:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:129:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:153:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:156:136 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:178:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:199:29 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:204:122 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:229:37 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:229:74 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:232:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:232:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:232:119 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:235:41 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:245:56 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:245:75 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:254:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:254:95 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:263:58 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:263:77 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:269:140 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:291:35 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:299:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:315:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:315:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:341:85 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:359:57 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:360:59 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:371:82 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:383:132 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:389:102 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:426:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:440:64 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:447:103 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:450:52 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:460:80 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:473:136 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:477:107 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:487:86 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:519:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:526:104 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:530:75 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:533:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:535:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:537:107 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:539:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:544:118 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:546:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:547:43 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:548:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:550:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:563:77 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:566:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:578:83 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:580:79 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:597:48 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:598:61 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:598:61 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:605:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:606:104 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:613:56 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:643:41 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:644:25 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/appointments_calendar_view.dart:645:33 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:649:40 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:650:25 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/appointments_calendar_view.dart:651:33 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:655:40 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:656:25 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/appointments_calendar_view.dart:657:33 • use_build_context_synchronously
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:663:25 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/appointments_calendar_view.dart:664:33 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:696:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:697:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:703:83 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:704:112 • undefined_identifier
+   info • The local variable '_currentStep' starts with an underscore • lib/screens/clinique/web/views/appointments_calendar_view.dart:720:9 • no_leading_underscores_for_local_identifiers
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:745:58 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:746:34 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:766:75 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:774:202 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:780:126 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:787:183 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:807:112 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:807:254 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:807:254 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:809:136 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:816:112 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:816:256 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:816:256 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:818:149 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:833:85 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:833:104 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:835:116 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:838:123 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:840:221 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:850:114 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:850:266 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:850:266 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:852:138 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:868:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:870:84 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:870:122 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:873:127 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:873:187 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:873:352 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:876:150 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:877:114 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:879:107 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:879:107 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:894:112 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:894:262 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:894:262 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:896:148 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:902:153 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:902:153 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:909:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:911:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:914:116 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:914:265 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:914:265 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:916:192 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:918:96 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:918:96 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:925:112 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_calendar_view.dart:925:256 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:925:256 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:927:144 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:943:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:943:89 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:945:82 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:945:120 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:946:85 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:949:155 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:949:174 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:951:167 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:962:71 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:962:114 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:964:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:967:144 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:985:95 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:993:218 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_calendar_view.dart:998:218 • deprecated_member_use
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1015:39 • undefined_identifier
+   info • Statements in an if should be enclosed in a block • lib/screens/clinique/web/views/appointments_calendar_view.dart:1025:46 • curly_braces_in_flow_control_structures
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1027:52 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/appointments_calendar_view.dart:1031:54 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1031:131 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1041:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1041:92 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1064:88 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1064:207 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1066:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1067:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1075:47 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1077:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1079:18 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1094:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1095:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1096:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1098:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_calendar_view.dart:1100:23 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/appointments_view.dart:4:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/appointments_view.dart:5:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:20:27 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:25:29 • undefined_identifier
+   info • The local variable '_currentStep' starts with an underscore • lib/screens/clinique/web/views/appointments_view.dart:44:9 • no_leading_underscores_for_local_identifiers
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:72:61 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:72:61 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:72:122 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:72:122 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:96:62 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:97:38 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:117:79 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:117:178 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:127:146 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:136:81 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:151:92 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:183:99 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:195:71 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:206:71 • deprecated_member_use
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:231:43 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/appointments_view.dart:242:60 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:244:58 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/appointments_view.dart:252:71 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:252:148 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:265:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:265:95 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:311:61 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:311:80 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:313:92 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:314:83 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:319:101 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:321:199 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:341:19 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:362:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:364:64 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:364:102 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:370:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:370:138 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:371:131 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:378:136 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:379:100 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:383:89 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:383:89 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:403:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:403:89 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:405:64 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:405:102 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:411:52 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:412:84 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:412:84 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:417:168 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:417:188 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:420:78 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:420:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:440:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:440:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:442:58 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:442:96 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:443:61 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:447:133 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:447:152 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:449:145 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:471:47 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:471:90 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:473:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:488:120 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:514:39 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:514:58 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:516:72 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:518:150 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:531:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:532:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:535:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:536:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:559:50 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:560:72 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:560:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:563:135 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:565:110 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:571:142 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:581:15 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:583:129 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:583:129 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:585:120 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:605:147 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:615:117 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:618:175 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:630:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:633:110 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:633:251 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:633:251 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:637:161 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:638:186 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:645:135 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:650:56 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:650:87 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:650:120 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:650:196 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:660:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:662:94 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:662:132 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:666:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:668:216 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/appointments_view.dart:692:41 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/appointments_view.dart:697:69 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:697:146 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:702:80 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:724:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:725:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:731:110 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:732:84 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:743:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:753:151 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:753:270 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:755:24 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:758:130 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:759:124 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:759:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:769:40 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:770:122 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:770:122 • undefined_identifier
+warning • The declaration '_buildLabel' isn't referenced • lib/screens/clinique/web/views/appointments_view.dart:774:10 • unused_element
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:777:105 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:778:66 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:778:66 • undefined_identifier
+warning • The declaration '_inputDecoration' isn't referenced • lib/screens/clinique/web/views/appointments_view.dart:783:19 • unused_element
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:786:47 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:788:18 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:791:124 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:792:118 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:792:118 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/appointments_view.dart:799:136 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:811:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:818:142 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:819:122 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:826:71 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:826:71 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:833:42 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:849:134 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:849:134 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:856:103 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:856:222 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:856:222 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:858:136 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:860:125 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:876:54 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:876:85 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:876:118 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:876:194 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:885:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:888:151 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:889:103 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:898:157 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:900:156 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:906:87 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:907:139 • undefined_identifier
+   info • Statements in an if should be enclosed in a block • lib/screens/clinique/web/views/appointments_view.dart:913:52 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/clinique/web/views/appointments_view.dart:914:59 • curly_braces_in_flow_control_structures
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:917:130 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:917:130 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:918:142 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:918:142 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/appointments_view.dart:918:221 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/appointments_view.dart:918:221 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/clinic_profile_view.dart:3:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/clinic_profile_view.dart:4:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/clinic_profile_view.dart:50:28 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/clinic_profile_view.dart:76:13 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:109:37 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:123:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:123:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:148:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:154:27 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:157:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:162:37 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:217:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:222:156 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:223:156 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:231:31 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:233:50 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:282:29 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:284:48 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:289:29 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:291:78 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:301:76 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/clinic_profile_view.dart:303:76 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:312:19 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:320:50 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/clinic_profile_view.dart:321:62 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:321:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:327:138 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:328:127 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:374:88 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:391:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:412:19 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:420:50 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/clinic_profile_view.dart:421:69 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:421:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:427:134 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:428:116 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:437:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:445:121 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:450:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:450:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:455:87 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:455:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:465:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:485:16 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:487:35 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:489:110 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:498:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:503:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:509:54 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:510:56 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:514:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:516:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:518:111 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:519:118 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/clinic_profile_view.dart:520:124 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:520:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:531:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:533:64 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/clinic_profile_view.dart:535:68 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/dashboard_home_view.dart:3:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/dashboard_home_view.dart:4:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/dashboard_home_view.dart:30:23 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/dashboard_home_view.dart:69:25 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:123:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:124:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:133:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:134:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:143:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:144:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:153:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:154:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:168:26 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:178:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:186:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:194:21 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:272:44 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:292:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:310:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:376:26 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:393:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:395:68 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:405:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:420:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:422:70 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:464:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:490:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:492:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:501:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:518:29 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:520:48 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:524:29 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:529:82 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:542:19 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:556:36 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:567:40 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:567:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:577:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:577:64 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:584:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:584:64 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:605:26 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:617:22 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:643:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:646:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:657:32 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:672:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:680:32 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:691:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:694:75 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:716:20 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:733:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:752:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:757:74 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:784:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:810:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:829:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:848:59 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:868:19 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:880:30 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/dashboard_home_view.dart:883:70 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:883:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:891:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:904:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:936:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:940:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:944:30 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:967:43 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:981:40 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:989:40 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1001:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1007:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1027:19 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1039:30 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/dashboard_home_view.dart:1042:71 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1042:71 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1053:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1059:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1070:26 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/dashboard_home_view.dart:1076:76 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1076:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1081:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1117:19 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:1129:43 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1140:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1149:26 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:1178:26 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:1180:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/dashboard_home_view.dart:1192:36 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1218:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1225:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1235:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1242:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1269:38 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1269:58 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1286:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1289:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1297:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1297:60 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1363:17 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1364:17 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1365:17 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1380:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1387:24 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/dashboard_home_view.dart:1390:69 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1390:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1398:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1404:57 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/dashboard_home_view.dart:1413:34 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/doctors_management_view.dart:3:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/doctors_management_view.dart:4:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:20:22 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:25:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:58:24 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:61:69 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:61:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:64:125 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:72:95 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:72:95 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:87:23 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:93:40 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:102:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:110:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:136:28 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:139:70 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:139:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:145:128 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:146:122 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:158:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:160:47 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:166:83 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:167:79 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:177:63 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:177:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:186:38 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:205:77 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:205:77 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:253:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:261:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:268:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:268:87 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:270:41 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:304:110 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:325:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:327:93 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:330:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:332:95 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:344:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:344:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:346:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:346:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:354:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:354:58 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:363:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:363:58 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:375:48 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:376:75 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:376:75 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:384:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:385:91 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:400:52 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:404:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:418:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:421:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:424:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:426:82 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:433:32 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:510:26 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:536:45 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:537:13 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:543:66 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:558:95 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:558:95 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:578:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:590:129 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:605:26 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:637:59 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:647:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:652:121 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:660:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:662:54 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:676:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:709:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:711:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:716:77 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:720:52 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:721:83 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:721:83 • undefined_identifier
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/clinique/web/views/doctors_management_view.dart:726:15 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:737:42 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:738:157 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:738:157 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:747:97 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:761:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:764:114 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:766:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:801:131 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:815:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:818:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:818:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:822:43 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:837:60 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:862:117 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:876:37 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:878:56 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:878:75 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:886:41 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:886:60 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:894:43 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:894:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:921:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:921:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:926:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:931:122 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:950:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:954:88 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:956:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:967:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:971:20 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:973:39 • undefined_identifier
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/clinique/web/views/doctors_management_view.dart:976:13 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:978:82 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:978:82 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1000:33 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1002:52 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1002:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1003:56 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1008:152 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1012:150 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1012:176 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1025:27 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1025:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1034:37 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1036:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1045:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1051:67 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1054:73 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1059:54 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1060:56 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1064:24 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1066:111 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1067:118 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:1068:124 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1068:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1108:46 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/doctors_management_view.dart:1109:58 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1109:58 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1115:127 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1116:89 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1126:114 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1128:120 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1136:76 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/doctors_management_view.dart:1141:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1146:115 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1153:30 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:1173:37 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1175:58 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/doctors_management_view.dart:1181:54 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1189:116 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/doctors_management_view.dart:1190:86 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/invoices_view.dart:3:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/invoices_view.dart:4:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/invoices_view.dart:28:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:72:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:80:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:88:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:89:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:103:52 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/invoices_view.dart:104:72 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:104:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:107:119 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:124:38 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:160:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:166:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:173:82 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:191:29 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:193:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:193:74 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:200:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:218:35 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:219:51 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:244:94 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:247:93 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:253:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:257:79 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:263:81 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:278:102 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:300:48 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/invoices_view.dart:301:65 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:301:65 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/invoices_view.dart:306:23 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/invoices_view.dart:314:23 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:321:76 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:323:80 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:324:71 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:339:52 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:343:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:374:52 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/invoices_view.dart:375:72 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:375:72 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:378:127 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:388:122 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:401:130 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:462:82 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:471:132 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:487:32 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:489:51 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:494:126 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:497:114 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:510:82 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/invoices_view.dart:516:27 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/invoices_view.dart:517:34 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/invoices_view.dart:522:35 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/clinique/web/views/invoices_view.dart:525:42 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:526:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:533:36 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:555:29 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:557:48 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:557:74 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:562:52 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:562:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:564:121 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:564:147 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:596:96 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:607:100 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/invoices_view.dart:614:97 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:629:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:636:156 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:637:140 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:638:140 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:639:142 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:648:134 • undefined_identifier
+   info • Unnecessary use of string interpolation • lib/screens/clinique/web/views/invoices_view.dart:650:48 • unnecessary_string_interpolations
+   info • Unnecessary use of string interpolation • lib/screens/clinique/web/views/invoices_view.dart:651:48 • unnecessary_string_interpolations
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:668:104 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:669:178 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:675:102 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:676:181 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:683:34 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:688:130 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:689:183 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:710:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:712:18 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:714:105 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:715:112 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/invoices_view.dart:716:118 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:716:118 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:725:49 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:727:55 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:729:20 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:738:55 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:739:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:740:60 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:741:62 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:757:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:758:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:761:119 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/invoices_view.dart:763:140 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/reception_admissions_view.dart:3:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/reception_admissions_view.dart:4:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:19:19 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:24:21 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:40:62 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:50:15 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:54:84 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:54:84 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:60:68 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:114:38 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:124:35 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:131:75 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:141:141 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:150:77 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/clinique/web/views/reception_admissions_view.dart:181:33 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/clinique/web/views/reception_admissions_view.dart:198:33 • deprecated_member_use
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:209:41 • undefined_identifier
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/clinique/web/views/reception_admissions_view.dart:219:37 • deprecated_member_use
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:262:41 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:274:58 • use_build_context_synchronously
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:274:150 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:274:150 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:278:69 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:278:146 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:281:131 • undefined_identifier
+   info • The local variable '_currentStep' starts with an underscore • lib/screens/clinique/web/views/reception_admissions_view.dart:311:9 • no_leading_underscores_for_local_identifiers
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:340:62 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:341:38 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:361:79 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:361:178 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:371:220 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:378:130 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:388:114 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:462:73 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:462:117 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:464:92 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:464:130 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:469:100 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:469:126 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:471:192 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:471:218 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:496:91 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:496:110 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:498:122 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:503:131 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:505:229 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:522:49 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:525:107 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:525:285 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:525:285 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:563:77 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:563:120 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:565:69 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:570:152 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:589:99 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:598:224 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:605:224 • deprecated_member_use
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:623:43 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:633:60 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:635:58 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:643:71 • use_build_context_synchronously
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:643:148 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:656:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:656:96 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:680:86 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:680:206 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:683:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:684:82 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:700:33 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:702:52 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:702:90 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:708:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:708:126 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:709:164 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:713:113 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:714:88 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:716:77 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:716:77 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:733:39 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:733:58 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:735:72 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:737:150 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:748:88 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:748:207 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:750:106 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:751:124 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:764:42 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:765:44 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:768:18 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:771:124 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:772:118 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:772:118 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:773:116 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:773:116 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:786:20 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:791:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:802:47 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:804:18 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:812:51 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:816:45 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:816:45 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:820:45 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:820:45 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:824:45 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:824:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:842:100 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:847:66 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:847:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:860:38 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:877:46 • deprecated_member_use
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:884:79 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:884:79 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:891:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:893:125 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:945:53 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:945:72 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:953:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/reception_admissions_view.dart:955:56 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:964:39 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:976:98 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:1019:43 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:1021:71 • use_build_context_synchronously
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1021:161 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1021:161 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:1025:43 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:1027:71 • use_build_context_synchronously
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1027:161 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1027:161 • undefined_identifier
+   info • Empty catch block • lib/screens/clinique/web/views/reception_admissions_view.dart:1028:46 • empty_catches
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/reception_admissions_view.dart:1031:43 • undefined_identifier
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/screens/clinique/web/views/reception_admissions_view.dart:1033:71 • use_build_context_synchronously
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1033:161 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1033:161 • undefined_identifier
+   info • Empty catch block • lib/screens/clinique/web/views/reception_admissions_view.dart:1034:46 • empty_catches
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1043:89 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1043:89 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1054:84 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1054:84 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1065:99 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1065:99 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1076:81 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1076:81 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1086:91 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1086:91 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/reception_admissions_view.dart:1088:81 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/reception_admissions_view.dart:1088:81 • undefined_identifier
+  error • Target of URI doesn't exist: '../../theme/app_theme.dart' • lib/screens/clinique/web/views/waiting_room_view.dart:4:8 • uri_does_not_exist
+  error • Target of URI doesn't exist: '../../services/api_service.dart' • lib/screens/clinique/web/views/waiting_room_view.dart:5:8 • uri_does_not_exist
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/waiting_room_view.dart:36:32 • undefined_identifier
+  error • Undefined name 'ApiService' • lib/screens/clinique/web/views/waiting_room_view.dart:70:13 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:79:65 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:86:30 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:96:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:117:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:125:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:133:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:141:15 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:157:28 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/waiting_room_view.dart:160:70 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:160:70 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:165:104 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:171:28 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:176:77 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/waiting_room_view.dart:185:66 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:185:66 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:219:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:221:54 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:221:73 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:223:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:224:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:231:30 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:246:108 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:249:87 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:272:41 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:308:90 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:313:73 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:318:81 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:324:66 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:328:81 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:341:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:347:63 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:351:104 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:390:24 • undefined_identifier
+  error • Invalid constant value • lib/screens/clinique/web/views/waiting_room_view.dart:393:65 • invalid_constant
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:393:65 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:398:109 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:400:92 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:402:78 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:404:88 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:419:52 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:423:108 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/clinique/web/views/waiting_room_view.dart:438:34 • deprecated_member_use
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:447:49 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:449:54 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:451:46 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:453:45 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:467:22 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:470:68 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:475:98 • undefined_identifier
+  error • Undefined name 'AppTheme' • lib/screens/clinique/web/views/waiting_room_view.dart:480:69 • undefined_identifier
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/consultations/new_consultation_screen.dart:528:17 • deprecated_member_use
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/onboarding/welcome_screen.dart:3:8 • unnecessary_import
+warning • Unused import: '../../widgets/medical_card.dart' • lib/screens/operations/operation_presets_screen.dart:4:8 • unused_import
+   info • Unnecessary use of string interpolation • lib/screens/patient/patient_dashboard_screen.dart:533:17 • unnecessary_string_interpolations
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/doctor_detail_sheet.dart:84:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/doctor_detail_sheet.dart:87:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/doctor_detail_sheet.dart:95:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/doctor_detail_sheet.dart:201:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/doctor_detail_sheet.dart:244:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:35:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:50:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:53:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:78:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:81:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:98:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:101:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:127:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:130:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:256:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:277:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:297:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:298:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:338:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:340:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:341:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:398:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:431:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:512:22 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/document_list_screen.dart:520:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/edit_profile_screen.dart:121:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/edit_profile_screen.dart:124:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/edit_profile_screen.dart:182:65 • deprecated_member_use
+   info • The file name 'homeScreen.dart' isn't a lower_case_with_underscores identifier • lib/screens/patientnesrine/homeScreen.dart:1:1 • file_names
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:50:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:207:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:219:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:233:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:259:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:271:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:274:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:372:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:375:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/homeScreen.dart:402:35 • deprecated_member_use
+   info • Use a 'SizedBox' to add whitespace to a layout • lib/screens/patientnesrine/informations/height.dart:124:9 • sized_box_for_whitespace
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/patientnesrine/informations/informations_flow.dart:3:8 • unnecessary_import
+warning • Unused import: '../../../../services/api_service.dart' • lib/screens/patientnesrine/informations/informations_flow.dart:5:8 • unused_import
+warning • Unused import: '../homeScreen.dart' • lib/screens/patientnesrine/informations/informations_flow.dart:8:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/informations/name.dart:66:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/informations/name.dart:77:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/informations/name.dart:93:45 • deprecated_member_use
+   info • Use a 'SizedBox' to add whitespace to a layout • lib/screens/patientnesrine/informations/weight.dart:103:9 • sized_box_for_whitespace
+warning • Unused import: 'package:google_fonts/google_fonts.dart' • lib/screens/patientnesrine/main_screen.dart:2:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/main_screen.dart:39:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/main_screen.dart:103:38 • deprecated_member_use
+   info • The private field _selectedSchedule could be 'final' • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:18:16 • prefer_final_fields
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:47:83 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:92:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:159:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:187:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:213:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:215:74 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread • lib/screens/patientnesrine/medicines/add_medicine_screen.dart:256:25 • unnecessary_to_list_in_spreads
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/medicine_detail_screen.dart:85:40 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/patientnesrine/medicines/medicine_detail_screen.dart:112:36 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/medicine_detail_screen.dart:117:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/medicine_detail_screen.dart:141:22 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/medicines/medicine_detail_screen.dart:182:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/notifications_screen.dart:74:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/notifications_screen.dart:78:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/notifications_screen.dart:83:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/notifications_screen.dart:91:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:46:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:49:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:92:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:95:49 • deprecated_member_use
+warning • The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used • lib/screens/patientnesrine/profile_screen.dart:100:143 • invalid_null_aware_operator
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:103:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:158:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:170:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:187:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:195:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:198:67 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:238:69 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:309:61 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/patientnesrine/profile_screen.dart:333:55 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:388:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:407:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:426:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:446:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:448:74 • deprecated_member_use
+warning • The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used • lib/screens/patientnesrine/profile_screen.dart:451:151 • invalid_null_aware_operator
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:464:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:466:74 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:471:93 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:483:98 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:485:84 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:511:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:522:79 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:534:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:549:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:552:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:564:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:589:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/profile_screen.dart:592:43 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/patientnesrine/profile_screen.dart:649:15 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:65:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:68:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:80:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:139:50 • deprecated_member_use
+warning • The declaration '_buildFilesTab' isn't referenced • lib/screens/patientnesrine/records_screen.dart:284:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:343:78 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:355:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:373:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:380:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:418:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/records_screen.dart:432:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/scanner_screen.dart:28:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/scanner_screen.dart:29:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/summary_result_screen.dart:27:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/summary_result_screen.dart:29:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/summary_result_screen.dart:59:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/summary_result_screen.dart:88:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/patientnesrine/summary_result_screen.dart:90:60 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/pharmacie/pharmacy_profile_screen.dart:582:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/pharmacie/pharmacy_profile_screen.dart:592:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/pharmacie/web/pharmacy_web_profile.dart:875:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/pharmacie/web/pharmacy_web_profile.dart:885:15 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/screens/web/appointment_detail_web_dialog.dart:543:23 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/web/appointment_detail_web_dialog.dart:544:30 • use_build_context_synchronously
+warning • The value of the field '_appointments' isn't used • lib/screens/web/center_dashboard_web.dart:43:30 • unused_field
+   info • The private field _selectedDate could be 'final' • lib/screens/web/center_dashboard_web.dart:46:12 • prefer_final_fields
+warning • The value of the local variable 'phone' isn't used • lib/screens/web/center_dashboard_web.dart:466:11 • unused_local_variable
+warning • The value of the local variable 'mainCategory' isn't used • lib/screens/web/center_dashboard_web.dart:469:11 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:552:48 • deprecated_member_use
+warning • The declaration '_buildAppointmentsListCard' isn't referenced • lib/screens/web/center_dashboard_web.dart:689:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:817:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:910:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:916:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:954:80 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:956:78 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/web/center_dashboard_web.dart:1137:47 • deprecated_member_use
+   info • The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart' • lib/screens/web/center_profile_web_screen.dart:1:8 • unnecessary_import
+warning • The declaration '_buildProfileImageSection' isn't referenced • lib/screens/web/center_profile_web_screen.dart:710:10 • unused_element
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/web/center_profile_web_screen.dart:1168:13 • deprecated_member_use
+warning • The declaration '_clearSignature' isn't referenced • lib/screens/web/digital_signature_screen.dart:388:8 • unused_element
+   info • Use a 'SizedBox' to add whitespace to a layout • lib/screens/web/digital_signature_screen.dart:409:16 • sized_box_for_whitespace
+  error • Target of URI doesn't exist: '../dashboard_main_screen.dart' • lib/screens/web/login_web_screen.dart:8:8 • uri_does_not_exist
+warning • The value of the local variable 'isLargeScreen' isn't used • lib/screens/web/login_web_screen.dart:38:11 • unused_local_variable
+  error • The name 'DashboardMainScreen' isn't a class • lib/screens/web/login_web_screen.dart:335:31 • creation_with_non_type
+   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/web/patients_web_screen.dart:2:8 • unnecessary_import
+warning • The declaration '_getStatusLabel' isn't referenced • lib/screens/web/prescription_detail_web_screen.dart:179:10 • unused_element
+warning • The value of the local variable 'statusColor' isn't used • lib/screens/web/prescription_detail_web_screen.dart:213:11 • unused_local_variable
+warning • Unused import: '../../widgets/appointment_detail_content.dart' • lib/screens/web/prescriptions_web_screen.dart:4:8 • unused_import
+warning • The declaration '_buildFilterChip' isn't referenced • lib/screens/web/prescriptions_web_screen.dart:382:10 • unused_element
+warning • The value of the local variable 'index' isn't used • lib/screens/web/prescriptions_web_screen.dart:447:15 • unused_local_variable
+warning • The value of the local variable 'isPending' isn't used • lib/screens/web/prescriptions_web_screen.dart:473:15 • unused_local_variable
+   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/web/results_upload_screen.dart:2:8 • unnecessary_import
+warning • The value of the field '_selectedEndDate' isn't used • lib/screens/web/results_upload_screen.dart:24:13 • unused_field
+   info • The private field _isDragging could be 'final' • lib/screens/web/results_upload_screen.dart:27:8 • prefer_final_fields
+warning • The value of the field '_isDragging' isn't used • lib/screens/web/results_upload_screen.dart:27:8 • unused_field
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/screens/web/results_upload_screen.dart:678:7 • deprecated_member_use
+   info • Empty catch block • lib/services/api_service.dart:823:17 • empty_catches
+warning • The value of the local variable 'status' isn't used • lib/widgets/appointment_detail_content.dart:84:11 • unused_local_variable
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:164:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:165:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:166:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:229:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:233:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:242:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:274:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:275:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:298:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:299:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:322:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:323:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/widgets/medical_animated_background.dart:385:41 • deprecated_member_use
+warning • The value of the local variable 'innerOffset' isn't used • lib/widgets/weight_dial_painter.dart:46:20 • unused_local_variable
+

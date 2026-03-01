@@ -35,6 +35,33 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  static const Color textSecondary = Color(0xFF64748B); // Slate 500
+  static const Color sidebarHover = Color(0xFFE2E8F0);
+  static const Color sidebarActive = Color(0xFFE2E8F0);
+  static const LinearGradient sidebarGradient = LinearGradient(
+    colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+  static const Color dividerLight = Color(0xFFE2E8F0);
+  static const LinearGradient warningGradient = LinearGradient(
+    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+  );
+  static const LinearGradient successGradient = LinearGradient(
+    colors: [Color(0xFF10B981), Color(0xFF059669)],
+  );
+  static const Color indigo = Color(0xFF6366F1);
+  static const LinearGradient purpleGradient = LinearGradient(
+    colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+  );
+  static final BoxDecoration cardDecoration = BoxDecoration(
+    color: white,
+    borderRadius: BorderRadius.circular(16),
+    boxShadow: [
+      BoxShadow(color: darkNavy.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+    ],
+  );
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

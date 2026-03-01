@@ -4,10 +4,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
-import 'screens/dashboard_main_screen.dart';
+import 'screens/clinique/web/dashboard_main_screen.dart';
 
 // Patient Imports
 import 'core/theme/app_theme.dart' as patient_theme;
@@ -76,8 +77,8 @@ class MEDAIChainApp extends StatelessWidget {
         initialRoute: kIsWeb ? '/login' : '/',
         routes: {
           // Mobile: onboarding si pas de session mémorisée, sinon aller direct à l'app
-          '/': (context) => kIsWeb ? const web_login.LoginWebScreen() : const AuthWrapper(),
-          '/login': (context) => kIsWeb ? const web_login.LoginWebScreen() : const LoginScreen(),
+          '/': (context) => kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
+          '/login': (context) => kIsWeb ? const LoginWebScreen() : const LoginScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
           '/patient_home': (context) => const AuthWrapper(),

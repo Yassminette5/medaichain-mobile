@@ -5,7 +5,9 @@ import '../dashboard_main_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../centre_analyse/home_centre_analyse.dart';
-
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../admin/admin_dashboard_screen.dart';
+import '../clinique/home_admin_clinique_mobile.dart';
 /// Router qui redirige vers l'interface appropriée selon le rôle de l'utilisateur
 class RoleRouter {
   static Widget getHomeScreen(UserRole role) {
@@ -23,7 +25,9 @@ class RoleRouter {
         return const HomeCentreAnalyse();
       
       case UserRole.clinique:
-        return const DashboardMainScreen();
+        return kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
+      case UserRole.admin:
+        return const AdminDashboardScreen();
     }
   }
 }

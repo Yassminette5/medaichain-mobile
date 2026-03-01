@@ -15,6 +15,8 @@ import '../web/center_dashboard_web.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
+import '../clinique/mobile/home_admin_clinique_mobile.dart';
+import '../clinique/web/dashboard_main_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -421,8 +423,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           dashboard = kIsWeb ? const CenterDashboardWeb() : const HomeCentreAnalyse();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {
+        } else if (userRole == UserRole.medecin) {
           dashboard = const DashboardScreen();
+        } else if (userRole == UserRole.clinique) {
+          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
         } else {
           // Patient
           dashboard = const MainScreen();
