@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
+import '../dashboard/dashboard_screen.dart';
 import '../web/center_dashboard_web.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../web/medecin_web_dashboard.dart';
+import '../clinique/web/dashboard_main_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../clinique/mobile/home_admin_clinique_mobile.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 
@@ -432,9 +437,11 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
           dashboard = const CenterDashboardWeb();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {
-          // Use web dashboard for medecin on web platform
+        } else if (userRole == UserRole.medecin) {
           dashboard = const MedecinWebDashboard();
+        } else if (userRole == UserRole.clinique) {
+          // Dashboard clinique (mobile vs web)
+          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
         } else {
           dashboard = const MainScreen();
         }

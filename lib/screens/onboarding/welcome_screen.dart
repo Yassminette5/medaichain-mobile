@@ -146,16 +146,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   ),
                   // Pagination dots
                   _buildPaginationDots(),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
                   // CTA Button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: _buildCTAButton(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
                   // Footer
                   _buildFooter(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -226,48 +226,52 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo with animated glow effect
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: _buildAnimatedLogo(),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 24),
+              // Logo with animated glow effect
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: _buildAnimatedLogo(),
+                ),
               ),
-            ),
-            const SizedBox(height: 48),
-            // App title with slide animation
-            AnimatedBuilder(
-              animation: _titleSlideAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _titleSlideAnimation.value),
-                  child: Opacity(
-                    opacity: _controller.value.clamp(0.3, 1.0),
-                    child: child,
-                  ),
-                );
-              },
-              child: _buildTitle(),
-            ),
-            const SizedBox(height: 16),
-            // Tagline with delayed slide animation
-            AnimatedBuilder(
-              animation: _taglineSlideAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(0, _taglineSlideAnimation.value),
-                  child: Opacity(
-                    opacity: _controller.value.clamp(0.0, 1.0),
-                    child: child,
-                  ),
-                );
-              },
-              child: _buildTagline(),
-            ),
-          ],
+              const SizedBox(height: 32),
+              // App title with slide animation
+              AnimatedBuilder(
+                animation: _titleSlideAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _titleSlideAnimation.value),
+                    child: Opacity(
+                      opacity: _controller.value.clamp(0.3, 1.0),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _buildTitle(),
+              ),
+              const SizedBox(height: 12),
+              // Tagline with delayed slide animation
+              AnimatedBuilder(
+                animation: _taglineSlideAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _taglineSlideAnimation.value),
+                    child: Opacity(
+                      opacity: _controller.value.clamp(0.0, 1.0),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _buildTagline(),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -419,9 +423,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 600),
         opacity: isActive ? 1.0 : 0.0,
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 24),
             // Bouclier animé avec cercles rotatifs
             AnimatedBuilder(
               animation: _pulseController,
@@ -607,6 +613,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               ),
             ),
           ],
+        ),
         ),
       ),
     );

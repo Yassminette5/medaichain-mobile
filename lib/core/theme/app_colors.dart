@@ -7,12 +7,12 @@ class AppColors {
   AppColors._();
 
   // Primary Colors - Purple/Lavender
-  static const Color primary = Color(0xFF6C63FF);
-  static const Color primaryLight = Color(0xFF8F89FF);
-  static const Color primaryDark = Color(0xFF5A52E0);
+  static const Color primary = Color(0xFF7C3AED);
+  static const Color primaryLight = Color(0xFFA78BFA);
+  static const Color primaryDark = Color(0xFF5B21B6);
 
   // Secondary Colors - Pastel Pink
-  static const Color secondary = Color(0xFFFF6B9D);
+  static const Color secondary = Color(0xFFEC4899);
   static const Color secondaryLight = Color(0xFFF9A8D4);
   static const Color secondaryDark = Color(0xFFBE185D);
 
@@ -46,8 +46,6 @@ class AppColors {
   static const Color categoryBlue = Color(0xFF60A5FA);
   static const Color categoryPurple = Color(0xFFA78BFA);
 
-  //
-
   // Medical-specific Colors
   static const Color alert = Color(0xFFFF5252);
   static const Color alertLight = Color(0xFFFFCDD2);
@@ -64,13 +62,13 @@ class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)],
+    colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
   );
 
   static const LinearGradient heroGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)],
+    colors: [Color(0xFF7C3AED), Color(0xFF8B5CF6)],
   );
 
   static const LinearGradient aiGradient = LinearGradient(
@@ -94,7 +92,7 @@ class AppColors {
   static const LinearGradient neonGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF6C63FF), Color(0xFFC4B5FD)],
+    colors: [Color(0xFF8B5CF6), Color(0xFFC4B5FD)],
   );
 
   // Soft category gradients
@@ -123,9 +121,9 @@ class AppColors {
   );
 
   // Shadow Colors - Soft purple tint
-  static Color shadowColor = const Color(0xFF6C63FF).withValues(alpha: 0.12);
-  static Color cardShadow = const Color(0xFF6C63FF).withValues(alpha: 0.08);
-  static Color glowShadow = const Color(0xFF6C63FF).withValues(alpha: 0.3);
+  static Color shadowColor = const Color(0xFF7C3AED).withValues(alpha: 0.12);
+  static Color cardShadow = const Color(0xFF7C3AED).withValues(alpha: 0.08);
+  static Color glowShadow = const Color(0xFF7C3AED).withValues(alpha: 0.3);
 
   // Border Colors
   static const Color border = Color(0xFFE5E7EB);
@@ -137,110 +135,48 @@ class AppColors {
   static const Color biometric = Color(0xFF10B981);
   static const Color biometricLight = Color(0xFFD1FAE5);
 
-  // Gradient Colors
-  static const Color gradientStart = Color(0xFF6C63FF);
-  static const Color gradientMiddle = Color(0xFF8F89FF);
-  static const Color gradientEnd = Color(0xFFB4A5FF);
+  // Backward-compatible aliases for patient screens
+  static const Color textDark = textPrimary;
+  static const Color textGrey = textSecondary;
+  static const Color textMedium = textSecondary;
+  static const Color backgroundDark = Color(0xFFEEF0F3);
 
-  // Accent Colors
-  static const Color accentPink = Color(0xFFFF6B9D);
-  static const Color accentOrange = Color(0xFFFF9B71);
-  static const Color accentCyan = Color(0xFF4ECDC4);
-  static const Color accentGreen = Color(0xFF95E1D3);
+  // Accent colors for patient screens
+  static const Color accentCyan = Color(0xFF06B6D4);
+  static const Color accentOrange = Color(0xFFF59E0B);
+  static const Color accentPink = Color(0xFFEC4899);
 
-  // Background Colors
-  static const Color backgroundDark = Color(0xFFEEF0F8);
-
-  // Text Colors
-  static const Color textDark = Color(0xFF1A1A2E);
-  static const Color textMedium = Color(0xFF4A4A68);
-  static const Color textGrey = Color(0xFF9E9EB0);
-
-
-  static const Color white = Colors.white;
-  static const Color accentBlue = Color(0xFFE0E7FF);
-  static const Color accentPurple = Color(0xFFEEE5FF);
-
-  // Gradients
- static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFFFFFFFF), Color(0xFFF8F9FE)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
+  // Accent gradient
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [accentPink, accentOrange],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
   );
 
+  // Box shadow presets
   static List<BoxShadow> small = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
+      color: shadowColor,
+      blurRadius: 8,
+      offset: const Offset(0, 2),
     ),
   ];
 
   static List<BoxShadow> medium = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: shadowColor,
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
   ];
 
-  static List<BoxShadow> large = [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.08),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
-
   static List<BoxShadow> colored(Color color) => [
     BoxShadow(
-      color: color.withOpacity(0.3),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
+      color: color.withValues(alpha: 0.3),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
     ),
   ];
 }
 
-class AppAnimations {
-  static const Duration fast = Duration(milliseconds: 200);
-  static const Duration normal = Duration(milliseconds: 300);
-  static const Duration slow = Duration(milliseconds: 500);
-}
-
-class AppStyles {
-  static BoxDecoration glassmorphic({Color? color}) => BoxDecoration(
-    color: (color ?? Colors.white).withOpacity(0.7),
-    borderRadius: BorderRadius.circular(20),
-    border: Border.all(
-      color: Colors.white.withOpacity(0.2),
-      width: 1.5,
-    ),
-    boxShadow: AppColors.medium,
-  );
-
-  static BoxDecoration neumorphic({Color? color}) => BoxDecoration(
-    color: color ?? AppColors.background,
-    borderRadius: BorderRadius.circular(20),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.white.withOpacity(0.7),
-        offset: const Offset(-6, -6),
-        blurRadius: 12,
-      ),
-      BoxShadow(
-        color: Colors.black.withOpacity(0.1),
-        offset: const Offset(6, 6),
-        blurRadius: 12,
-      ),
-    ],
-  );
-}
 /// Glassmorphism Card Widget
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -290,7 +226,7 @@ class NeonGlowBox extends StatelessWidget {
   const NeonGlowBox({
     super.key,
     required this.child,
-    this.glowColor = const Color(0xFF6C63FF),
+    this.glowColor = const Color(0xFF7C3AED),
     this.blurRadius = 20,
   });
 

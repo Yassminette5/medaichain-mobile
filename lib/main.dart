@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
-import 'screens/dashboard_main_screen.dart';
+import 'screens/clinique/web/dashboard_main_screen.dart';
 
 // Patient Imports
 import 'core/theme/app_theme.dart' as patient_theme;
@@ -24,8 +27,21 @@ import 'screens/patientnesrine/main_screen.dart';
 import 'screens/admin/admin_login_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
 
+// Web dashboards (routes compat *.html)
+import 'screens/web/medecin_web_dashboard.dart';
+import 'screens/web/center_dashboard_web.dart';
+import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
+
+  // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
+  // Sans "rewrite" côté serveur, la navigation en path (/xxx) peut afficher une 404.
+  // Avec HashUrlStrategy, l'URL reste /#/xxx et évite ces 404.
+  if (kIsWeb) {
+    setUrlStrategy(const HashUrlStrategy());
+  }
 
   // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
   await ApiService.enforceRememberPolicyOnStartup();
@@ -58,7 +74,7 @@ class MEDAIChainApp extends StatelessWidget {
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,
-        initialRoute: '/',
+        initialRoute: kIsWeb ? '/login' : '/',
         routes: {
           // Mobile: onboarding si pas de session mémorisée, sinon aller direct à l'app
           '/': (context) => kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
@@ -66,10 +82,18 @@ class MEDAIChainApp extends StatelessWidget {
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
           '/patient_home': (context) => const AuthWrapper(),
+          // '/pharmacie': (context) => const PharmacyWebDashboard(),
+          '/centre_analyse': (context) => const CenterDashboardWeb(),
           '/admin': (context) => const AdminLoginScreen(),
           '/admin/dashboard': (context) => const AdminDashboardScreen(),
           '/signup.html': (context) => const SignupScreen(),
           '/signup': (context) => const SignupScreen(),
+
+          // Compat: certains liens anciens pointent vers des pages *.html (éviter une navigation cassée)
+          '/clinique_dashboard.html': (context) => const MedecinWebDashboard(),
+          '/centre_dashboard.html': (context) => const CenterDashboardWeb(),
+          '/centre_analyse_dashboard.html': (context) => const CenterDashboardWeb(),
+          '/pharmacie_dashboard.html': (context) => const PharmacieDashboardScreen(),
           // Ancien écran de sélection (si besoin plus tard)
           '/launcher': (context) => const AppLauncherScreen(),
         },
@@ -94,6 +118,11 @@ class AppLauncherScreen extends StatelessWidget {
             const Text(
               'Bienvenue sur MEDAIChain',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Sélectionnez votre espace',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 48),
             
@@ -124,6 +153,18 @@ class AppLauncherScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Connexion Professionnelle (Pharmacie, Centre d'Analyse, Admin)
+            _buildEspaceButton(
+              context: context,
+              route: '/login',
+              label: 'ESPACE PROFESSIONNEL',
+              subtitle: 'Pharmacie · Laboratoire · Admin',
+              icon: Icons.local_hospital,
+              colors: const [Color(0xFF2E5BFF), Color(0xFF0030E5)],
+
             ),
             const SizedBox(height: 24),
             
@@ -160,6 +201,62 @@ class AppLauncherScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildEspaceButton({
+    required BuildContext context,
+    required String route,
+    required String label,
+    required IconData icon,
+    required List<Color> colors,
+    String? subtitle,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        width: 380,
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: colors),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: colors[0].withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.7), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class AuthWrapper extends StatelessWidget {
@@ -167,14 +264,15 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Override the theme to use the patient app theme temporarily for this widget tree
     return Theme(
       data: patient_theme.AppTheme.lightTheme,
       child: Builder(
         builder: (context) {
           final authProvider = Provider.of<AuthProvider>(context);
           if (authProvider.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          if (authProvider.isLoggedIn) return const MainScreen();
+          if (authProvider.isLoggedIn) {
+            return const MainScreen();
+          }
           return const WelcomeScreen();
         }
       ),

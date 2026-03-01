@@ -1,3 +1,4 @@
+﻿import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
-/// Écran du profil du centre d'analyse adapté pour le web
+/// ├ëcran du profil du centre d'analyse adapt├® pour le web
 class CenterProfileWebScreen extends StatefulWidget {
   const CenterProfileWebScreen({super.key});
 
@@ -32,7 +33,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  // Liste des catégories disponibles
+  // Liste des cat├®gories disponibles
   final List<String> _availableCategories = [
     'Biologie',
     'Radiologie',
@@ -40,11 +41,11 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
     'Cardiologie',
     'Neurologie',
     'Oncologie',
-    'Gynécologie',
-    'Pédiatrie',
-    'Génétique',
+    'Gyn├®cologie',
+    'P├®diatrie',
+    'G├®n├®tique',
     'Microbiologie',
-    'Hématologie',
+    'H├®matologie',
     'Biochimie',
     'Immunologie',
   ];
@@ -68,18 +69,18 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
     setState(() => _isLoading = true);
 
     try {
-      debugPrint('🔍 Center Profile Web: Chargement du profil...');
+      debugPrint('­ƒöÁ Center Profile Web: Chargement du profil...');
       final labProfile = await ApiService.getLabProfile();
-      debugPrint('✅ Center Profile Web: Profil récupéré: $labProfile');
+      debugPrint('Ô£à Center Profile Web: Profil r├®cup├®r├®: $labProfile');
       
       if (mounted) {
         setState(() {
           _labName = labProfile['centreName'] ?? labProfile['name'] ?? labProfile['centre_name'] ?? '';
           _localisation = labProfile['localisation'] ?? '';
           
-          debugPrint('🔍 Center Profile Web: Nom: $_labName');
-          debugPrint('🔍 Center Profile Web: Localisation: $_localisation');
-          debugPrint('🔍 Center Profile Web: Catégories brutes: ${labProfile['categorie']}');
+          debugPrint('­ƒöÁ Center Profile Web: Nom: $_labName');
+          debugPrint('­ƒöÁ Center Profile Web: Localisation: $_localisation');
+          debugPrint('­ƒöÁ Center Profile Web: Cat├®gories brutes: ${labProfile['categorie']}');
           
           if (labProfile['categorie'] != null) {
             if (labProfile['categorie'] is List) {
@@ -93,7 +94,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
             _categories = [];
           }
           
-          debugPrint('🔍 Center Profile Web: Catégories parsées: $_categories');
+          debugPrint('­ƒöÁ Center Profile Web: Cat├®gories pars├®es: $_categories');
           
           _phone = labProfile['phone'] ?? '';
           _email = labProfile['email'] ?? '';
@@ -109,26 +110,26 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                    labProfile['logoUrl'] ?? 
                                    '';
           
-          // Construire l'URL complète si c'est un chemin relatif
+          // Construire l'URL compl├¿te si c'est un chemin relatif
           if (profilePhotoPath.isNotEmpty) {
             if (profilePhotoPath.startsWith('http')) {
               _profileImageUrl = profilePhotoPath;
             } else {
-              // Essayer d'abord la route API qui gère mieux CORS
+              // Essayer d'abord la route API qui g├¿re mieux CORS
               // Format: /lab/uploads/profiles/filename.png
               final filename = profilePhotoPath.split('/').last;
               _profileImageUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
-              debugPrint('🔍 Center Profile Web: URL image (route API): $_profileImageUrl');
+              debugPrint('­ƒöÁ Center Profile Web: URL image (route API): $_profileImageUrl');
             }
           } else {
             _profileImageUrl = null;
           }
           
-          debugPrint('🔍 Center Profile Web: Téléphone: $_phone');
-          debugPrint('🔍 Center Profile Web: Email: $_email');
-          debugPrint('🔍 Center Profile Web: Actif: $_isActive');
-          debugPrint('🔍 Center Profile Web: ProfilePhotoPath: $profilePhotoPath');
-          debugPrint('🔍 Center Profile Web: Image URL finale: $_profileImageUrl');
+          debugPrint('­ƒöÁ Center Profile Web: T├®l├®phone: $_phone');
+          debugPrint('­ƒöÁ Center Profile Web: Email: $_email');
+          debugPrint('­ƒöÁ Center Profile Web: Actif: $_isActive');
+          debugPrint('­ƒöÁ Center Profile Web: ProfilePhotoPath: $profilePhotoPath');
+          debugPrint('­ƒöÁ Center Profile Web: Image URL finale: $_profileImageUrl');
           
           _nameController.text = _labName ?? '';
           _localisationController.text = _localisation ?? '';
@@ -138,7 +139,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
         });
       }
     } catch (e) {
-      debugPrint('❌ Center Profile Web: Erreur: $e');
+      debugPrint('ÔØî Center Profile Web: Erreur: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -161,9 +162,9 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
         final extension = file.extension?.toLowerCase() ?? '';
         final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         
-        // Vérifier l'extension du fichier
+        // V├®rifier l'extension du fichier
         if (!allowedExtensions.contains(extension)) {
-          _showErrorSnackBar('Format non supporté. Formats acceptés: JPG, JPEG, PNG, GIF, WEBP');
+          _showErrorSnackBar('Format non support├®. Formats accept├®s: JPG, JPEG, PNG, GIF, WEBP');
           return;
         }
         
@@ -171,12 +172,12 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
           _selectedImageFile = file;
         });
         
-        // Uploader l'image immédiatement
+        // Uploader l'image imm├®diatement
         await _uploadImage();
       }
     } catch (e) {
-      debugPrint('❌ Center Profile Web: Erreur lors de la sélection de l\'image: $e');
-      _showErrorSnackBar('Erreur lors de la sélection de l\'image: $e');
+      debugPrint('ÔØî Center Profile Web: Erreur lors de la s├®lection de l\'image: $e');
+      _showErrorSnackBar('Erreur lors de la s├®lection de l\'image: $e');
     }
   }
 
@@ -191,27 +192,27 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
       final imageBytes = _selectedImageFile!.bytes!;
       final fileName = _selectedImageFile!.name;
       
-      debugPrint('🔍 Center Profile Web: Upload de l\'image...');
-      debugPrint('🔍 Center Profile Web: Taille du fichier: ${imageBytes.length} bytes');
+      debugPrint('­ƒöÁ Center Profile Web: Upload de l\'image...');
+      debugPrint('­ƒöÁ Center Profile Web: Taille du fichier: ${imageBytes.length} bytes');
       final imageUrl = await ApiService.uploadLabProfilePhoto(imageBytes, fileName);
       
       if (mounted) {
-        // Mettre à jour l'URL de l'image immédiatement
+        // Mettre ├á jour l'URL de l'image imm├®diatement
         setState(() {
           _profileImageUrl = imageUrl;
           _isUploadingImage = false;
           _selectedImageFile = null;
         });
         
-        // Recharger le profil pour avoir les données à jour depuis le backend
+        // Recharger le profil pour avoir les donn├®es ├á jour depuis le backend
         await _loadCenterProfile();
         
-        _showSuccessSnackBar('Photo uploadée avec succès');
-        debugPrint('✅ Center Profile Web: Image uploadée: $imageUrl');
-        debugPrint('✅ Center Profile Web: Image URL après rechargement: $_profileImageUrl');
+        _showSuccessSnackBar('Photo upload├®e avec succ├¿s');
+        debugPrint('Ô£à Center Profile Web: Image upload├®e: $imageUrl');
+        debugPrint('Ô£à Center Profile Web: Image URL apr├¿s rechargement: $_profileImageUrl');
       }
     } catch (e) {
-      debugPrint('❌ Center Profile Web: Erreur lors de l\'upload: $e');
+      debugPrint('ÔØî Center Profile Web: Erreur lors de l\'upload: $e');
       if (mounted) {
         setState(() => _isUploadingImage = false);
         _showErrorSnackBar('Erreur lors de l\'upload de l\'image: $e');
@@ -228,16 +229,16 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Si une nouvelle image a été sélectionnée mais pas encore uploadée, l'uploader d'abord
+      // Si une nouvelle image a ├®t├® s├®lectionn├®e mais pas encore upload├®e, l'uploader d'abord
       if (_selectedImageFile != null && _selectedImageFile!.bytes != null) {
         await _uploadImage();
       }
 
-      // Extraire le chemin relatif si c'est une URL complète
+      // Extraire le chemin relatif si c'est une URL compl├¿te
       String? profilePhotoPath;
       if (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) {
         if (_profileImageUrl!.startsWith('http')) {
-          // Extraire le chemin relatif depuis l'URL complète
+          // Extraire le chemin relatif depuis l'URL compl├¿te
           final uri = Uri.parse(_profileImageUrl!);
           profilePhotoPath = uri.path;
         } else {
@@ -259,7 +260,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
 
       await ApiService.updateLabProfile(updateData);
       
-      // Recharger le profil pour avoir les données à jour
+      // Recharger le profil pour avoir les donn├®es ├á jour
       await _loadCenterProfile();
 
       if (mounted) {
@@ -272,7 +273,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
           _email = _emailController.text.trim();
         });
 
-        _showSuccessSnackBar('Profil mis à jour avec succès');
+        _showSuccessSnackBar('Profil mis ├á jour avec succ├¿s');
       }
     } catch (e) {
       if (mounted) {
@@ -312,22 +313,19 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        // ⚠️ Ne pas dépendre d'un asset qui peut manquer en prod (sinon 404 en boucle sur web)
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surface,
-            AppColors.primary.withValues(alpha: 0.04),
-          ],
+        image: DecorationImage(
+          image: AssetImage('assets/images/profile_backend.jpg'),
+          fit: BoxFit.cover,
+          opacity: 0.15,
         ),
+        color: AppColors.surface,
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // En-tête avec bouton d'édition
+          // En-t├¬te avec bouton d'├®dition
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -456,11 +454,11 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionTitle('Informations générales'),
+                    _buildSectionTitle('Informations g├®n├®rales'),
                     const SizedBox(height: 20),
                     _buildProfileCard(),
                     const SizedBox(height: 32),
-                    _buildSectionTitle('Catégories d\'analyses'),
+                    _buildSectionTitle('Cat├®gories d\'analyses'),
                     const SizedBox(height: 20),
                     _buildCategoriesSection(),
                   ],
@@ -472,7 +470,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionTitle('Informations complémentaires'),
+                    _buildSectionTitle('Informations compl├®mentaires'),
                     const SizedBox(height: 20),
                     _buildTextField(
                       controller: _nameController,
@@ -490,7 +488,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                     const SizedBox(height: 20),
                     _buildTextField(
                       controller: _phoneController,
-                      label: 'Téléphone',
+                      label: 'T├®l├®phone',
                       icon: Icons.phone_in_talk_rounded,
                       enabled: _isEditing,
                       keyboardType: TextInputType.phone,
@@ -504,7 +502,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 32),
-                    _buildSectionTitle('Paramètres'),
+                    _buildSectionTitle('Param├¿tres'),
                     const SizedBox(height: 20),
                     _buildSwitchTile(
                       title: 'Rendez-vous en ligne',
@@ -618,14 +616,14 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                     );
                                   },
                                   errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('❌ Profile Card: Erreur chargement image: $error');
-                                    debugPrint('❌ Profile Card: URL: $_profileImageUrl');
+                                    debugPrint('ÔØî Profile Card: Erreur chargement image: $error');
+                                    debugPrint('ÔØî Profile Card: URL: $_profileImageUrl');
                                     
                                     // Fallback : essayer la route API alternative
                                     if (_profileImageUrl != null && _profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                       final filename = _profileImageUrl!.split('/').last.split('?').first;
                                       final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
-                                      debugPrint('🔄 Profile Card: Tentative route API: $alternativeUrl');
+                                      debugPrint('­ƒöä Profile Card: Tentative route API: $alternativeUrl');
                                       return Image.network(
                                         '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                         fit: BoxFit.cover,
@@ -709,7 +707,6 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
     );
   }
 
-  // ignore: unused_element
   Widget _buildProfileImageSection() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -732,7 +729,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              // Aperçu de l'image
+              // Aper├ºu de l'image
               Stack(
                 children: [
                   Container(
@@ -758,14 +755,14 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                   Uint8List.fromList(_selectedImageFile!.bytes!),
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('❌ Profile Card: Erreur chargement image: $error');
-                                    debugPrint('❌ Profile Card: URL: $_profileImageUrl');
+                                    debugPrint('ÔØî Profile Card: Erreur chargement image: $error');
+                                    debugPrint('ÔØî Profile Card: URL: $_profileImageUrl');
                                     
                                     // Fallback : essayer la route API alternative
                                     if (_profileImageUrl != null && _profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                       final filename = _profileImageUrl!.split('/').last.split('?').first;
                                       final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
-                                      debugPrint('🔄 Profile Card: Tentative route API: $alternativeUrl');
+                                      debugPrint('­ƒöä Profile Card: Tentative route API: $alternativeUrl');
                                       return Image.network(
                                         '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                         fit: BoxFit.cover,
@@ -806,15 +803,15 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                         );
                                       },
                                       errorBuilder: (context, error, stackTrace) {
-                                        debugPrint('❌ Center Profile Web: Erreur chargement image: $error');
-                                        debugPrint('❌ Center Profile Web: StackTrace: $stackTrace');
-                                        debugPrint('❌ Center Profile Web: URL: $_profileImageUrl');
+                                        debugPrint('ÔØî Center Profile Web: Erreur chargement image: $error');
+                                        debugPrint('ÔØî Center Profile Web: StackTrace: $stackTrace');
+                                        debugPrint('ÔØî Center Profile Web: URL: $_profileImageUrl');
                                         
                                         // Fallback : essayer la route API alternative si disponible
                                         if (_profileImageUrl!.contains('/uploads/lab-profiles/')) {
                                           final filename = _profileImageUrl!.split('/').last.split('?').first;
                                           final alternativeUrl = '${ApiService.baseUrl}/lab/uploads/profiles/$filename';
-                                          debugPrint('🔄 Center Profile Web: Tentative avec route API alternative: $alternativeUrl');
+                                          debugPrint('­ƒöä Center Profile Web: Tentative avec route API alternative: $alternativeUrl');
                                           return Image.network(
                                             '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
                                             fit: BoxFit.cover,
@@ -824,7 +821,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                                               'Accept': 'image/*',
                                             },
                                             errorBuilder: (context, error, stackTrace) {
-                                              debugPrint('❌ Center Profile Web: Erreur route API alternative: $error');
+                                              debugPrint('ÔØî Center Profile Web: Erreur route API alternative: $error');
                                               return _buildDefaultAvatar();
                                             },
                                           );
@@ -894,7 +891,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
                       const SizedBox(height: 8),
                     ],
                     Text(
-                      'Formats acceptés: JPG, JPEG, PNG, GIF, WEBP',
+                      'Formats accept├®s: JPG, JPEG, PNG, GIF, WEBP',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -1019,7 +1016,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
         children: [
           if (_isEditing)
             Text(
-              'Sélectionnez les catégories proposées par votre centre',
+              'S├®lectionnez les cat├®gories propos├®es par votre centre',
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
@@ -1028,7 +1025,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
           const SizedBox(height: 16),
           if (_categories.isEmpty && !_isEditing)
             Text(
-              'Aucune catégorie enregistrée',
+              'Aucune cat├®gorie enregistr├®e',
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Sidebar pour le dashboard web
@@ -112,7 +112,7 @@ class WebSidebar extends StatelessWidget {
                     context,
                     index: 5,
                     icon: Icons.upload_file_rounded,
-                    label: 'Upload résultats',
+                    label: 'Upload r├®sultats',
                   ),
                   _buildMenuItem(
                     context,
@@ -124,7 +124,7 @@ class WebSidebar extends StatelessWidget {
                     context,
                     index: 10,
                     icon: Icons.settings_rounded,
-                    label: 'Paramètres',
+                    label: 'Param├¿tres',
                   ),
                   _buildMenuItem(
                     context,
@@ -136,7 +136,7 @@ class WebSidebar extends StatelessWidget {
               ),
             ),
           ),
-          // Footer avec bouton de déconnexion premium
+          // Footer avec bouton de d├®connexion premium
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -154,7 +154,7 @@ class WebSidebar extends StatelessWidget {
                 onPressed: () => onItemSelected(-1),
                 icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
                 label: const Text(
-                  'Déconnexion',
+                  'D├®connexion',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

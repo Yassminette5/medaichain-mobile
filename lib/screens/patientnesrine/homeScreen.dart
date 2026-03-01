@@ -93,7 +93,11 @@ class HomeScreen extends StatelessWidget {
 
               // Enhanced Search Bar
               Container(
-                decoration: AppStyles.glassmorphic(),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: AppColors.small,
+                ),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Search for doctors, specialties...",

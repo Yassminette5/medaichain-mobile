@@ -11,9 +11,12 @@ import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../web/center_dashboard_web.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
+import '../clinique/mobile/home_admin_clinique_mobile.dart';
+import '../clinique/web/dashboard_main_screen.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -191,14 +194,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 children: [
                   _buildModernCheckbox(),
                   const SizedBox(width: 8),
-                  Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
-                  const Spacer(),
+                  Flexible(
+                    child: Text('Se souvenir de moi', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12), overflow: TextOverflow.ellipsis),
+                  ),
                   TextButton(
                     onPressed: _showForgotPasswordDialog,
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
                     child: ShaderMask(
                       shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13)),
+                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 12)),
                     ),
                   ),
                 ],
@@ -416,11 +420,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           dashboard = const AdminDashboardScreen();
         } else if (userRole == UserRole.centreAnalyse) {
           // Sur mobile, utiliser HomeCentreAnalyse, sur web c'est géré par login_web_screen
-          dashboard = kIsWeb ?  const HomeCentreAnalyse() : const  HomeCentreAnalyse();
+          dashboard = kIsWeb ? const CenterDashboardWeb() : const HomeCentreAnalyse();
         } else if (userRole == UserRole.pharmacie) {
           dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == UserRole.medecin || userRole == UserRole.clinique) {
+        } else if (userRole == UserRole.medecin) {
           dashboard = const DashboardScreen();
+        } else if (userRole == UserRole.clinique) {
+          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
         } else {
           // Patient
           dashboard = const MainScreen();

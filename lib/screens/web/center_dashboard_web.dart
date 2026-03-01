@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/web/web_sidebar.dart';
 import '../../widgets/web/web_header.dart';
+import '../auth/login_web_screen.dart';
 import '../centre_analyse/center_patients_screen.dart';
 import 'center_notifications_screen.dart';
 import 'results_upload_screen.dart';
@@ -27,10 +28,10 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
   int _selectedIndex = 0;
   String? _labName;
   bool _isLoadingProfile = true;
-
+  
   // Profil du centre
   Map<String, dynamic> _labProfile = {};
-
+  
   // Statistiques
   int _pendingCount = 0;
   int _acceptedCount = 0;
@@ -40,7 +41,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
   List<int> _weeklyAnalyses = [0, 0, 0, 0, 0, 0, 0]; // Lundi to Dimanche
   bool _isLoadingStats = true;
   List<Map<String, dynamic>> _appointments = [];
-
+  
   // Calendrier
   DateTime _selectedDate = DateTime.now();
 
@@ -56,27 +57,27 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
       debugPrint('🔵 Dashboard Web: Chargement du profil lab...');
       final labProfile = await ApiService.getLabProfile();
       debugPrint('✅ Dashboard Web: Profil récupéré: $labProfile');
-
+      
       if (mounted) {
         setState(() {
           _labProfile = labProfile;
-          _labName = labProfile['name'] ??
-              labProfile['centreName'] ??
-              labProfile['centre_name'] ??
-              'Centre d\'Analyses';
+          _labName = labProfile['name'] ?? 
+                    labProfile['centreName'] ?? 
+                    labProfile['centre_name'] ??
+                    'Centre d\'Analyses';
           debugPrint('✅ Dashboard Web: Nom du centre: $_labName');
           debugPrint('✅ Dashboard Web: Email: ${labProfile['email']}');
           debugPrint('✅ Dashboard Web: Phone: ${labProfile['phone']}');
           debugPrint('✅ Dashboard Web: Localisation: ${labProfile['localisation']}');
           debugPrint('✅ Dashboard Web: Catégories: ${labProfile['categorie']}');
-          final profilePhotoPath = labProfile['profilePhoto'] ??
-              labProfile['photo'] ??
-              labProfile['photoUrl'] ??
-              labProfile['image'] ??
-              labProfile['imageUrl'] ??
-              labProfile['logo'] ??
-              labProfile['logoUrl'] ??
-              '';
+          final profilePhotoPath = labProfile['profilePhoto'] ?? 
+                                   labProfile['photo'] ?? 
+                                   labProfile['photoUrl'] ?? 
+                                   labProfile['image'] ?? 
+                                   labProfile['imageUrl'] ?? 
+                                   labProfile['logo'] ?? 
+                                   labProfile['logoUrl'] ?? 
+                                   '';
           debugPrint('✅ Dashboard Web: ProfilePhotoPath: $profilePhotoPath');
           _isLoadingProfile = false;
         });
@@ -97,7 +98,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
 
     try {
       final appointments = await ApiService.getLabAppointments();
-
+      
       if (mounted) {
         final now = DateTime.now();
         // Calculer les statistiques
@@ -142,7 +143,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
         for (var apt in appointments) {
           try {
             final date = DateTime.parse(apt['appointmentDate'] ?? '');
-            if (date.isAfter(monday.subtract(const Duration(seconds: 1))) &&
+            if (date.isAfter(monday.subtract(const Duration(seconds: 1))) && 
                 date.isBefore(sunday.add(const Duration(days: 1)))) {
               final dayIndex = date.weekday - 1; // 0 for Monday, 6 for Sunday in Dart
               if (dayIndex >= 0 && dayIndex < 7) {
@@ -179,12 +180,12 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
       _handleLogout();
       return;
     }
-
+    
     // Si on revient au dashboard, recharger le profil pour afficher les mises à jour
     if (index == 0 && _selectedIndex != 0) {
       _loadLabProfile();
     }
-
+    
     setState(() {
       _selectedIndex = index;
     });
@@ -202,9 +203,15 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
             child: const Text('Annuler'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              context.read<AuthProvider>().logout();
+              await context.read<AuthProvider>().logout();
+              if (!mounted) return;
+              // Retourner à l'écran de login web (sans changer l'URL -> évite 404 si l'app est servie derrière un backend sans rewrite)
+              Navigator.of(this.context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginWebScreen()),
+                (route) => false,
+              );
             },
             child: const Text('Déconnexion', style: TextStyle(color: AppColors.error)),
           ),
@@ -387,7 +394,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     final period = hour < 12 ? 'am' : 'pm';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
     final formattedTime = '${displayHour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} $period';
-
+    
     String greeting = 'Bonjour';
     if (hour < 12) {
       greeting = 'Bonjour';
@@ -461,15 +468,15 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
     final categoryList = categories is List ? List<String>.from(categories) : (categories.toString().isNotEmpty ? [categories.toString()] : []);
     final mainCategory = categoryList.isNotEmpty ? categoryList.first.toUpperCase() : 'LABORATOIRE';
     // Le backend utilise 'profilePhoto' comme champ principal
-    final profilePhotoPath = _labProfile['profilePhoto'] ??
-        _labProfile['photo'] ??
-        _labProfile['photoUrl'] ??
-        _labProfile['image'] ??
-        _labProfile['imageUrl'] ??
-        _labProfile['logo'] ??
-        _labProfile['logoUrl'] ??
-        '';
-
+    final profilePhotoPath = _labProfile['profilePhoto'] ?? 
+                              _labProfile['photo'] ?? 
+                              _labProfile['photoUrl'] ?? 
+                              _labProfile['image'] ?? 
+                              _labProfile['imageUrl'] ?? 
+                              _labProfile['logo'] ?? 
+                              _labProfile['logoUrl'] ?? 
+                              '';
+    
     // Construire l'URL complète si c'est un chemin relatif
     // Utiliser la route API qui gère mieux CORS
     String profileImage = '';
@@ -484,7 +491,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
         debugPrint('🔵 Dashboard Web: URL image (route API): $profileImage');
       }
     }
-
+    
     debugPrint('🔵 Dashboard Web: ProfilePhotoPath: $profilePhotoPath');
     debugPrint('🔵 Dashboard Web: ProfileImage URL finale: $profileImage');
     debugPrint('🔵 Dashboard Web: ProfileImage isNotEmpty: ${profileImage.isNotEmpty}');
@@ -525,49 +532,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                     letterSpacing: 1.2,
                   ),
                 ),
-                Row(
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _onItemSelected(10),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.edit_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _onItemSelected(-1),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.logout_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox.shrink(),
               ],
             ),
           ),
@@ -591,48 +556,63 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                   child: ClipOval(
                     child: profileImage.isNotEmpty
                         ? Image.network(
-                      '$profileImage?t=${DateTime.now().millisecondsSinceEpoch}',
-                      fit: BoxFit.cover,
-                      cacheWidth: 200,
-                      cacheHeight: 200,
-                      headers: const {
-                        'Accept': 'image/*',
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) {
-                          return child;
-                        }
-                        return Container(
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              strokeWidth: 2.5,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        debugPrint('❌ Dashboard Web: Erreur chargement image: $error');
-                        debugPrint('❌ Dashboard Web: URL: $profileImage');
-
-                        // Fallback : essayer la route statique si la route API échoue
-                        if (profileImage.contains('/lab/uploads/profiles/')) {
-                          final filename = profileImage.split('/').last.split('?').first;
-                          final alternativeUrl = '${ApiService.baseUrl}/uploads/lab-profiles/$filename';
-                          debugPrint('🔄 Dashboard Web: Tentative route statique: $alternativeUrl');
-                          return Image.network(
-                            '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+                            '$profileImage?t=${DateTime.now().millisecondsSinceEpoch}',
                             fit: BoxFit.cover,
                             cacheWidth: 200,
                             cacheHeight: 200,
                             headers: const {
                               'Accept': 'image/*',
                             },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                return child;
+                              }
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    strokeWidth: 2.5,
+                                  ),
+                                ),
+                              );
+                            },
                             errorBuilder: (context, error, stackTrace) {
+                              debugPrint('❌ Dashboard Web: Erreur chargement image: $error');
+                              debugPrint('❌ Dashboard Web: URL: $profileImage');
+                              
+                              // Fallback : essayer la route statique si la route API échoue
+                              if (profileImage.contains('/lab/uploads/profiles/')) {
+                                final filename = profileImage.split('/').last.split('?').first;
+                                final alternativeUrl = '${ApiService.baseUrl}/uploads/lab-profiles/$filename';
+                                debugPrint('🔄 Dashboard Web: Tentative route statique: $alternativeUrl');
+                                return Image.network(
+                                  '$alternativeUrl?t=${DateTime.now().millisecondsSinceEpoch}',
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 200,
+                                  cacheHeight: 200,
+                                  headers: const {
+                                    'Accept': 'image/*',
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: AppColors.primaryGradient,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.local_hospital_rounded,
+                                        size: 50,
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
+                              
                               return Container(
                                 decoration: BoxDecoration(
                                   gradient: AppColors.primaryGradient,
@@ -645,33 +625,18 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
                                 ),
                               );
                             },
-                          );
-                        }
-
-                        return Container(
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.local_hospital_rounded,
-                            size: 50,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    )
+                          )
                         : Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.local_hospital_rounded,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.local_hospital_rounded,
+                              size: 50,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -768,7 +733,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
             }
             final analysisType = appointment['analysisType']?.toString() ?? '';
             final typeLabel = analysisType.isNotEmpty ? analysisType : 'Consultation';
-
+            
             // Couleur selon le type
             Color dotColor = AppColors.primary;
             if (typeLabel.toLowerCase().contains('consultation')) {
@@ -1095,7 +1060,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
-                maxY: (maxVal == 0 ? 5 : maxVal) + ((maxVal == 0 ? 5 : maxVal) * 0.2),
+                maxY: (maxVal == 0 ? 5 : maxVal) + ((maxVal == 0 ? 5 : maxVal) * 0.2), 
                 barTouchData: BarTouchData(
                   enabled: true,
                   touchTooltipData: BarTouchTooltipData(

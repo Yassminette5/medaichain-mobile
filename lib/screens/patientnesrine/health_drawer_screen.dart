@@ -1,35 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../services/api_service.dart';
+import '../centre_analyse/centers_list_screen.dart';
+import '../centre_analyse/center_detail_screen.dart';
 
-class HealthDrawerScreen extends StatelessWidget {
+enum _HealthDrawerFilter { pharmacies, analysisCenters }
+
+class HealthDrawerScreen extends StatefulWidget {
   const HealthDrawerScreen({super.key});
+
+  @override
+  State<HealthDrawerScreen> createState() => _HealthDrawerScreenState();
+}
+
+class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
+  _HealthDrawerFilter _selectedFilter = _HealthDrawerFilter.pharmacies;
+
+  bool _isLoadingCenters = false;
+  String? _centersError;
+  List<Map<String, dynamic>> _centers = [];
+
+  void _openCentersList(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CentersListScreen()),
+    );
+  }
+
+  Future<void> _loadCentersIfNeeded() async {
+    if (_isLoadingCenters) return;
+    if (_centers.isNotEmpty && _centersError == null) return;
+
+    setState(() {
+      _isLoadingCenters = true;
+      _centersError = null;
+    });
+
+    try {
+      final raw = await ApiService.getCentersList();
+
+      final normalized = raw.map((center) {
+        return <String, dynamic>{
+          'id': center['_id']?.toString() ?? center['id']?.toString() ?? '',
+          'name': (center['centreName'] ?? center['name'] ?? 'Centre sans nom').toString(),
+          'location': (center['localisation'] ?? center['location'] ?? '').toString(),
+          'isActive': center['isActive'] == true,
+        };
+      }).where((c) => (c['id'] as String).isNotEmpty).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _centers = normalized;
+        _isLoadingCenters = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _centersError = e.toString().replaceFirst('Exception: ', '');
+        _isLoadingCenters = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: AppColors.colored(AppColors.primary),
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(
-            "Request Medicine",
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -59,10 +96,10 @@ class HealthDrawerScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -70,7 +107,7 @@ class HealthDrawerScreen extends StatelessWidget {
                       style: GoogleFonts.poppins(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: "Search pharmacy, analysis center...",
-                        hintStyle: GoogleFonts.poppins(color: Colors.white.withOpacity(0.7)),
+                        hintStyle: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.7)),
                         prefixIcon: const Icon(Icons.search, color: Colors.white),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -80,9 +117,24 @@ class HealthDrawerScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildFilterChip("Pharmacies", true),
+                      _buildFilterChip(
+                        context,
+                        label: "Pharmacies",
+                        isSelected: _selectedFilter == _HealthDrawerFilter.pharmacies,
+                        onTap: () {
+                          setState(() => _selectedFilter = _HealthDrawerFilter.pharmacies);
+                        },
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip("Analysis Centers", false),
+                      _buildFilterChip(
+                        context,
+                        label: "Analysis Centers",
+                        isSelected: _selectedFilter == _HealthDrawerFilter.analysisCenters,
+                        onTap: () {
+                          setState(() => _selectedFilter = _HealthDrawerFilter.analysisCenters);
+                          _loadCentersIfNeeded();
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -115,7 +167,7 @@ class HealthDrawerScreen extends StatelessWidget {
                           gradient: const LinearGradient(colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)]),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF6B9D).withOpacity(0.5),
+                              color: const Color(0xFFFF6B9D).withValues(alpha: 0.5),
                               blurRadius: 12,
                             ),
                           ],
@@ -166,40 +218,103 @@ class HealthDrawerScreen extends StatelessWidget {
                             color: AppColors.textDark,
                           ),
                         ),
-                        Text(
-                          "See All",
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primary,
+                        InkWell(
+                          onTap: () {
+                            if (_selectedFilter == _HealthDrawerFilter.analysisCenters) {
+                              _openCentersList(context);
+                              return;
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Liste des pharmacies: bientôt disponible')),
+                            );
+                          },
+                          child: Text(
+                            "See All",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildPlaceCard(
-                      "MediCare Pharmacy",
-                      "1.2 km",
-                      "Open 24/7",
-                      Colors.green,
-                      const LinearGradient(colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)]),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPlaceCard(
-                      "City Analysis Center",
-                      "2.4 km",
-                      "Closes 8 PM",
-                      Colors.orange,
-                      const LinearGradient(colors: [Color(0xFFFF9B71), Color(0xFFFFB88C)]),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPlaceCard(
-                      "HealthPlus Drugstore",
-                      "0.8 km",
-                      "Open",
-                      Colors.green,
-                      AppColors.primaryGradient,
-                    ),
+                    if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
+                      _buildPlaceCard(
+                        icon: Icons.local_pharmacy,
+                        name: "MediCare Pharmacy",
+                        distance: "1.2 km",
+                        status: "Open 24/7",
+                        statusColor: Colors.green,
+                        gradient: const LinearGradient(colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)]),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPlaceCard(
+                        icon: Icons.local_pharmacy,
+                        name: "HealthPlus Drugstore",
+                        distance: "0.8 km",
+                        status: "Open",
+                        statusColor: Colors.green,
+                        gradient: AppColors.primaryGradient,
+                      ),
+                    ] else ...[
+                      if (_isLoadingCenters)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_centersError != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Erreur: $_centersError',
+                                style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _loadCentersIfNeeded,
+                                  child: const Text('Réessayer'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_centers.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            "Aucun centre d'analyse trouvé",
+                            style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                          ),
+                        )
+                      else ...[
+                        for (final c in _centers.take(5)) ...[
+                          _buildPlaceCard(
+                            icon: Icons.science,
+                            name: (c['name'] as String),
+                            distance: (c['location'] as String).isEmpty ? 'Localisation inconnue' : (c['location'] as String),
+                            status: (c['isActive'] == true) ? 'Disponible' : 'Indisponible',
+                            statusColor: (c['isActive'] == true) ? Colors.green : Colors.orange,
+                            gradient: const LinearGradient(colors: [Color(0xFFFF9B71), Color(0xFFFFB88C)]),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CenterDetailScreen(centerId: c['id'] as String),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
+                    ],
                   ],
                 ),
               ),
@@ -210,30 +325,50 @@ class HealthDrawerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.white.withOpacity(0.25) : Colors.transparent,
+  Widget _buildFilterChip(
+    BuildContext context, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(isSelected ? 0.4 : 0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isSelected ? 0.4 : 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPlaceCard(String name, String distance, String status, Color statusColor, LinearGradient gradient) {
-    return Container(
+  Widget _buildPlaceCard({
+    required IconData icon,
+    required String name,
+    required String distance,
+    required String status,
+    required Color statusColor,
+    required LinearGradient gradient,
+    VoidCallback? onTap,
+  }) {
+    final card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -249,7 +384,7 @@ class HealthDrawerScreen extends StatelessWidget {
               gradient: gradient,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.local_pharmacy, color: Colors.white, size: 28),
+            child: Icon(icon, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -263,17 +398,23 @@ class HealthDrawerScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.location_on, size: 14, color: AppColors.textGrey),
                     const SizedBox(width: 4),
-                    Text(
-                      distance,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: AppColors.textGrey,
+                    Expanded(
+                      child: Text(
+                        distance,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: AppColors.textGrey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -284,7 +425,7 @@ class HealthDrawerScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.15),
+              color: statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -297,6 +438,17 @@ class HealthDrawerScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return card;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: card,
       ),
     );
   }

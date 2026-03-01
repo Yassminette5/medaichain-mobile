@@ -31,20 +31,20 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
 
     try {
       final appointments = await ApiService.getLabAppointments();
-      
+
       // Extraire les patients uniques avec statut "accepted"
       final Map<String, Map<String, dynamic>> uniquePatients = {};
-      
+
       for (var appointment in appointments) {
         final status = appointment['status']?.toString().toLowerCase();
         if (status == 'accepted') {
           final patientId = appointment['patientId'];
           if (patientId != null && patientId is Map) {
             final patientMap = Map<String, dynamic>.from(patientId);
-            final patientIdStr = patientMap['_id']?.toString() ?? 
-                                 patientMap['id']?.toString() ?? 
-                                 '';
-            
+            final patientIdStr = patientMap['_id']?.toString() ??
+                patientMap['id']?.toString() ??
+                '';
+
             if (patientIdStr.isNotEmpty && !uniquePatients.containsKey(patientIdStr)) {
               // Compter le nombre de rendez-vous acceptés pour ce patient
               final appointmentCount = appointments.where((apt) {
@@ -52,8 +52,8 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
                 final aptPatientId = apt['patientId'];
                 if (aptPatientId != null && aptPatientId is Map) {
                   final aptPatientMap = Map<String, dynamic>.from(aptPatientId);
-                  final aptPatientIdStr = aptPatientMap['_id']?.toString() ?? 
-                                         aptPatientMap['id']?.toString() ?? '';
+                  final aptPatientIdStr = aptPatientMap['_id']?.toString() ??
+                      aptPatientMap['id']?.toString() ?? '';
                   return aptStatus == 'accepted' && aptPatientIdStr == patientIdStr;
                 }
                 return false;
@@ -102,8 +102,8 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
           final email = patient['email']?.toString().toLowerCase() ?? '';
           final searchLower = query.toLowerCase();
           return firstName.contains(searchLower) ||
-                 lastName.contains(searchLower) ||
-                 email.contains(searchLower);
+              lastName.contains(searchLower) ||
+              email.contains(searchLower);
         }).toList();
       }
     });
@@ -123,11 +123,11 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
   }
 
   void _openPatientHistory(Map<String, dynamic> patient) {
-    final patientId = patient['_id']?.toString() ?? 
-                     patient['id']?.toString() ?? '';
+    final patientId = patient['_id']?.toString() ??
+        patient['id']?.toString() ?? '';
     final patientName = _getPatientName(patient);
     final patientEmail = _getPatientEmail(patient);
-    
+
     if (patientId.isNotEmpty) {
       Navigator.push(
         context,
@@ -204,55 +204,55 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredPatients.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.folder_open_rounded,
-                              size: 64,
-                              color: AppColors.textSecondary.withValues(alpha: 0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Aucun patient accepté'
-                                  : 'Aucun résultat trouvé',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.all(24),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 1.1,
-                          ),
-                          itemCount: _filteredPatients.length,
-                          itemBuilder: (context, index) {
-                            final patient = _filteredPatients[index];
-                            final patientName = _getPatientName(patient);
-                            final patientEmail = _getPatientEmail(patient);
-                            final appointmentCount = patient['appointmentCount'] ?? 0;
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open_rounded,
+                    size: 64,
+                    color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _searchQuery.isEmpty
+                        ? 'Aucun patient accepté'
+                        : 'Aucun résultat trouvé',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: 1.1,
+                ),
+                itemCount: _filteredPatients.length,
+                itemBuilder: (context, index) {
+                  final patient = _filteredPatients[index];
+                  final patientName = _getPatientName(patient);
+                  final patientEmail = _getPatientEmail(patient);
+                  final appointmentCount = patient['appointmentCount'] ?? 0;
 
-                            return _buildPatientCard(
-                              patientName,
-                              patientEmail,
-                              appointmentCount,
-                              () => _openPatientHistory(patient),
-                            );
-                          },
-                        ),
-                      ),
+                  return _buildPatientCard(
+                    patientName,
+                    patientEmail,
+                    appointmentCount,
+                        () => _openPatientHistory(patient),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -260,11 +260,11 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
   }
 
   Widget _buildPatientCard(
-    String name,
-    String email,
-    int appointmentCount,
-    VoidCallback onTap,
-  ) {
+      String name,
+      String email,
+      int appointmentCount,
+      VoidCallback onTap,
+      ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(

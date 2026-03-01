@@ -5,6 +5,7 @@ enum UserRole {
   pharmacie,
   centreAnalyse,
   clinique,
+  admin,
 }
 
 extension UserRoleExtension on UserRole {
@@ -20,6 +21,8 @@ extension UserRoleExtension on UserRole {
         return 'centre_analyse';
       case UserRole.clinique:
         return 'clinique';
+      case UserRole.admin:
+        return 'admin';
     }
   }
 
@@ -35,6 +38,8 @@ extension UserRoleExtension on UserRole {
         return UserRole.centreAnalyse;
       case 'clinique':
         return UserRole.clinique;
+      case 'admin':
+        return UserRole.admin;
       default:
         return UserRole.patient;
     }
@@ -52,6 +57,8 @@ extension UserRoleExtension on UserRole {
         return 'Centre d\'analyse';
       case UserRole.clinique:
         return 'Clinique';
+      case UserRole.admin:
+        return 'Administrateur';
     }
   }
 }

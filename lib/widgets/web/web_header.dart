@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Header pour le dashboard web
 class WebHeader extends StatelessWidget {
@@ -13,7 +13,7 @@ class WebHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Header vide - titre et profil supprimés
+    // Header vide - titre et profil supprim├®s
     return const SizedBox.shrink();
   }
 }
