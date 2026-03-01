@@ -5,7 +5,7 @@ import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import 'center_dashboard_web.dart';
 import '../onboarding/welcome_screen.dart';
-import '../dashboard_main_screen.dart';
+import '../clinique/web/dashboard_main_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../dashboard/dashboard_screen.dart' as medecin_dash;
 

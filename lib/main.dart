@@ -34,6 +34,10 @@ import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Test sur téléphone réel : décommenter et mettre l'IP de ton PC (même WiFi, ex: 192.168.1.10)
+  // ApiService.backendUrlOverride = 'http://192.168.1.10:3000';
+
   await initializeDateFormatting('fr_FR', null);
 
   // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)

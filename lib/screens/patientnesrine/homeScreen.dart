@@ -63,14 +63,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    await Future.wait([
+      _loadPrescriptions(),
+      _loadUnreadCount(),
+      _loadTopDoctors(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header with Gradient Background
@@ -476,6 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -483,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPrescriptionCard(Map<String, dynamic> p) {
     final doctorId = p['doctorId'];
     String doctorName = 'Médecin';
-    if (doctorId is Map && doctorId['email'] != null) {
+    if (doctorId is Map) {
       doctorName = doctorId['fullName'] ?? doctorId['email'] ?? 'Médecin';
     }
     final meds = p['medications'] as List? ?? [];

@@ -118,10 +118,11 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                         return;
                       }
                       try {
+                        final urgencyApi = urgency == 'high' ? 'urgent' : (urgency == 'low' ? 'normal' : urgency);
                         await ApiService.createAccessRequest(
                           doctorId: doctorId.toString(),
                           reason: reason,
-                          urgency: urgency,
+                          urgency: urgencyApi,
                         );
                         if (context.mounted) {
                           Navigator.pop(ctx);

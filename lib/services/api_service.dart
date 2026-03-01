@@ -8,11 +8,22 @@ import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 
 class ApiService {
+  /// Override pour test sur téléphone réel : mets l'IP de ton PC (ex: 'http://192.168.1.10:3000').
+  /// Sur émulateur, ne pas définir (baseUrl utilise 10.0.2.2).
+  static String? backendUrlOverride;
+
   /// Base URL backend:
-  /// - Web: localhost
-  /// - Android emulator: 10.0.2.2 (loopback vers la machine hôte)
-  /// - Autres (iOS/desktop): localhost (à adapter si device physique)
+  /// - Si [backendUrlOverride] est défini (téléphone réel) : l'utiliser.
+  /// - Web: 127.0.0.1
+  /// - Android émulateur: 10.0.2.2 (machine hôte)
+  /// - Téléphone réel: définir backendUrlOverride dans main.dart avec l'IP du PC (même WiFi).
   static String get baseUrl {
+    if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
+      String url = backendUrlOverride!.trim();
+      if (!url.startsWith('http')) url = 'http://$url';
+      if (!url.contains(':3000') && !url.contains(':')) url = '$url:3000';
+      return url;
+    }
     if (kIsWeb) return 'http://127.0.0.1:3000';
     if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
     return 'http://127.0.0.1:3000';
@@ -801,6 +812,11 @@ class ApiService {
       await refreshToken();
       return createAccessRequest(doctorId: doctorId, reason: reason, urgency: urgency);
     }
+    if (response.statusCode == 403) {
+      final body = jsonDecode(response.body);
+      final msg = body is Map ? (body['message'] ?? 'Réservé aux patients. Connectez-vous avec un compte patient.') : 'Réservé aux patients. Connectez-vous avec un compte patient.';
+      throw Exception(msg);
+    }
     throw Exception(jsonDecode(response.body)['message'] ?? 'Erreur création demande');
   }
 
@@ -982,6 +998,14 @@ class ApiService {
     };
   }
 
+  static String _extractHttpErrorMessage(http.Response response, {String? fallback}) {
+    try {
+      final data = json.decode(response.body);
+      if (data is Map && data['message'] != null) return data['message'].toString();
+    } catch (_) {}
+    return fallback ?? 'Erreur (${response.statusCode})';
+  }
+
   static Future<String> _getClinicId() async {
     if (_cachedClinicId != null) return _cachedClinicId!;
     try {
@@ -1132,12 +1156,12 @@ class ApiService {
     if (response.statusCode != 201) throw Exception('Failed to create appointment');
   }
 
-  // Version pour centres d'analyse (Map)
+  // Version pour centres d'analyse (patient) — POST /lab-appointments
   static Future<void> createLabAppointment(Map<String, dynamic> appointmentData) async {
     final token = await getAccessToken();
     
     final response = await http.post(
-      Uri.parse('$baseUrl/appointments'),
+      Uri.parse('$baseUrl/lab-appointments'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -1293,7 +1317,7 @@ class ApiService {
 
   /// Dossiers médicaux de ma clinique (optionnel: filtrer par patientId pour lier clinique-patient)
   static Future<List<dynamic>> getMyMedicalRecords({String? patientId}) async {
-    final headers = await _clinicHeaders();
+    final headers = await _getClinicHeaders();
     var uri = Uri.parse('$baseUrl/clinic-management/my/medical-records');
     if (patientId != null && patientId.isNotEmpty) {
       uri = uri.replace(queryParameters: {'patientId': patientId});
@@ -1309,7 +1333,7 @@ class ApiService {
 
   /// Historique médical complet d'un patient (toutes cliniques)
   static Future<List<dynamic>> getPatientMedicalHistory(String patientId) async {
-    final headers = await _clinicHeaders();
+    final headers = await _getClinicHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/clinic-management/patient/$patientId/medical-history'),
       headers: headers,
@@ -1319,7 +1343,7 @@ class ApiService {
       await refreshToken();
       return getPatientMedicalHistory(patientId);
     }
-    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger l\'historique médical'));
+    throw Exception(_extractHttpErrorMessage(response, fallback: "Impossible de charger l'historique médical"));
   }
 
   /// Résultats d'analyse du patient (centre d'analyse) — médecin ou patient (ses propres résultats)
@@ -2241,6 +2265,27 @@ class ApiService {
         throw Exception('Erreur de récupération du laboratoire: ${response.statusCode}');
       }
     }
+  }
+
+  /// Mes ordonnances (patient = reçues, médecin = émises)
+  static Future<List<Map<String, dynamic>>> getMyPrescriptions() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/my-prescriptions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? List<Map<String, dynamic>>.from(data.map((e) => e as Map<String, dynamic>)) : [];
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getMyPrescriptions();
+    }
+    return [];
   }
 
   static Future<Map<String, dynamic>> createPrescription({

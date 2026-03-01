@@ -1,13 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../dashboard/dashboard_screen.dart';
-import '../dashboard_main_screen.dart';
+import '../clinique/web/dashboard_main_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../centre_analyse/home_centre_analyse.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../admin/admin_dashboard_screen.dart';
-import '../clinique/home_admin_clinique_mobile.dart';
+import '../clinique/mobile/home_admin_clinique_mobile.dart';
 /// Router qui redirige vers l'interface appropriée selon le rôle de l'utilisateur
 class RoleRouter {
   static Widget getHomeScreen(UserRole role) {

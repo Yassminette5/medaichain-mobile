@@ -972,7 +972,10 @@ class _HomeViewState extends State<_HomeView> {
     final patients = patientsProvider.patients;
     if (patients.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aucun patient. Chargez la liste ou ajoutez un patient.')),
+        const SnackBar(
+          content: Text('Aucun patient avec accès partagé. Acceptez des demandes dans l\'onglet "Demandes d\'accès" (Voir tout).'),
+          duration: Duration(seconds: 4),
+        ),
       );
       patientsProvider.loadPatients();
       return;
@@ -1112,9 +1115,9 @@ class _HomeViewState extends State<_HomeView> {
               final patient = req['patientId'] is Map ? req['patientId'] as Map<String, dynamic> : null;
               final name = patient?['fullName'] ?? 'Patient';
               final reason = req['reason']?.toString() ?? 'Demande d\'accès';
-              final urgency = req['urgency']?.toString() ?? 'normal';
-              final priorityColor = urgency == 'high' ? AppColors.error : urgency == 'low' ? AppColors.success : AppColors.warning;
-              final priorityLabel = urgency == 'high' ? 'URGENT' : urgency == 'low' ? 'BASSE' : 'HAUTE';
+              final urgency = (req['urgency']?.toString() ?? 'normal').toLowerCase();
+              final priorityColor = urgency == 'urgent' ? AppColors.error : urgency == 'low' ? AppColors.success : AppColors.warning;
+              final priorityLabel = urgency == 'urgent' ? 'URGENT' : urgency == 'low' ? 'BASSE' : 'NORMALE';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _buildModernRequestItem(name, reason, priorityColor, priorityLabel),

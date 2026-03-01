@@ -166,7 +166,7 @@ class DoctorDetailSheet extends StatelessWidget {
                       _buildActionButton(
                         context,
                         Icons.videocam,
-                        "Video",
+                        "Appel vidéo",
                         const LinearGradient(colors: [Color(0xFFFF9B71), Color(0xFFFFB88C)]),
                         onTap: doctorId != null
                             ? () async {
@@ -180,18 +180,17 @@ class DoctorDetailSheet extends StatelessWidget {
                                   return;
                                 }
                                 final channel = ApiService.videoCallChannelName(doctorId!, user.id);
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => VideoCallScreen(
-                                        channelName: channel,
-                                        remoteUserName: doctor.name,
-                                      ),
+                                if (!context.mounted) return;
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => VideoCallScreen(
+                                      channelName: channel,
+                                      remoteUserName: doctor.name,
                                     ),
-                                  );
-                                }
+                                  ),
+                                );
                               }
                             : null,
                       ),
