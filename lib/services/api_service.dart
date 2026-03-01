@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -635,6 +635,9 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> getAllPatients() async {
     final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Session expirée. Veuillez vous reconnecter.');
+    }
 
     final response = await http.get(
       Uri.parse('$baseUrl/profiles/patients'),
@@ -645,13 +648,29 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
+      final body = response.body.trim();
+      if (body.isEmpty) return [];
+      final decoded = jsonDecode(body);
+      List<dynamic> list;
+      if (decoded is List) {
+        list = decoded;
+      } else if (decoded is Map && decoded.containsKey('data')) {
+        final data = decoded['data'];
+        list = data is List ? data : [];
+      } else {
+        list = [];
+      }
+      return list.cast<Map<String, dynamic>>();
     } else if (response.statusCode == 401) {
       await refreshToken();
       return getAllPatients();
     } else {
-      throw Exception('Erreur de chargement des patients');
+      debugPrint('[ApiService] getAllPatients: ${response.statusCode} ${response.body}');
+      String msg = 'Erreur de chargement des patients';
+      if (response.statusCode == 403) msg = 'Accès refusé aux patients.';
+      else if (response.statusCode == 404) msg = 'Endpoint patients non disponible.';
+      else if (response.statusCode >= 500) msg = 'Serveur indisponible. Réessayez plus tard.';
+      throw Exception(msg);
     }
   }
 
@@ -703,7 +722,7 @@ class ApiService {
   static Future<void> markNotificationAsRead(String notificationId) async {
     final token = await getAccessToken();
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$baseUrl/notifications/$notificationId/read'),
       headers: {
         'Content-Type': 'application/json',
@@ -724,7 +743,7 @@ class ApiService {
   static Future<void> markAllNotificationsAsRead() async {
     final token = await getAccessToken();
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse('$baseUrl/notifications/read-all'),
       headers: {
         'Content-Type': 'application/json',
@@ -740,6 +759,159 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Erreur de mise à jour des notifications');
     }
+  }
+
+  // ========== RECHERCHE MÉDECINS (public) ==========
+  static Future<List<Map<String, dynamic>>> searchDoctors({
+    String? speciality,
+    String? city,
+    String? wilaya,
+  }) async {
+    final query = <String, String>{};
+    if (speciality != null && speciality.isNotEmpty) query['speciality'] = speciality;
+    if (city != null && city.isNotEmpty) query['city'] = city;
+    if (wilaya != null && wilaya.isNotEmpty) query['wilaya'] = wilaya;
+    final uri = Uri.parse('$baseUrl/profiles/doctors/search').replace(queryParameters: query.isNotEmpty ? query : null);
+    final response = await http.get(uri);
+    if (response.statusCode != 200) throw Exception('Erreur recherche médecins');
+    final data = jsonDecode(response.body);
+    return data is List ? data.cast<Map<String, dynamic>>() : [];
+  }
+
+  // ========== DEMANDES D'ACCÈS (patient → médecin) ==========
+  static Future<Map<String, dynamic>> createAccessRequest({
+    required String doctorId,
+    required String reason,
+    String urgency = 'normal',
+  }) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final response = await http.post(
+      Uri.parse('$baseUrl/access-requests'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'doctorId': doctorId, 'reason': reason, 'urgency': urgency}),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return createAccessRequest(doctorId: doctorId, reason: reason, urgency: urgency);
+    }
+    throw Exception(jsonDecode(response.body)['message'] ?? 'Erreur création demande');
+  }
+
+  static Future<List<Map<String, dynamic>>> getAccessRequestsForDoctor() async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final response = await http.get(
+      Uri.parse('$baseUrl/access-requests/for-doctor'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data.cast<Map<String, dynamic>>() : [];
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getAccessRequestsForDoctor();
+    }
+    throw Exception('Erreur chargement demandes');
+  }
+
+  /// Liste des patients dont le médecin a accepté la demande d'accès (pour afficher dossier + analyses).
+  static Future<List<Map<String, dynamic>>> getAcceptedPatientsForDoctor() async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final response = await http.get(
+      Uri.parse('$baseUrl/access-requests/for-doctor/accepted'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data.cast<Map<String, dynamic>>() : [];
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getAcceptedPatientsForDoctor();
+    }
+    return [];
+  }
+
+  static Future<void> acceptAccessRequest(String id, {String duration = '24 heures'}) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final response = await http.patch(
+      Uri.parse('$baseUrl/access-requests/$id/accept'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'duration': duration}),
+    );
+    if (response.statusCode == 200) return;
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return acceptAccessRequest(id, duration: duration);
+    }
+    throw Exception(jsonDecode(response.body)['message'] ?? 'Erreur');
+  }
+
+  static Future<void> refuseAccessRequest(String id) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final response = await http.patch(
+      Uri.parse('$baseUrl/access-requests/$id/refuse'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) return;
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return refuseAccessRequest(id);
+    }
+    throw Exception(jsonDecode(response.body)['message'] ?? 'Erreur');
+  }
+
+  // ========== APPEL VIDÉO (Agora) ==========
+  /// Récupère un token pour rejoindre un canal vidéo (médecin ou patient).
+  /// Construit le nom de canal pour un appel médecin-patient (même ordre que le backend).
+  static String videoCallChannelName(String doctorId, String patientId) {
+    final ids = [doctorId, patientId]..sort();
+    return 'medaichain-${ids[0]}-${ids[1]}';
+  }
+
+  /// [channelName] ex: medaichain-{doctorId}-{patientId}
+  static Future<Map<String, dynamic>> getVideoCallToken(String channelName) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) throw Exception('Session expirée');
+    final uri = Uri.parse('$baseUrl/video-call/token').replace(queryParameters: {'channelName': channelName});
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getVideoCallToken(channelName);
+    }
+    throw Exception(jsonDecode(response.body)['message'] ?? 'Erreur token vidéo');
   }
 
   // ========== HELPERS ==========
@@ -1117,6 +1289,56 @@ class ApiService {
   static Future<void> deleteInvoice(String invoiceId) async {
     final response = await http.delete(Uri.parse('$baseUrl/clinic-management/invoices/$invoiceId'), headers: await _getClinicHeaders());
     if (response.statusCode != 200) throw Exception('Failed to delete invoice');
+  }
+
+  /// Dossiers médicaux de ma clinique (optionnel: filtrer par patientId pour lier clinique-patient)
+  static Future<List<dynamic>> getMyMedicalRecords({String? patientId}) async {
+    final headers = await _clinicHeaders();
+    var uri = Uri.parse('$baseUrl/clinic-management/my/medical-records');
+    if (patientId != null && patientId.isNotEmpty) {
+      uri = uri.replace(queryParameters: {'patientId': patientId});
+    }
+    final response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getMyMedicalRecords(patientId: patientId);
+    }
+    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger les dossiers médicaux'));
+  }
+
+  /// Historique médical complet d'un patient (toutes cliniques)
+  static Future<List<dynamic>> getPatientMedicalHistory(String patientId) async {
+    final headers = await _clinicHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinic-management/patient/$patientId/medical-history'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getPatientMedicalHistory(patientId);
+    }
+    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger l\'historique médical'));
+  }
+
+  /// Résultats d'analyse du patient (centre d'analyse) — médecin ou patient (ses propres résultats)
+  static Future<List<dynamic>> getPatientAnalysisResults(String patientId) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab/results/patient/$patientId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getPatientAnalysisResults(patientId);
+    }
+    if (response.statusCode == 403 || response.statusCode == 404) return [];
+    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger les analyses'));
   }
 
   // ========== PROFIL LABORATOIRE ==========

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
@@ -25,6 +25,7 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
   EventType _selectedType = EventType.consultation;
   AlertOption _selectedAlert = AlertOption.min15;
   String _selectedPatientName = '';
+  String? _selectedPatientId;
   
   bool _isLoading = false;
 
@@ -131,6 +132,7 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
         type: _selectedType,
         alertBefore: _selectedAlert,
         patientName: _selectedPatientName.isEmpty ? null : _selectedPatientName,
+        patientId: _selectedPatientId,
       );
 
       await calendarProvider.addEvent(event);
@@ -295,7 +297,11 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
                       .where((name) => name.toLowerCase().contains(textEditingValue.text.toLowerCase()));
                 },
                 onSelected: (String selection) {
-                  setState(() => _selectedPatientName = selection);
+                  setState(() {
+                    _selectedPatientName = selection;
+                    final match = patients.where((p) => p.fullName == selection);
+                    _selectedPatientId = match.isNotEmpty ? match.first.id : null;
+                  });
                 },
                 fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                   if (_selectedPatientName.isNotEmpty && controller.text != _selectedPatientName) {
@@ -312,7 +318,10 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
                               icon: const Icon(Icons.clear),
                               onPressed: () {
                                 controller.clear();
-                                setState(() => _selectedPatientName = '');
+                                setState(() {
+                                  _selectedPatientName = '';
+                                  _selectedPatientId = null;
+                                });
                               },
                             )
                           : null,
@@ -324,7 +333,10 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
                       ),
                     ),
                     onChanged: (value) {
-                      setState(() => _selectedPatientName = value);
+                      setState(() {
+                        _selectedPatientName = value;
+                        _selectedPatientId = null;
+                      });
                     },
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {

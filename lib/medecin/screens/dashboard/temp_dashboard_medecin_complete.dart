@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
@@ -14,6 +14,7 @@ import 'package:medaichainmobile/medecin/screens/agenda/agenda_screen.dart';
 import 'package:medaichainmobile/screens/patientnesrine/notifications_screen.dart';
 import 'package:medaichainmobile/screens/consultations/new_consultation_screen.dart';
 import 'package:medaichainmobile/screens/consultations/all_consultations_screen.dart';
+import 'package:medaichainmobile/services/api_service.dart';
 
 /// Tableau de Bord Moderne avec Navigation
 class DashboardScreen extends StatefulWidget {
@@ -95,8 +96,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  List<Map<String, dynamic>> _accessRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessRequests();
+  }
+
+  Future<void> _loadAccessRequests() async {
+    try {
+      final list = await ApiService.getAccessRequestsForDoctor();
+      if (mounted) setState(() => _accessRequests = list);
+    } catch (_) {
+      if (mounted) setState(() => _accessRequests = []);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -831,14 +854,6 @@ class _HomeView extends StatelessWidget {
               const SizedBox(width: 12),
               _buildModernActionButton(
                 context,
-                Icons.document_scanner_outlined,
-                'Scanner\nDocument',
-                AppColors.secondary,
-                LinearGradient(colors: [AppColors.secondary, AppColors.secondary.withValues(alpha: 0.7)]),
-              ),
-              const SizedBox(width: 12),
-              _buildModernActionButton(
-                context,
                 Icons.video_call_outlined,
                 'Appel\nVidéo',
                 AppColors.diagnosis,
@@ -969,7 +984,10 @@ class _HomeView extends StatelessWidget {
                 ],
               ),
               TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientAccessRequestScreen())),
+                onPressed: () async {
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientAccessRequestScreen()));
+                  _loadAccessRequests();
+                },
                 child: const Text(
                   'Voir tout',
                   style: TextStyle(
@@ -981,9 +999,27 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernRequestItem('Jean Dupont', 'Accès urgence', AppColors.error, 'URGENT'),
-          const SizedBox(height: 12),
-          _buildModernRequestItem('Marie Martin', 'Historique médical', AppColors.warning, 'HAUTE'),
+          if (_accessRequests.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Aucune demande en attente',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+            )
+          else
+            ..._accessRequests.take(3).map((req) {
+              final patient = req['patientId'] is Map ? req['patientId'] as Map<String, dynamic> : null;
+              final name = patient?['fullName'] ?? 'Patient';
+              final reason = req['reason']?.toString() ?? 'Demande d\'accès';
+              final urgency = req['urgency']?.toString() ?? 'normal';
+              final priorityColor = urgency == 'high' ? AppColors.error : urgency == 'low' ? AppColors.success : AppColors.warning;
+              final priorityLabel = urgency == 'high' ? 'URGENT' : urgency == 'low' ? 'BASSE' : 'HAUTE';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildModernRequestItem(name, reason, priorityColor, priorityLabel),
+              );
+            }),
         ],
       ),
     );
@@ -1078,6 +1114,10 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildTodayConsultations(BuildContext context) {
+    final calendarProvider = Provider.of<CalendarProvider>(context);
+    final todayEvents = calendarProvider.getEventsForDay(DateTime.now());
+    final now = DateTime.now();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1115,11 +1155,28 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernConsultationItem(context, 'Pierre Dubois', '09:00', 'Suivi diabète', AppColors.primary, true),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Sophie Laurent', '10:30', 'Bilan général', AppColors.secondary, false),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Marc Petit', '14:00', 'Contrôle cardiaque', AppColors.error, false),
+          if (todayEvents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Aucune consultation aujourd\'hui',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+            )
+          else
+            ...List.generate(todayEvents.length, (index) {
+              final event = todayEvents[index];
+              final timeStr = DateFormat('HH:mm').format(event.dateTime);
+              final name = event.patientName ?? event.title;
+              final typeLabel = event.title;
+              final color = event.type.color;
+              final isNow = event.dateTime.isBefore(now.add(const Duration(hours: 1))) &&
+                  event.dateTime.isAfter(now.subtract(const Duration(minutes: 30)));
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildModernConsultationItem(context, name, timeStr, typeLabel, color, isNow),
+              );
+            }),
         ],
       ),
     );

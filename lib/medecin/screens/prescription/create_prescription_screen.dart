@@ -8,9 +8,17 @@ import 'package:medaichainmobile/widgets/primary_button.dart';
 import 'package:medaichainmobile/widgets/medical_text_field.dart';
 import 'package:medaichainmobile/widgets/medical_card.dart';
 
-/// Écran Création Ordonnance
+/// Écran Création Ordonnance (médecin).
+/// [initialPatientId] et [initialPatientName] optionnels : ouvrir directement pour un patient (ex. depuis le dossier).
 class CreatePrescriptionScreen extends StatefulWidget {
-  const CreatePrescriptionScreen({super.key});
+  const CreatePrescriptionScreen({
+    super.key,
+    this.initialPatientId,
+    this.initialPatientName,
+  });
+
+  final String? initialPatientId;
+  final String? initialPatientName;
 
   @override
   State<CreatePrescriptionScreen> createState() => _CreatePrescriptionScreenState();
@@ -23,17 +31,22 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
   String? _selectedPatientId;
   Patient? _selectedPatient;
   bool _isLoading = false;
+  bool get _hasInitialPatient => widget.initialPatientId != null && widget.initialPatientId!.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _addMedication();
-
-    // Load patients for doctor selection
+    if (_hasInitialPatient) {
+      _selectedPatientId = widget.initialPatientId;
+      _selectedPatient = null;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final patientsProvider = Provider.of<PatientsProvider>(context, listen: false);
-      if (patientsProvider.patients.isEmpty && !patientsProvider.isLoading) {
-        patientsProvider.loadPatients();
+      if (!_hasInitialPatient) {
+        final patientsProvider = Provider.of<PatientsProvider>(context, listen: false);
+        if (patientsProvider.patients.isEmpty && !patientsProvider.isLoading) {
+          patientsProvider.loadPatients();
+        }
       }
     });
   }
@@ -97,9 +110,14 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
 
   Widget _buildPatientHeader() {
     final patientsProvider = Provider.of<PatientsProvider>(context);
-
     final allergies = _selectedPatient?.allergies ?? const <String>[];
     final allergiesText = allergies.isEmpty ? 'Aucune allergie connue' : allergies.join(', ');
+    final displayName = _hasInitialPatient
+        ? (widget.initialPatientName ?? 'Patient')
+        : (_selectedPatient?.fullName ?? '--');
+    final initials = displayName.isNotEmpty
+        ? displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+        : '--';
 
     return MedicalCard(
       margin: EdgeInsets.zero,
@@ -109,7 +127,7 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
           radius: 24,
           backgroundColor: AppColors.prescription.withValues(alpha: 0.2),
           child: Text(
-            _selectedPatient?.initials ?? '--',
+            initials,
             style: const TextStyle(color: AppColors.prescription, fontWeight: FontWeight.bold),
           ),
         ),
@@ -120,24 +138,35 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
             children: [
               const Text('Patient', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                value: _selectedPatientId,
-                decoration: InputDecoration(
-                  hintText: 'Sélectionner un patient',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              if (_hasInitialPatient)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Text(displayName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  value: _selectedPatientId,
+                  decoration: InputDecoration(
+                    hintText: 'Sélectionner un patient',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: patientsProvider.patients
+                      .map((p) => DropdownMenuItem<String>(value: p.id, child: Text(p.fullName)))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedPatientId = v;
+                      _selectedPatient = v == null ? null : patientsProvider.getPatientById(v);
+                    });
+                  },
+                  validator: (v) => (v == null || v.isEmpty) ? 'Patient requis' : null,
                 ),
-                items: patientsProvider.patients
-                    .map((p) => DropdownMenuItem<String>(value: p.id, child: Text(p.fullName)))
-                    .toList(),
-                onChanged: (v) {
-                  setState(() {
-                    _selectedPatientId = v;
-                    _selectedPatient = v == null ? null : patientsProvider.getPatientById(v);
-                  });
-                },
-                validator: (v) => (v == null || v.isEmpty) ? 'Patient requis' : null,
-              ),
               const SizedBox(height: 8),
               Text(
                 'Allergies: $allergiesText',

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 import '../patientnesrine/edit_profile_screen.dart';
 
 
@@ -270,6 +273,16 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 32),
+
+            // Résultats d'analyse (centre d'analyse)
+            Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                final userId = auth.user?.id;
+                if (userId == null || userId.isEmpty) return const SizedBox.shrink();
+                return _ProfileAnalysisResultsSection(userId: userId);
+              },
             ),
             const SizedBox(height: 32),
 
@@ -650,6 +663,197 @@ class ProfileScreen extends StatelessWidget {
               onChanged: (val) {},
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section Résultats d'analyse dans My Medical Card (profil patient)
+class _ProfileAnalysisResultsSection extends StatefulWidget {
+  const _ProfileAnalysisResultsSection({required this.userId});
+  final String userId;
+
+  @override
+  State<_ProfileAnalysisResultsSection> createState() => _ProfileAnalysisResultsSectionState();
+}
+
+class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsSection> {
+  List<dynamic> _results = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await ApiService.getPatientAnalysisResults(widget.userId);
+      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _results = []; _loading = false; });
+    }
+  }
+
+  Future<void> _openPdf(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (mounted && !ok) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible d\'ouvrir le PDF')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Résultats d'analyse",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _loading
+              ? Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppColors.small,
+                  ),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : _results.isEmpty
+                  ? Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: AppColors.small,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.science_rounded, color: AppColors.primary, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              "Aucun résultat d'analyse pour le moment.",
+                              style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        for (int i = 0; i < _results.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          _buildResultItem(_results[i]),
+                        ],
+                      ],
+                    ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultItem(dynamic a) {
+    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
+    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
+    final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
+    final date = m['analysisDate'];
+    String dateStr = '—';
+    if (date != null) {
+      try {
+        dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+      } catch (_) {}
+    }
+    final lab = m['labId'];
+    String labName = '';
+    if (lab is Map<String, dynamic>) {
+      labName = lab['centreName'] ?? lab['name'] ?? '';
+    }
+    final resultFile = m['resultFile']?.toString() ?? '';
+    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
+    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.small,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.biotech_rounded, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  typeStr.isNotEmpty ? typeStr : 'Résultat',
+                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                ),
+                if (labName.isNotEmpty)
+                  Text(labName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+              ],
+            ),
+          ),
+          if (pdfUrl != null && pdfUrl.isNotEmpty)
+            IconButton(
+              onPressed: () => _openPdf(pdfUrl),
+              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
+              tooltip: 'Ouvrir le PDF',
+              style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.1)),
+            )
+          else
+            Icon(Icons.description_outlined, color: AppColors.textGrey, size: 24),
         ],
       ),
     );

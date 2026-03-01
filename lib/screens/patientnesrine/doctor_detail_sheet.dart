@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
-import '../patientnesrine/doctor.dart';
+import '../../services/api_service.dart';
+import '../video_call/video_call_screen.dart';
+import 'doctor.dart';
 
 class DoctorDetailSheet extends StatelessWidget {
   final Doctor doctor;
+  /// ID du médecin (userId) pour l'appel vidéo. Si null, le bouton Video ne lance pas d'appel.
+  final String? doctorId;
 
-  const DoctorDetailSheet({super.key, required this.doctor});
+  const DoctorDetailSheet({super.key, required this.doctor, this.doctorId});
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +168,32 @@ class DoctorDetailSheet extends StatelessWidget {
                         Icons.videocam,
                         "Video",
                         const LinearGradient(colors: [Color(0xFFFF9B71), Color(0xFFFFB88C)]),
+                        onTap: doctorId != null
+                            ? () async {
+                                final user = await ApiService.getSavedUser();
+                                if (user == null) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Session expirée. Reconnectez-vous.')),
+                                    );
+                                  }
+                                  return;
+                                }
+                                final channel = ApiService.videoCallChannelName(doctorId!, user.id);
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => VideoCallScreen(
+                                        channelName: channel,
+                                        remoteUserName: doctor.name,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            : null,
                       ),
                       _buildActionButton(
                         context,

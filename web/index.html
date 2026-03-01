@@ -15,6 +15,15 @@
     the `--base-href` argument provided to `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
+  <script>
+    // Fallback: si le base href n'a pas été remplacé par Flutter (ex: debug), utiliser "/"
+    (function() {
+      var base = document.querySelector('base');
+      if (base && base.getAttribute('href') === '$FLUTTER_BASE_HREF') {
+        base.setAttribute('href', '/');
+      }
+    })();
+  </script>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -31,8 +40,32 @@
 
   <title>madaichain</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    window.addEventListener('error', function(event) {
+      document.body.innerHTML += '<div style="color:red; font-size: 16px; font-weight: bold; padding: 20px; z-index: 99999; position: absolute; background: white; white-space: pre-wrap; top:0; left:0; right:0;">[JS ERROR] ' + event.message + '\n' + event.filename + ':' + event.lineno + '</div>';
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+      document.body.innerHTML += '<div style="color:red; font-size: 16px; font-weight: bold; padding: 20px; z-index: 99999; position: absolute; background: white; white-space: pre-wrap; top:0; left:0; right:0;">[PROMISE ERROR] ' + (event.reason ? (event.reason.stack || event.reason) : 'Unknown') + '</div>';
+    });
+  </script>
 </head>
 <body>
+  <div id="loading" style="display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; background: linear-gradient(135deg, #1A0B2E 0%, #16213E 50%, #0F3460 100%); color: #fff; font-size: 18px;">
+    <span>Chargement de MEDAIChain…</span>
+  </div>
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Masquer le loader une fois Flutter monté (le canevas remplace le body)
+    document.addEventListener('flutter-first-frame', function() {
+      var loading = document.getElementById('loading');
+      if (loading) loading.style.display = 'none';
+    });
+    setTimeout(function() {
+      var loading = document.getElementById('loading');
+      if (loading && document.querySelector('flt-glass-pane') == null) {
+        loading.innerHTML = 'Chargement en cours…<br><small>Si la page reste blanche, ouvrez la console (F12) pour voir les erreurs.</small>';
+      }
+    }, 8000);
+  </script>
 </body>
 </html>

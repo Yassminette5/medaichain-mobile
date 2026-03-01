@@ -1,5 +1,7 @@
-﻿class Patient {
+class Patient {
   final String id;
+  /// ID du compte User (pour appel vidéo, canal, etc.). Peut être null si l'API ne le renvoie pas.
+  final String? userId;
   final String firstName;
   final String lastName;
   final DateTime? dateOfBirth;
@@ -16,6 +18,7 @@
 
   Patient({
     required this.id,
+    this.userId,
     required this.firstName,
     required this.lastName,
     this.dateOfBirth,
@@ -51,14 +54,31 @@
   }
 
   factory Patient.fromJson(Map<String, dynamic> json) {
+    // Si userInfo / userId est peuplé (ce qui est le cas de /profiles/patients)
+    final userMap = json['userId'] as Map<String, dynamic>? ?? {};
+    final fullName = userMap['fullName'] ?? json['fullName'] ?? '';
+    
+    // Fallback: extraction de firstName / lastName si fullName existe
+    String fn = json['firstName'] ?? '';
+    String ln = json['lastName'] ?? '';
+    if (fn.isEmpty && ln.isEmpty && fullName.isNotEmpty) {
+      final parts = fullName.split(' ');
+      fn = parts.first;
+      ln = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    }
+
+    final userIdObj = json['userId'];
+    final userId = userIdObj is Map ? userIdObj['_id']?.toString() : userIdObj?.toString();
+
     return Patient(
       id: json['_id'] ?? json['id'] ?? '',
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
+      userId: userId,
+      firstName: fn,
+      lastName: ln,
       dateOfBirth: json['dateOfBirth'] != null
-          ? DateTime.parse(json['dateOfBirth'])
+          ? DateTime.tryParse(json['dateOfBirth'])
           : null,
-      gender: json['gender'],
+      gender: json['gender'] ?? userMap['gender'],
       bloodType: json['bloodType'],
       allergies: json['allergies'] != null
           ? List<String>.from(json['allergies'])

@@ -4,7 +4,6 @@ import '../patientnesrine/health_drawer_screen.dart';
 import '../patientnesrine/homeScreen.dart';
 import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/records_screen.dart';
-import '../patientnesrine/scanner_screen.dart';
 import '../../core/theme/app_colors.dart';
 
 class MainScreen extends StatefulWidget {
@@ -20,7 +19,6 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const RecordsScreen(),
-    const ScannerScreen(),
     const HealthDrawerScreen(),
     const ProfileScreen(),
   ];
@@ -65,10 +63,6 @@ class _MainScreenState extends State<MainScreen> {
               icon: Icon(Icons.monitor_heart_outlined),
               activeIcon: Icon(Icons.monitor_heart_rounded),
               label: 'Records',
-            ),
-            BottomNavigationBarItem(
-              icon: ContainerWidget(icon: Icons.qr_code_scanner_rounded),
-              label: 'Scan',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.local_pharmacy_outlined),

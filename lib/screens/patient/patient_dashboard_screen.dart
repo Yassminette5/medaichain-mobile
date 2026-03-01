@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
+import '../../widgets/medical_card.dart';
 import '../auth/login_screen.dart';
 
 /// Tableau de Bord Patient - Espace Santé Personnel
@@ -493,6 +497,149 @@ class _PatientHealthView extends StatelessWidget {
   }
 }
 
+// ========== RÉSULTATS D'ANALYSE (profil patient) ==========
+class _PatientAnalysisResultsSection extends StatefulWidget {
+  const _PatientAnalysisResultsSection({required this.userId});
+  final String userId;
+
+  @override
+  State<_PatientAnalysisResultsSection> createState() => _PatientAnalysisResultsSectionState();
+}
+
+class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsSection> {
+  List<dynamic> _results = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await ApiService.getPatientAnalysisResults(widget.userId);
+      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _results = []; _loading = false; });
+    }
+  }
+
+  Future<void> _openPdf(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (mounted && !ok) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible d\'ouvrir le PDF')));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MedicalCard(
+      title: 'Résultats d\'analyse',
+      titleIcon: Icons.science_rounded,
+      child: _loading
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+            )
+          : _results.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Aucun résultat d\'analyse pour le moment.',
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (int i = 0; i < _results.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 12),
+                      _buildResultItem(_results[i]),
+                    ],
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildResultItem(dynamic a) {
+    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
+    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
+    final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
+    final date = m['analysisDate'];
+    String dateStr = '—';
+    if (date != null) {
+      try {
+        dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+      } catch (_) {}
+    }
+    final lab = m['labId'];
+    String labName = '';
+    if (lab is Map<String, dynamic>) {
+      labName = lab['centreName'] ?? lab['name'] ?? '';
+    }
+    final resultFile = m['resultFile']?.toString() ?? '';
+    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
+    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.biotech_rounded, color: AppColors.secondary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(typeStr.isNotEmpty ? typeStr : 'Résultat', style: const TextStyle(fontWeight: FontWeight.w600)),
+                if (labName.isNotEmpty) Text(labName, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                Text(dateStr, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          if (pdfUrl != null && pdfUrl.isNotEmpty)
+            IconButton(
+              onPressed: () => _openPdf(pdfUrl),
+              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
+              tooltip: 'Ouvrir le PDF',
+              style: IconButton.styleFrom(backgroundColor: AppColors.error.withValues(alpha: 0.1)),
+            )
+          else
+            Icon(Icons.description_outlined, color: AppColors.textLight, size: 24),
+        ],
+      ),
+    );
+  }
+}
+
 // ========== PROFILE VIEW ==========
 class _PatientProfileView extends StatelessWidget {
   const _PatientProfileView();
@@ -530,12 +677,14 @@ class _PatientProfileView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                '${user?.email ?? ''}',
+                user?.fullName ?? user?.email ?? '',
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 4),
               Text(user?.email ?? '', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
+              if (user?.id != null) _PatientAnalysisResultsSection(userId: user!.id),
+              const SizedBox(height: 24),
               _buildProfileOption(Icons.person_outline, 'Informations personnelles', null),
               _buildProfileOption(Icons.lock_outline, 'Sécurité', null),
               _buildProfileOption(Icons.notifications_outlined, 'Notifications', null),

@@ -1,10 +1,155 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../../services/api_service.dart';
 import '../../widgets/medical_card.dart';
+import '../../medecin/screens/prescription/create_prescription_screen.dart';
 
-/// Écran du dossier médical patient
-class PatientMedicalRecordScreen extends StatelessWidget {
-  const PatientMedicalRecordScreen({super.key});
+/// Écran du dossier médical patient.
+/// Si [patientId] (et optionnellement [patientName]) sont fournis, charge les vraies données
+/// (dossiers clinique, analyses centre d'analyse). Sinon affiche des données de démo statiques.
+class PatientMedicalRecordScreen extends StatefulWidget {
+  const PatientMedicalRecordScreen({
+    super.key,
+    this.patientId,
+    this.patientName,
+    this.onBack,
+  });
+
+  final String? patientId;
+  final String? patientName;
+  /// Si fourni (ex. intégration web), le bouton retour appelle ce callback au lieu de Navigator.pop.
+  final VoidCallback? onBack;
+
+  @override
+  State<PatientMedicalRecordScreen> createState() => _PatientMedicalRecordScreenState();
+}
+
+class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen> {
+  List<dynamic> _medicalRecords = [];
+  List<dynamic> _analysisResults = [];
+  List<dynamic> _medicalHistory = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.patientId != null && widget.patientId!.isNotEmpty) {
+      _loadPatientData();
+    } else {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadPatientData() async {
+    if (widget.patientId == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    List<dynamic> records = [];
+    List<dynamic> analyses = [];
+    List<dynamic> history = [];
+    String? errorMsg;
+
+    try {
+      records = await ApiService.getMyMedicalRecords(patientId: widget.patientId);
+      if (records is! List) records = [];
+    } catch (e) {
+      errorMsg = e.toString().replaceFirst('Exception: ', '');
+      records = [];
+    }
+
+    try {
+      final res = await ApiService.getPatientAnalysisResults(widget.patientId!);
+      analyses = res is List ? res : [];
+    } catch (_) {
+      analyses = [];
+    }
+
+    try {
+      final h = await ApiService.getPatientMedicalHistory(widget.patientId!);
+      history = h is List ? h : [];
+    } catch (_) {
+      history = [];
+    }
+
+    if (mounted) {
+      setState(() {
+        _medicalRecords = records;
+        _analysisResults = analyses;
+        _medicalHistory = history;
+        _error = errorMsg;
+        _loading = false;
+      });
+    }
+  }
+
+  bool get _hasRealData => widget.patientId != null && !_loading;
+
+  Future<void> _openPdfUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ouverture du PDF...'), duration: Duration(seconds: 1)),
+      );
+    }
+    try {
+      // Priorité: navigateur externe / app PDF (plus fiable pour afficher un PDF sur mobile)
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (mounted && !ok) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Impossible d\'ouvrir le PDF. Vérifiez votre connexion.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur: ${e.toString().replaceFirst('Exception: ', '')}')),
+          );
+        }
+      }
+    }
+  }
+
+  Map<String, dynamic>? get _latestRecord {
+    if (_medicalRecords.isEmpty) return null;
+    final r = _medicalRecords.first;
+    return r is Map<String, dynamic> ? r : null;
+  }
+
+  Map<String, dynamic>? get _vitalSigns {
+    final record = _latestRecord;
+    if (record == null) return null;
+    final vs = record['vitalSigns'];
+    if (vs is Map<String, dynamic>) return vs;
+    return null;
+  }
+
+  String _patientDisplayName() {
+    if (widget.patientName != null && widget.patientName!.isNotEmpty) return widget.patientName!;
+    final record = _latestRecord;
+    if (record != null && record['patientName'] != null) return record['patientName'].toString();
+    return 'Jean Dupont';
+  }
+
+  String _patientInitials() {
+    final name = _patientDisplayName();
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    if (parts.isNotEmpty && parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    return 'JD';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,27 +167,55 @@ class PatientMedicalRecordScreen extends StatelessWidget {
           child: Column(
             children: [
               _buildHeader(context),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPatientInfo(),
-                      const SizedBox(height: 24),
-                      _buildVitalSigns(),
-                      const SizedBox(height: 24),
-                      _buildMedicalHistory(),
-                      const SizedBox(height: 24),
-                      _buildCurrentMedications(),
-                      const SizedBox(height: 24),
-                      _buildRecentConsultations(),
-                    ],
+              if (_loading)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_error != null) _buildError(),
+                        _buildPatientInfo(),
+                        const SizedBox(height: 24),
+                        _buildVitalSigns(),
+                        const SizedBox(height: 24),
+                        if (_hasRealData) _buildAnalysisSection(),
+                        if (_hasRealData) const SizedBox(height: 24),
+                        _buildMedicalHistory(),
+                        const SizedBox(height: 24),
+                        _buildCurrentMedications(),
+                        const SizedBox(height: 24),
+                        _buildRecentConsultations(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+            const SizedBox(width: 12),
+            Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+          ],
         ),
       ),
     );
@@ -54,7 +227,7 @@ class PatientMedicalRecordScreen extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () => widget.onBack != null ? widget.onBack!() : Navigator.pop(context),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -72,21 +245,61 @@ class PatientMedicalRecordScreen extends StatelessWidget {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10)],
+          if (widget.patientId != null && widget.patientId!.isNotEmpty)
+            PopupMenuButton<String>(
+              icon: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10)],
+                ),
+                child: const Icon(Icons.more_vert, size: 20),
+              ),
+              onSelected: (value) {
+                if (value == 'ordonnance') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreatePrescriptionScreen(
+                        initialPatientId: widget.patientId,
+                        initialPatientName: widget.patientName ?? _patientDisplayName(),
+                      ),
+                    ),
+                  );
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'ordonnance',
+                  child: Row(
+                    children: [
+                      Icon(Icons.description_rounded, color: AppColors.prescription, size: 20),
+                      SizedBox(width: 12),
+                      Text('Ajouter une ordonnance'),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10)],
+              ),
+              child: const Icon(Icons.more_vert, size: 20),
             ),
-            child: const Icon(Icons.more_vert, size: 20),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildPatientInfo() {
+    final name = _patientDisplayName();
+    final id = widget.patientId ?? 'PAT-2024-1234';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -103,8 +316,11 @@ class PatientMedicalRecordScreen extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Center(
-              child: Text('JD', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24)),
+            child: Center(
+              child: Text(
+                _patientInitials(),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -112,9 +328,9 @@ class PatientMedicalRecordScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Jean Dupont',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  name,
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -128,9 +344,9 @@ class PatientMedicalRecordScreen extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
-                    'ID: PAT-2024-1234',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  child: Text(
+                    'ID: $id',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
               ],
@@ -142,15 +358,37 @@ class PatientMedicalRecordScreen extends StatelessWidget {
   }
 
   Widget _buildVitalSigns() {
+    final vs = _vitalSigns;
+    final heartRate = vs?['heartRate'];
+    final sys = vs?['bloodPressureSystolic'];
+    final dia = vs?['bloodPressureDiastolic'];
+    final temp = vs?['temperature'];
+
+    String heartStr = '—';
+    if (heartRate != null) {
+      if (heartRate is num) heartStr = heartRate.toInt().toString();
+      else heartStr = heartRate.toString();
+    } else if (!_hasRealData) heartStr = '72';
+
+    String tensionStr = '—/—';
+    if (sys != null && dia != null) {
+      tensionStr = '${sys is num ? sys.toInt() : sys}/${dia is num ? dia.toInt() : dia}';
+    } else if (!_hasRealData) tensionStr = '120/80';
+
+    String tempStr = '—';
+    if (temp != null) {
+      tempStr = temp is num ? temp.toStringAsFixed(1) : temp.toString();
+    } else if (!_hasRealData) tempStr = '36.8';
+
     return MedicalCard(
       title: 'Signes Vitaux',
       titleIcon: Icons.favorite_rounded,
       child: Row(
         children: [
-          _buildVitalItem('❤️', '72', 'bpm', 'Rythme'),
-          _buildVitalItem('🩺', '120/80', 'mmHg', 'Tension'),
-          _buildVitalItem('🌡️', '36.8', '°C', 'Temp.'),
-          _buildVitalItem('🫁', '16', '/min', 'Resp.'),
+          _buildVitalItem('❤️', heartStr, 'bpm', 'Rythme'),
+          _buildVitalItem('🩺', tensionStr, 'mmHg', 'Tension'),
+          _buildVitalItem('🌡️', tempStr, '°C', 'Temp.'),
+          _buildVitalItem('🫁', _hasRealData ? '—' : '16', '/min', 'Resp.'),
         ],
       ),
     );
@@ -183,7 +421,132 @@ class PatientMedicalRecordScreen extends StatelessWidget {
     );
   }
 
+  /// Section Analyses (centre d'analyse) — affichée uniquement quand on a un patient lié et des données réelles
+  Widget _buildAnalysisSection() {
+    return MedicalCard(
+      title: 'Analyses (centre d\'analyse)',
+      titleIcon: Icons.science_rounded,
+      child: _analysisResults.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Aucun résultat d\'analyse pour le moment.',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+            )
+          : Column(
+              children: [
+                ..._analysisResults.map<Widget>((a) {
+                  final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
+                  final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
+                  final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
+                  final date = m['analysisDate'];
+                  String dateStr = '—';
+                  if (date != null) {
+                    try {
+                      dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+                    } catch (_) {
+                      dateStr = date.toString();
+                    }
+                  }
+                  final lab = m['labId'];
+                  String labName = '';
+                  if (lab is Map<String, dynamic>) {
+                    labName = lab['centreName'] ?? lab['name'] ?? '';
+                  }
+                  final resultFile = m['resultFile']?.toString() ?? '';
+                  final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
+                  final pdfUrl = filename.isNotEmpty
+                      ? '${ApiService.baseUrl}/lab/uploads/results/$filename'
+                      : null;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.biotech_rounded, color: AppColors.secondary, size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  typeStr.isNotEmpty ? typeStr : 'Résultat',
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                if (labName.isNotEmpty)
+                                  Text(
+                                    labName,
+                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                  ),
+                                Text(
+                                  dateStr,
+                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (pdfUrl != null && pdfUrl.isNotEmpty)
+                            IconButton(
+                              onPressed: () => _openPdfUrl(pdfUrl),
+                              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
+                              tooltip: 'Ouvrir le PDF',
+                              style: IconButton.styleFrom(
+                                backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                              ),
+                            )
+                          else
+                            Icon(Icons.description_outlined, color: AppColors.textLight, size: 24),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+    );
+  }
+
   Widget _buildMedicalHistory() {
+    if (_hasRealData && _medicalHistory.isNotEmpty) {
+      final items = _medicalHistory.take(5).map((r) {
+        final m = r is Map<String, dynamic> ? r : <String, dynamic>{};
+        final diagnosis = m['diagnosis'] ?? 'Consultation';
+        final date = m['date'];
+        String year = '—';
+        if (date != null) {
+          try {
+            year = DateFormat('yyyy').format(DateTime.parse(date.toString()));
+          } catch (_) {}
+        }
+        return _buildHistoryItem(diagnosis.toString(), year, AppColors.warning);
+      }).toList();
+      return MedicalCard(
+        title: 'Antécédents',
+        titleIcon: Icons.history_rounded,
+        child: Column(
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              items[i],
+            ],
+          ],
+        ),
+      );
+    }
     return MedicalCard(
       title: 'Antécédents',
       titleIcon: Icons.history_rounded,
@@ -222,17 +585,39 @@ class PatientMedicalRecordScreen extends StatelessWidget {
   }
 
   Widget _buildCurrentMedications() {
+    final record = _latestRecord;
+    List<Widget> items = [];
+    if (_hasRealData && record != null) {
+      final meds = record['prescription'];
+      if (meds is List && meds.isNotEmpty) {
+        for (final m in meds.take(5)) {
+          final map = m is Map<String, dynamic> ? m : <String, dynamic>{};
+          items.add(_buildMedicationItem(
+            map['name']?.toString() ?? '—',
+            map['dosage']?.toString() ?? '',
+            map['frequency']?.toString() ?? '',
+            AppColors.primary,
+          ));
+          items.add(const SizedBox(height: 12));
+        }
+        if (items.isNotEmpty) items.removeLast();
+      }
+    }
+    if (items.isEmpty) {
+      items = [
+        _buildMedicationItem('Metformine', '500mg', '2x/jour', AppColors.primary),
+        const SizedBox(height: 12),
+        _buildMedicationItem('Amlodipine', '5mg', '1x/jour', AppColors.secondary),
+        const SizedBox(height: 12),
+        _buildMedicationItem('Aspirine', '100mg', '1x/jour', AppColors.prescription),
+      ];
+    }
     return MedicalCard(
       title: 'Médicaments Actuels',
       titleIcon: Icons.medication_rounded,
       child: Column(
-        children: [
-          _buildMedicationItem('Metformine', '500mg', '2x/jour', AppColors.primary),
-          const SizedBox(height: 12),
-          _buildMedicationItem('Amlodipine', '5mg', '1x/jour', AppColors.secondary),
-          const SizedBox(height: 12),
-          _buildMedicationItem('Aspirine', '100mg', '1x/jour', AppColors.prescription),
-        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: items,
       ),
     );
   }
@@ -261,35 +646,58 @@ class PatientMedicalRecordScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(dose, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                if (dose.isNotEmpty) Text(dose, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+          if (frequency.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(frequency, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
             ),
-            child: Text(frequency, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildRecentConsultations() {
+    List<Widget> items = [];
+    if (_hasRealData && _medicalHistory.isNotEmpty) {
+      for (final r in _medicalHistory.take(3)) {
+        final m = r is Map<String, dynamic> ? r : <String, dynamic>{};
+        final doctorName = m['doctorName'] ?? 'Dr.';
+        final date = m['date'];
+        String dateStr = '—';
+        if (date != null) {
+          try {
+            dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+          } catch (_) {}
+        }
+        final reason = m['chiefComplaint'] ?? m['diagnosis'] ?? 'Consultation';
+        items.add(_buildConsultationItem(doctorName.toString(), dateStr, reason.toString()));
+        items.add(const SizedBox(height: 12));
+      }
+      if (items.isNotEmpty) items.removeLast();
+    }
+    if (items.isEmpty) {
+      items = [
+        _buildConsultationItem('Dr. Sarah Mitchell', '15 Jan 2024', 'Suivi diabète'),
+        const SizedBox(height: 12),
+        _buildConsultationItem('Dr. Marc Laurent', '02 Jan 2024', 'Bilan cardiologique'),
+        const SizedBox(height: 12),
+        _buildConsultationItem('Dr. Sarah Mitchell', '18 Déc 2023', 'Contrôle tension'),
+      ];
+    }
     return MedicalCard(
       title: 'Consultations Récentes',
       titleIcon: Icons.calendar_today_rounded,
       child: Column(
-        children: [
-          _buildConsultationItem('Dr. Sarah Mitchell', '15 Jan 2024', 'Suivi diabète'),
-          const SizedBox(height: 12),
-          _buildConsultationItem('Dr. Marc Laurent', '02 Jan 2024', 'Bilan cardiologique'),
-          const SizedBox(height: 12),
-          _buildConsultationItem('Dr. Sarah Mitchell', '18 Déc 2023', 'Contrôle tension'),
-        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: items,
       ),
     );
   }
@@ -328,5 +736,3 @@ class PatientMedicalRecordScreen extends StatelessWidget {
     );
   }
 }
-
-

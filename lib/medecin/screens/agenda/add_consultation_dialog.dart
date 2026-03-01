@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
 import 'package:medaichainmobile/models/calendar_event_model.dart';
 import 'package:medaichainmobile/providers/calendar_provider.dart';
 import 'package:medaichainmobile/providers/patients_provider.dart';
+import 'package:medaichainmobile/models/patient_model.dart' as medecin_patient_model;
 
 class AddConsultationDialog extends StatefulWidget {
   final DateTime selectedDate;
@@ -27,6 +28,7 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
   AlertOption _selectedAlert = AlertOption.min15;
   TimeOfDay _selectedTime = TimeOfDay.now();
   String _selectedPatientName = ''; // Valeur vide au lieu de null
+  String? _selectedPatientId;
   
   bool _isLoading = false;
 
@@ -98,6 +100,7 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
         type: _selectedType,
         alertBefore: _selectedAlert,
         patientName: _selectedPatientName.isEmpty ? null : _selectedPatientName,
+        patientId: _selectedPatientId,
       );
 
       await calendarProvider.addEvent(event);
@@ -265,19 +268,34 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Autocomplete<String>(
+                      Autocomplete<medecin_patient_model.Patient>(
                         optionsBuilder: (TextEditingValue textEditingValue) {
                           if (textEditingValue.text.isEmpty) {
-                            return const Iterable<String>.empty();
+                            return patients;
                           }
-                          return patients
-                              .map((p) => p.fullName)
-                              .where((name) => name.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+                          return patients.where((p) => 
+                            p.fullName.toLowerCase().contains(textEditingValue.text.toLowerCase())
+                          );
                         },
-                        onSelected: (String selection) {
-                          setState(() => _selectedPatientName = selection);
+                        displayStringForOption: (medecin_patient_model.Patient option) => option.fullName,
+                        onSelected: (medecin_patient_model.Patient selection) {
+                          setState(() {
+                            _selectedPatientName = selection.fullName;
+                            _selectedPatientId = selection.id;
+                          });
                         },
                         fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                          // Force l'affichage de la liste au clic si vide
+                          focusNode.addListener(() {
+                            if (focusNode.hasFocus && controller.text.isEmpty) {
+                              // Astuce pour déclencher optionsBuilder
+                              controller.text = ' ';
+                              Future.delayed(const Duration(milliseconds: 10), () {
+                                if (mounted) controller.text = '';
+                              });
+                            }
+                          });
+
                           // Synchroniser avec _selectedPatientName
                           if (_selectedPatientName.isNotEmpty && controller.text != _selectedPatientName) {
                             controller.text = _selectedPatientName;
@@ -293,7 +311,10 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
                                       icon: const Icon(Icons.clear),
                                       onPressed: () {
                                         controller.clear();
-                                        setState(() => _selectedPatientName = '');
+                                        setState(() {
+                                          _selectedPatientName = '';
+                                          _selectedPatientId = null;
+                                        });
                                       },
                                     )
                                   : null,
@@ -302,7 +323,11 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
                               ),
                             ),
                             onChanged: (value) {
-                              setState(() => _selectedPatientName = value);
+                              setState(() {
+                                _selectedPatientName = value;
+                                // Si l'utilisateur modifie manuellement, on réinitialise l'ID
+                                _selectedPatientId = null; 
+                              });
                             },
                           );
                         },

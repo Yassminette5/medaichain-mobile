@@ -109,6 +109,7 @@ class CalendarEvent {
   final EventType type;
   final AlertOption alertBefore;
   final String? patientName;
+  final String? patientId;
 
   CalendarEvent({
     required this.id,
@@ -119,6 +120,7 @@ class CalendarEvent {
     required this.type,
     this.alertBefore = AlertOption.none,
     this.patientName,
+    this.patientId,
   });
 
   CalendarEvent copyWith({
@@ -140,6 +142,7 @@ class CalendarEvent {
       type: type ?? this.type,
       alertBefore: alertBefore ?? this.alertBefore,
       patientName: patientName ?? this.patientName,
+      patientId: patientId ?? this.patientId,
     );
   }
 
@@ -153,6 +156,7 @@ class CalendarEvent {
       'type': type.index,
       'alertBefore': alertBefore.index,
       'patientName': patientName,
+      'patientId': patientId,
     };
   }
 
@@ -166,6 +170,7 @@ class CalendarEvent {
       type: EventType.values[json['type'] ?? 0],
       alertBefore: AlertOption.values[json['alertBefore'] ?? 0],
       patientName: json['patientName'],
+      patientId: json['patientId'],
     );
   }
 
@@ -194,6 +199,7 @@ class CalendarEvent {
     if (description != null) map['description'] = description;
     if (endTime != null) map['endTime'] = endTime!.toIso8601String();
     if (patientName != null) map['patientName'] = patientName;
+    if (patientId != null) map['patientId'] = patientId;
     return map;
   }
 
@@ -222,8 +228,7 @@ class CalendarEvent {
       type: typeMap[json['type']] ?? EventType.consultation,
       alertBefore: alertMap[json['alertBefore']] ?? AlertOption.none,
       patientName: json['patientName'],
+      patientId: json['patientId'],
     );
   }
 }
-
-

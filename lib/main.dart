@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -36,25 +36,69 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fr_FR', null);
 
-  // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
-  // Sans "rewrite" côté serveur, la navigation en path (/xxx) peut afficher une 404.
-  // Avec HashUrlStrategy, l'URL reste /#/xxx et évite ces 404.
-  if (kIsWeb) {
-    setUrlStrategy(const HashUrlStrategy());
+  // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)
+  await initializeDateFormatting('fr_FR', null);
+
+  try {
+    // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
+    // Sans "rewrite" côté serveur, la navigation en path (/xxx) peut afficher une 404.
+    // Avec HashUrlStrategy, l'URL reste /#/xxx et évite ces 404.
+    if (kIsWeb) {
+      setUrlStrategy(const HashUrlStrategy());
+    }
+
+    // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
+    await ApiService.enforceRememberPolicyOnStartup();
+  } catch (e, st) {
+    // En web, SharedPreferences ou l'init peuvent échouer (ex: mode privé).
+    // On affiche l'app quand même ; l'utilisateur pourra se connecter.
+    if (kIsWeb) {
+      debugPrint('[MEDAIChain] Startup init warning: $e');
+    } else {
+      rethrow;
+    }
   }
 
-  // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
-  await ApiService.enforceRememberPolicyOnStartup();
-  
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF0A0E1A),
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-  
+  try {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF0A0E1A),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+  } catch (_) {
+    // Ignoré sur plateformes où SystemChrome n'est pas supporté (ex: web)
+  }
+
+  // En mode debug web, afficher les erreurs de rendu au lieu d'un écran blanc
+  if (kIsWeb) {
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Erreur d\'affichage', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
+                const SizedBox(height: 12),
+                SelectableText(details.exceptionAsString(), style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+                if (details.stack != null) ...[
+                  const SizedBox(height: 12),
+                  SelectableText(details.stack.toString(), style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    };
+  }
+
   runApp(const MEDAIChainApp());
 }
 

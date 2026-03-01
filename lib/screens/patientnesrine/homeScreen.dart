@@ -1,15 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 import '../patientnesrine/notifications_screen.dart';
 import '../patientnesrine/doctor_detail_sheet.dart';
 import '../../core/theme/app_colors.dart';
 import '../patientnesrine/doctor.dart';
 import '../patientnesrine/profile_screen.dart';
+import '../patientnesrine/doctors_list_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _unreadNotificationCount = 0;
+  List<Map<String, dynamic>> _topDoctors = [];
+  bool _topDoctorsLoading = true;
+  List<Map<String, dynamic>> _prescriptions = [];
+  bool _prescriptionsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+    _loadTopDoctors();
+    _loadPrescriptions();
+  }
+
+  Future<void> _loadPrescriptions() async {
+    setState(() => _prescriptionsLoading = true);
+    try {
+      final list = await ApiService.getMyPrescriptions();
+      if (mounted) setState(() { _prescriptions = list; _prescriptionsLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _prescriptions = []; _prescriptionsLoading = false; });
+    }
+  }
+
+  Future<void> _loadTopDoctors() async {
+    setState(() => _topDoctorsLoading = true);
+    try {
+      final list = await ApiService.searchDoctors();
+      if (mounted) setState(() { _topDoctors = list; _topDoctorsLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _topDoctors = []; _topDoctorsLoading = false; });
+    }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final data = await ApiService.getUnreadNotificationsCount();
+      final count = data['unreadCount'] is int ? data['unreadCount'] as int : 0;
+      if (mounted) setState(() => _unreadNotificationCount = count);
+    } catch (_) {
+      if (mounted) setState(() => _unreadNotificationCount = 0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,16 +126,8 @@ class HomeScreen extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        _buildGlassButton(
-                          icon: Icons.notifications_outlined,
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen())),
-                        ),
+                        _buildNotificationButton(context),
                         const SizedBox(width: 10),
-
-                        const SizedBox(width: 10),
-
-
-
                       ],
                     ),
                   ],
@@ -317,6 +361,52 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
+              // Mes ordonnances
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Mes ordonnances",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _prescriptionsLoading
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                    )
+                  : _prescriptions.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.prescription.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.prescription.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.description_outlined, color: AppColors.prescription.withOpacity(0.8), size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  "Aucune ordonnance pour le moment",
+                                  style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Column(
+                          children: _prescriptions.take(5).map((p) => _buildPrescriptionCard(p)).toList(),
+                        ),
+              const SizedBox(height: 28),
+
               // Top Doctors
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -329,12 +419,18 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.textDark,
                     ),
                   ),
-                  Text(
-                    "See All",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primary,
+                  GestureDetector(
+                    onTap: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorsListScreen()));
+                      _loadTopDoctors();
+                    },
+                    child: Text(
+                      "Voir tout",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -343,22 +439,163 @@ class HomeScreen extends StatelessWidget {
 
               SizedBox(
                 height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: mockDoctors.length,
-                  itemBuilder: (context, index) {
-                    final doctor = mockDoctors[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: _buildDoctorCard(context, doctor),
-                    );
-                  },
-                ),
+                child: _topDoctorsLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _topDoctors.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Aucun médecin disponible',
+                              style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 14),
+                            ),
+                          )
+                        : ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _topDoctors.length,
+                            itemBuilder: (context, index) {
+                              final d = _topDoctors[index];
+                              final u = d['userId'];
+                              final doctorId = u is Map ? u['_id']?.toString() : u?.toString();
+                              final doctor = Doctor(
+                                name: d['fullName'] ?? 'Médecin',
+                                specialty: d['speciality'] ?? 'Médecine générale',
+                                hospital: d['hospital'] ?? '',
+                                rating: 4.5,
+                                reviews: 0,
+                                experience: (d['yearsOfExperience'] as num?)?.toInt() ?? 0,
+                                about: '',
+                                imagePath: '',
+                              );
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: _buildDoctorCard(context, doctor, doctorId: doctorId),
+                              );
+                            },
+                          ),
               ),
               const SizedBox(height: 20),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionCard(Map<String, dynamic> p) {
+    final doctorId = p['doctorId'];
+    String doctorName = 'Médecin';
+    if (doctorId is Map && doctorId['email'] != null) {
+      doctorName = doctorId['fullName'] ?? doctorId['email'] ?? 'Médecin';
+    }
+    final meds = p['medications'] as List? ?? [];
+    final firstMed = meds.isNotEmpty && meds[0] is Map ? '${(meds[0] as Map)['name']} ${(meds[0] as Map)['dosage']}' : null;
+    final status = p['status'] as String? ?? 'active';
+    final date = p['prescriptionDate'] != null
+        ? DateFormat('dd MMM yyyy', 'fr').format(DateTime.parse(p['prescriptionDate'].toString()))
+        : (p['createdAt'] != null ? DateFormat('dd MMM yyyy', 'fr').format(DateTime.parse(p['createdAt'].toString())) : '--');
+    final statusLabel = status == 'active' ? 'Active' : status == 'completed' ? 'Complétée' : 'Annulée';
+    final statusColor = status == 'active' ? AppColors.prescription : status == 'completed' ? AppColors.success : AppColors.textGrey;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4))],
+        border: Border.all(color: AppColors.prescription.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.prescription.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.description_rounded, color: AppColors.prescription, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doctorName,
+                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                ),
+                if (firstMed != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      firstMed,
+                      style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textGrey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 12, color: AppColors.textGrey),
+                    const SizedBox(width: 4),
+                    Text(date, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(statusLabel, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: statusColor)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+        _loadUnreadCount();
+        _loadPrescriptions();
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+            ),
+            child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
+          ),
+          if (_unreadNotificationCount > 0)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -419,14 +656,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDoctorCard(BuildContext context, Doctor doctor) {
+  Widget _buildDoctorCard(BuildContext context, Doctor doctor, {String? doctorId}) {
     return GestureDetector(
       onTap: () {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => DoctorDetailSheet(doctor: doctor),
+          builder: (context) => DoctorDetailSheet(doctor: doctor, doctorId: doctorId),
         );
       },
       child: Container(

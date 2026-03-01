@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
@@ -14,6 +14,8 @@ import 'package:medaichainmobile/medecin/screens/agenda/agenda_screen.dart';
 import 'package:medaichainmobile/screens/patientnesrine/notifications_screen.dart';
 import 'package:medaichainmobile/screens/consultations/new_consultation_screen.dart';
 import 'package:medaichainmobile/screens/consultations/all_consultations_screen.dart';
+import 'package:medaichainmobile/screens/video_call/video_call_screen.dart';
+import 'package:medaichainmobile/services/api_service.dart';
 
 /// Tableau de Bord Moderne avec Navigation
 class DashboardScreen extends StatefulWidget {
@@ -95,8 +97,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  List<Map<String, dynamic>> _accessRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccessRequests();
+    // Rafraîchir les consultations depuis le backend à l'affichage du tableau de bord
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      calendarProvider.refresh();
+    });
+  }
+
+  Future<void> _loadAccessRequests() async {
+    try {
+      final list = await ApiService.getAccessRequestsForDoctor();
+      if (mounted) setState(() => _accessRequests = list);
+    } catch (_) {
+      if (mounted) setState(() => _accessRequests = []);
+    }
+  }
+
+  Future<void> _refreshFromBackend() async {
+    await Future.wait([
+      _loadAccessRequests(),
+      Provider.of<CalendarProvider>(context, listen: false).refresh(),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,25 +146,29 @@ class _HomeView extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 28),
-              _buildNotificationsSection(context),
-              const SizedBox(height: 28),
-              _buildUpcomingEvents(context),
-              const SizedBox(height: 28),
-              _buildStatsGrid(context),
-              const SizedBox(height: 28),
-              _buildQuickActions(context),
-              const SizedBox(height: 28),
-              _buildPendingRequests(context),
-              const SizedBox(height: 28),
-              _buildTodayConsultations(context),
-            ],
+        child: RefreshIndicator(
+          onRefresh: _refreshFromBackend,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 28),
+                _buildNotificationsSection(context),
+                const SizedBox(height: 28),
+                _buildUpcomingEvents(context),
+                const SizedBox(height: 28),
+                _buildStatsGrid(context),
+                const SizedBox(height: 28),
+                _buildQuickActions(context),
+                const SizedBox(height: 28),
+                _buildPendingRequests(context),
+                const SizedBox(height: 28),
+                _buildTodayConsultations(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -831,14 +871,6 @@ class _HomeView extends StatelessWidget {
               const SizedBox(width: 12),
               _buildModernActionButton(
                 context,
-                Icons.document_scanner_outlined,
-                'Scanner\nDocument',
-                AppColors.secondary,
-                LinearGradient(colors: [AppColors.secondary, AppColors.secondary.withValues(alpha: 0.7)]),
-              ),
-              const SizedBox(width: 12),
-              _buildModernActionButton(
-                context,
                 Icons.video_call_outlined,
                 'Appel\nVidéo',
                 AppColors.diagnosis,
@@ -863,15 +895,14 @@ class _HomeView extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          // Action selon le label
           if (label.contains('Consult')) {
             _showAddConsultationDialog(context);
           } else if (label.contains('Planifier')) {
-            // Naviguer vers l'agenda
             final dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
             dashboardState?.navigateToTab(2);
+          } else if (label.contains('Vidéo') || label.contains('Appel')) {
+            _showVideoCallPatientPicker(context);
           }
-          // Ajouter d'autres actions selon les besoins
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -928,6 +959,90 @@ class _HomeView extends StatelessWidget {
     );
   }
 
+  void _showVideoCallPatientPicker(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final patientsProvider = Provider.of<PatientsProvider>(context, listen: false);
+    final doctorId = authProvider.user?.id;
+    if (doctorId == null || doctorId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session expirée. Reconnectez-vous.')),
+      );
+      return;
+    }
+    final patients = patientsProvider.patients;
+    if (patients.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucun patient. Chargez la liste ou ajoutez un patient.')),
+      );
+      patientsProvider.loadPatients();
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.6),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Choisir un patient pour l\'appel vidéo',
+                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: patients.length,
+                itemBuilder: (ctx, index) {
+                  final patient = patients[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      child: Text(
+                        (patient.fullName).split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase(),
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    title: Text(patient.fullName),
+                    subtitle: Text(patient.phone ?? patient.email ?? ''),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      final patientUserId = patient.userId ?? patient.id;
+                      final channel = ApiService.videoCallChannelName(doctorId, patientUserId);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VideoCallScreen(
+                            channelName: channel,
+                            remoteUserName: patient.fullName,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPendingRequests(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -969,7 +1084,10 @@ class _HomeView extends StatelessWidget {
                 ],
               ),
               TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientAccessRequestScreen())),
+                onPressed: () async {
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientAccessRequestScreen()));
+                  _loadAccessRequests();
+                },
                 child: const Text(
                   'Voir tout',
                   style: TextStyle(
@@ -981,9 +1099,27 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernRequestItem('Jean Dupont', 'Accès urgence', AppColors.error, 'URGENT'),
-          const SizedBox(height: 12),
-          _buildModernRequestItem('Marie Martin', 'Historique médical', AppColors.warning, 'HAUTE'),
+          if (_accessRequests.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Aucune demande en attente',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+            )
+          else
+            ..._accessRequests.take(3).map((req) {
+              final patient = req['patientId'] is Map ? req['patientId'] as Map<String, dynamic> : null;
+              final name = patient?['fullName'] ?? 'Patient';
+              final reason = req['reason']?.toString() ?? 'Demande d\'accès';
+              final urgency = req['urgency']?.toString() ?? 'normal';
+              final priorityColor = urgency == 'high' ? AppColors.error : urgency == 'low' ? AppColors.success : AppColors.warning;
+              final priorityLabel = urgency == 'high' ? 'URGENT' : urgency == 'low' ? 'BASSE' : 'HAUTE';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildModernRequestItem(name, reason, priorityColor, priorityLabel),
+              );
+            }),
         ],
       ),
     );
@@ -1078,6 +1214,10 @@ class _HomeView extends StatelessWidget {
   }
 
   Widget _buildTodayConsultations(BuildContext context) {
+    final calendarProvider = Provider.of<CalendarProvider>(context);
+    final todayEvents = calendarProvider.getEventsForDay(DateTime.now());
+    final now = DateTime.now();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1115,19 +1255,36 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildModernConsultationItem(context, 'Pierre Dubois', '09:00', 'Suivi diabète', AppColors.primary, true),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Sophie Laurent', '10:30', 'Bilan général', AppColors.secondary, false),
-          const SizedBox(height: 12),
-          _buildModernConsultationItem(context, 'Marc Petit', '14:00', 'Contrôle cardiaque', AppColors.error, false),
+          if (todayEvents.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Aucune consultation aujourd\'hui',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+            )
+          else
+            ...List.generate(todayEvents.length, (index) {
+              final event = todayEvents[index];
+              final timeStr = DateFormat('HH:mm').format(event.dateTime);
+              final name = event.patientName ?? event.title;
+              final typeLabel = event.title;
+              final color = event.type.color;
+              final isNow = event.dateTime.isBefore(now.add(const Duration(hours: 1))) &&
+                  event.dateTime.isAfter(now.subtract(const Duration(minutes: 30)));
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildModernConsultationItem(context, name, timeStr, typeLabel, color, isNow, patientId: event.patientId),
+              );
+            }),
         ],
       ),
     );
   }
 
-  Widget _buildModernConsultationItem(BuildContext context, String name, String time, String type, Color color, bool isNow) {
+  Widget _buildModernConsultationItem(BuildContext context, String name, String time, String type, Color color, bool isNow, {String? patientId}) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientMedicalRecordScreen())),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PatientMedicalRecordScreen(patientId: patientId, patientName: name))),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -1248,22 +1405,52 @@ class _PatientsView extends StatefulWidget {
 
 class _PatientsViewState extends State<_PatientsView> {
   String _searchQuery = '';
+  List<Map<String, dynamic>> _acceptedList = [];
+  bool _loading = true;
+  String? _error;
+
+  List<Map<String, dynamic>> get _acceptedPatients {
+    final byId = <String, Map<String, dynamic>>{};
+    for (final r in _acceptedList) {
+      final p = r['patientId'];
+      if (p is Map<String, dynamic>) {
+        final id = p['_id']?.toString();
+        if (id != null && id.isNotEmpty) byId[id] = p;
+      }
+    }
+    return byId.values.toList();
+  }
+
+  List<Map<String, dynamic>> get _filteredPatients {
+    final list = _acceptedPatients;
+    if (_searchQuery.isEmpty) return list;
+    final q = _searchQuery.toLowerCase();
+    return list.where((p) {
+      final name = (p['fullName'] ?? p['email'] ?? '').toString().toLowerCase();
+      final email = (p['email'] ?? '').toString().toLowerCase();
+      return name.contains(q) || email.contains(q);
+    }).toList();
+  }
+
+  Future<void> _loadAccepted() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final list = await ApiService.getAcceptedPatientsForDoctor();
+      if (mounted) setState(() { _acceptedList = list; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // Charger les patients au démarrage
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PatientsProvider>(context, listen: false).loadPatients();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAccepted());
   }
 
   @override
   Widget build(BuildContext context) {
-    final patientsProvider = Provider.of<PatientsProvider>(context);
-    final patients = _searchQuery.isEmpty
-        ? patientsProvider.patients
-        : patientsProvider.searchPatients(_searchQuery);
+    final patients = _filteredPatients;
 
     return SafeArea(
       child: Padding(
@@ -1277,11 +1464,16 @@ class _PatientsViewState extends State<_PatientsView> {
                 const Text('Patients', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => patientsProvider.loadPatients(),
+                  onPressed: _loadAccepted,
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+            Text(
+              'Patients ayant partagé l\'accès à leur dossier',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -1299,11 +1491,11 @@ class _PatientsViewState extends State<_PatientsView> {
               ),
             ),
             const SizedBox(height: 20),
-            if (patientsProvider.isLoading)
+            if (_loading)
               const Expanded(
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (patientsProvider.error != null)
+            else if (_error != null)
               Expanded(
                 child: Center(
                   child: Column(
@@ -1317,13 +1509,13 @@ class _PatientsViewState extends State<_PatientsView> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        patientsProvider.error!,
+                        _error!,
                         style: TextStyle(color: AppColors.textSecondary),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => patientsProvider.loadPatients(),
+                        onPressed: _loadAccepted,
                         child: const Text('Réessayer'),
                       ),
                     ],
@@ -1339,8 +1531,11 @@ class _PatientsViewState extends State<_PatientsView> {
                       const Icon(Icons.people_outline, size: 64, color: AppColors.textLight),
                       const SizedBox(height: 16),
                       Text(
-                        _searchQuery.isEmpty ? 'Aucun patient' : 'Aucun résultat',
+                        _searchQuery.isEmpty
+                            ? 'Aucun patient n\'a partagé l\'accès.\nAcceptez des demandes dans "Demandes d\'accès".'
+                            : 'Aucun résultat',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -1351,14 +1546,16 @@ class _PatientsViewState extends State<_PatientsView> {
                 child: ListView.builder(
                   itemCount: patients.length,
                   itemBuilder: (context, index) {
-                    final patient = patients[index];
+                    final p = patients[index];
+                    final id = p['_id']?.toString() ?? '';
+                    final name = p['fullName']?.toString() ?? p['email']?.toString() ?? 'Patient';
                     return _buildPatientCard(
                       context,
-                      patient.fullName,
-                      patient.chronicDiseases.isNotEmpty
-                          ? patient.chronicDiseases.join(', ')
-                          : 'Soins généraux',
+                      name,
+                      'Accès partagé',
                       _getColorForIndex(index),
+                      patientId: id,
+                      patientName: name,
                     );
                   },
                 ),
@@ -1381,9 +1578,9 @@ class _PatientsViewState extends State<_PatientsView> {
     return colors[index % colors.length];
   }
 
-  Widget _buildPatientCard(BuildContext context, String name, String condition, Color color) {
+  Widget _buildPatientCard(BuildContext context, String name, String condition, Color color, {String? patientId, String? patientName}) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PatientMedicalRecordScreen())),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PatientMedicalRecordScreen(patientId: patientId, patientName: patientName ?? name))),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
