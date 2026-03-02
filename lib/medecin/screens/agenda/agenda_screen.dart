@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
 import 'package:medaichainmobile/models/calendar_event_model.dart';
 import 'package:medaichainmobile/providers/calendar_provider.dart';
+import 'package:medaichainmobile/providers/patients_provider.dart';
+import 'package:medaichainmobile/models/patient_model.dart' as medecin_patient_model;
 import 'add_consultation_dialog.dart';
 
 class AgendaScreen extends StatefulWidget {
@@ -25,6 +27,13 @@ class _AgendaScreenState extends State<AgendaScreen> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final patientsProvider = Provider.of<PatientsProvider>(context, listen: false);
+      if (patientsProvider.patients.isEmpty && !patientsProvider.isLoading) {
+        patientsProvider.loadPatients();
+      }
+    });
   }
 
   @override
@@ -560,9 +569,13 @@ class _AgendaScreenState extends State<AgendaScreen> with SingleTickerProviderSt
     final titleController = TextEditingController(text: existingEvent?.title ?? '');
     final descController = TextEditingController(text: existingEvent?.description ?? '');
     final patientController = TextEditingController(text: existingEvent?.patientName ?? '');
+    String selectedPatientName = existingEvent?.patientName ?? '';
+    String? selectedPatientId = existingEvent?.patientId;
     EventType selectedType = existingEvent?.type ?? EventType.consultation;
     AlertOption selectedAlert = existingEvent?.alertBefore ?? AlertOption.min15;
     final provider = Provider.of<CalendarProvider>(context, listen: false);
+    final patientsProvider = Provider.of<PatientsProvider>(context, listen: false);
+    final patients = patientsProvider.patients;
     DateTime selectedDate = existingEvent?.dateTime ?? provider.selectedDay;
     TimeOfDay selectedTime = existingEvent != null
         ? TimeOfDay.fromDateTime(existingEvent.dateTime)
@@ -691,11 +704,124 @@ class _AgendaScreenState extends State<AgendaScreen> with SingleTickerProviderSt
                         const SizedBox(height: 16),
 
                         // Patient field
-                        _buildFormField(
-                          controller: patientController,
-                          label: 'Patient (optionnel)',
-                          hint: 'Nom du patient',
-                          icon: Icons.person_outline_rounded,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Patient (optionnel)',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Autocomplete<medecin_patient_model.Patient>(
+                                optionsBuilder: (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return patients;
+                                  }
+                                  return patients.where((p) => 
+                                    p.fullName.toLowerCase().contains(textEditingValue.text.toLowerCase())
+                                  );
+                                },
+                                displayStringForOption: (medecin_patient_model.Patient option) => option.fullName,
+                                onSelected: (medecin_patient_model.Patient selection) {
+                                  setSheetState(() {
+                                    selectedPatientName = selection.fullName;
+                                    selectedPatientId = selection.id;
+                                    patientController.text = selection.fullName;
+                                  });
+                                },
+                                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                                  focusNode.addListener(() {
+                                    if (focusNode.hasFocus && controller.text.isEmpty) {
+                                      controller.text = ' ';
+                                      Future.delayed(const Duration(milliseconds: 10), () {
+                                        if (mounted) controller.text = '';
+                                      });
+                                    }
+                                  });
+
+                                  if (selectedPatientName.isNotEmpty && controller.text != selectedPatientName) {
+                                    controller.text = selectedPatientName;
+                                  }
+                                  return TextField(
+                                    controller: controller,
+                                    focusNode: focusNode,
+                                    style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                                    decoration: InputDecoration(
+                                      hintText: 'Nom du patient',
+                                      hintStyle: const TextStyle(color: AppColors.textLight),
+                                      prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 20),
+                                      suffixIcon: controller.text.isNotEmpty
+                                          ? IconButton(
+                                              icon: const Icon(Icons.clear, size: 20),
+                                              onPressed: () {
+                                                controller.clear();
+                                                setSheetState(() {
+                                                  selectedPatientName = '';
+                                                  selectedPatientId = null;
+                                                  patientController.clear();
+                                                });
+                                              },
+                                            )
+                                          : null,
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                    ),
+                                    onChanged: (value) {
+                                      setSheetState(() {
+                                        selectedPatientName = value;
+                                        selectedPatientId = null;
+                                        patientController.text = value;
+                                      });
+                                    },
+                                  );
+                                },
+                                optionsViewBuilder: (context, onSelected, options) {
+                                  return Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Material(
+                                      elevation: 4,
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        width: MediaQuery.of(context).size.width - 48, // Padding compensation
+                                        constraints: const BoxConstraints(maxHeight: 200),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: ListView.builder(
+                                          padding: EdgeInsets.zero,
+                                          shrinkWrap: true,
+                                          itemCount: options.length,
+                                          itemBuilder: (BuildContext context, int index) {
+                                            final medecin_patient_model.Patient option = options.elementAt(index);
+                                            return InkWell(
+                                              onTap: () {
+                                                onSelected(option);
+                                              },
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(16.0),
+                                                child: Text(option.fullName),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
 
@@ -863,6 +989,7 @@ class _AgendaScreenState extends State<AgendaScreen> with SingleTickerProviderSt
                               type: selectedType,
                               alertBefore: selectedAlert,
                               patientName: patientController.text.trim().isEmpty ? null : patientController.text.trim(),
+                              patientId: selectedPatientId,
                             );
 
                             if (isEditing) {

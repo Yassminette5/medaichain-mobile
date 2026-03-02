@@ -2,7 +2,7 @@
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
-/// ├ëcran des notifications pour le centre d'analyse
+/// Écran des notifications pour le centre d'analyse
 class CenterNotificationsScreen extends StatefulWidget {
   const CenterNotificationsScreen({super.key});
 
@@ -67,7 +67,7 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
               children: [
                 Icon(accept ? Icons.done_all_rounded : Icons.delete_rounded, color: Colors.white),
                 const SizedBox(width: 12),
-                Text(accept ? 'Marqu├®e comme lue' : 'Notification supprim├®e'),
+                Text(accept ? 'Marquée comme lue' : 'Notification supprimée'),
               ],
             ),
             backgroundColor: accept ? AppColors.success : AppColors.error,
@@ -164,7 +164,7 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
     }
 
     final id = notification['_id']?.toString() ?? notification['id']?.toString() ?? '';
-    final type = notification['analysisType'] ?? 'Analyse m├®dicale';
+    final type = notification['analysisType'] ?? 'Analyse médicale';
     final dateStr = _formatDate(notification['appointmentDate']?.toString() ?? '');
 
     return Container(
@@ -364,7 +364,7 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Vos demandes de rendez-vous sont toutes trait├®es.',
+            'Vos demandes de rendez-vous sont toutes traitées.',
             style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
           ),
         ],
@@ -389,17 +389,17 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
           ElevatedButton(
             onPressed: _loadNotifications,
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('R├®essayer', style: TextStyle(color: Colors.white)),
+            child: const Text('Réessayer', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
   String _formatDate(String dateString) {
-    if (dateString.isEmpty || dateString == 'Date non sp├®cifi├®e') return 'Date non sp├®cifi├®e';
+    if (dateString.isEmpty || dateString == 'Date non spécifiée') return 'Date non spécifiée';
     try {
       final date = DateTime.parse(dateString);
-      final months = ['Jan', 'F├®v', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Ao├╗', 'Sep', 'Oct', 'Nov', 'D├®c'];
+      final months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
       return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
       return dateString;

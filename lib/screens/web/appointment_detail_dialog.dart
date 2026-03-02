@@ -2,7 +2,7 @@
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
-/// Version dialog des d├®tails de rendez-vous (sans Scaffold)
+/// Version dialog des détails de rendez-vous (sans Scaffold)
 class AppointmentDetailDialog extends StatefulWidget {
   final Map<String, dynamic> appointment;
 
@@ -39,8 +39,8 @@ class _AppointmentDetailDialogState extends State<AppointmentDetailDialog> {
     try {
       final date = DateTime.parse(dateString);
       final months = [
-        'Janvier', 'F├®vrier', 'Mars', 'Avril', 'Mai', 'Juin',
-        'Juillet', 'Ao├╗t', 'Septembre', 'Octobre', 'Novembre', 'D├®cembre'
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
@@ -69,7 +69,7 @@ class _AppointmentDetailDialogState extends State<AppointmentDetailDialog> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Rendez-vous accept├®'),
+            content: Text('Rendez-vous accepté'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -139,7 +139,7 @@ class _AppointmentDetailDialogState extends State<AppointmentDetailDialog> {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Rendez-vous refus├®'),
+              content: Text('Rendez-vous refusé'),
               backgroundColor: AppColors.success,
             ),
           );
@@ -200,9 +200,9 @@ class _AppointmentDetailDialogState extends State<AppointmentDetailDialog> {
           // Carte Patient
           _buildPatientCard(patientFirstName, patientEmail, patientPhone),
           const SizedBox(height: 24),
-          // M├®decin R├®f├®rent (si disponible)
+          // Médecin Référent (si disponible)
           if (doctorId != null && doctorId is Map) ...[
-            _buildSectionTitle('M├ëDECIN R├ëF├ëRENT'),
+            _buildSectionTitle('MÉDECIN RÉFÉRENT'),
             const SizedBox(height: 12),
             _buildDoctorCard(Map<String, dynamic>.from(doctorId)),
             const SizedBox(height: 24),
@@ -373,7 +373,7 @@ class _AppointmentDetailDialogState extends State<AppointmentDetailDialog> {
   Widget _buildDoctorCard(Map<String, dynamic> doctor) {
     final name = doctor['firstName'] != null && doctor['lastName'] != null
         ? '${doctor['firstName']} ${doctor['lastName']}'
-        : doctor['name']?.toString() ?? 'M├®decin';
+        : doctor['name']?.toString() ?? 'Médecin';
     final speciality = doctor['speciality']?.toString() ?? '';
 
     return Container(

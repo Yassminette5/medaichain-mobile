@@ -8,6 +8,7 @@ import '../onboarding/welcome_screen.dart';
 import '../clinique/web/dashboard_main_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../dashboard/dashboard_screen.dart' as medecin_dash;
+import 'medecin_web_dashboard.dart';
 
 /// Écran de connexion web sécurisé pour les centres d'analyse
 class LoginWebScreen extends StatefulWidget {
@@ -337,8 +338,8 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
           debugPrint('✅ Redirection vers AdminDashboardScreen');
           destination = const AdminDashboardScreen();
         } else if (role == UserRole.medecin) {
-          debugPrint('✅ Redirection vers MedecinDashboardScreen');
-          destination = const medecin_dash.DashboardScreen();
+          debugPrint('✅ Redirection vers Medecin Web Dashboard');
+          destination = const MedecinWebDashboard();
         } else {
           debugPrint('❌ Rôle non autorisé: $role');
           _showErrorSnackBar('Accès réservé aux professionnels. Rôle détecté: ${role?.value ?? "inconnu"}');

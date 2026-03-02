@@ -74,7 +74,7 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
                 : '01/01/2024';
 
             if (isLoading) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5)));
+              return const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)));
             }
 
             return FadeTransition(
@@ -85,13 +85,13 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
                   SliverAppBar(
                     expandedHeight: 280.0,
                     pinned: true,
-                    backgroundColor: const Color(0xFF0A1628), // Premium dark blue
+                    backgroundColor: const Color(0xFF1E1B4B), // Premium dark blue
                     elevation: 0,
                     flexibleSpace: FlexibleSpaceBar(
                       background: Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Color(0xFF0A1628), Color(0xFF132E57), Color(0xFF1A4B8C)],
+                            colors: [Color(0xFF1E1B4B), Color(0xFF132E57), Color(0xFF1A4B8C)],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),

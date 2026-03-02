@@ -2,7 +2,7 @@
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
-/// Version du d├®tail de rendez-vous adapt├®e pour la dialog web (sans Scaffold)
+/// Version du détail de rendez-vous adaptée pour la dialog web (sans Scaffold)
 class AppointmentDetailWebDialog extends StatelessWidget {
   final Map<String, dynamic> appointment;
 
@@ -32,8 +32,8 @@ class AppointmentDetailWebDialog extends StatelessWidget {
     try {
       final date = DateTime.parse(dateString);
       final months = [
-        'Janvier', 'F├®vrier', 'Mars', 'Avril', 'Mai', 'Juin',
-        'Juillet', 'Ao├╗t', 'Septembre', 'Octobre', 'Novembre', 'D├®cembre'
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
@@ -55,9 +55,9 @@ class AppointmentDetailWebDialog extends StatelessWidget {
       case 'pending':
         return 'EN ATTENTE';
       case 'accepted':
-        return 'ACCEPT├ë';
+        return 'ACCEPTÉ';
       case 'rejected':
-        return 'REFUS├ë';
+        return 'REFUSÉ';
       default:
         return 'EN ATTENTE';
     }
@@ -116,9 +116,9 @@ class AppointmentDetailWebDialog extends StatelessWidget {
           // Carte Patient
           _buildPatientCard(patientFirstName, patientEmail, patientPhone),
           const SizedBox(height: 24),
-          // M├®decin R├®f├®rent (si disponible)
+          // Médecin Référent (si disponible)
           if (doctorId != null && doctorId is Map) ...[
-            _buildSectionTitle('M├ëDECIN R├ëF├ëRENT'),
+            _buildSectionTitle('MÉDECIN RÉFÉRENT'),
             const SizedBox(height: 12),
             _buildDoctorCard(Map<String, dynamic>.from(doctorId)),
             const SizedBox(height: 24),
@@ -298,7 +298,7 @@ class AppointmentDetailWebDialog extends StatelessWidget {
   Widget _buildDoctorCard(Map<String, dynamic> doctor) {
     final name = doctor['firstName'] != null && doctor['lastName'] != null
         ? '${doctor['firstName']} ${doctor['lastName']}'
-        : doctor['name'] ?? doctor['email'] ?? 'M├®decin';
+        : doctor['name'] ?? doctor['email'] ?? 'Médecin';
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -477,7 +477,7 @@ class AppointmentDetailWebDialog extends StatelessWidget {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Rendez-vous accept├®'),
+            content: Text('Rendez-vous accepté'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -543,7 +543,7 @@ class AppointmentDetailWebDialog extends StatelessWidget {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Rendez-vous refus├®'),
+            content: Text('Rendez-vous refusé'),
             backgroundColor: AppColors.success,
           ),
         );

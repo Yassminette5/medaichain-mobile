@@ -1636,7 +1636,7 @@ class ApiService {
     final token = await getAccessToken();
     
     final response = await http.get(
-      Uri.parse('$baseUrl/appointments/lab/my-appointments'),
+      Uri.parse('$baseUrl/lab-appointments/lab/requests'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -2040,7 +2040,7 @@ class ApiService {
     final token = await getAccessToken();
     
     final response = await http.put(
-      Uri.parse('$baseUrl/appointments/lab/$appointmentId/accept'),
+      Uri.parse('$baseUrl/lab-appointments/lab/$appointmentId/accept'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -2073,7 +2073,7 @@ class ApiService {
     final token = await getAccessToken();
     
     final response = await http.put(
-      Uri.parse('$baseUrl/appointments/lab/$appointmentId/reject'),
+      Uri.parse('$baseUrl/lab-appointments/lab/$appointmentId/reject'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -2207,6 +2207,66 @@ class ApiService {
     }
   }
 
+  // ========== LISTE DES CLINIQUES ==========
+  static Future<List<Map<String, dynamic>>> getClinicsList() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinic-management/clinics'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    debugPrint('🔍 GET /clinic-management/clinics - Status: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      } else if (data is Map && data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } else {
+      throw Exception('Erreur de chargement des cliniques: ${response.statusCode}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getClinicById(String id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinic-management/clinic/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    debugPrint('🔍 GET /clinic-management/clinic/$id - Status: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Impossible de charger les détails de la clinique.');
+    }
+  }
+
+  static Future<void> bookClinicAppointmentMobile(String clinicId, Map<String, dynamic> data) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/clinic-management/clinic/$clinicId/book-appointment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(data),
+    );
+
+    debugPrint('🔍 POST /clinic-management/clinic/$clinicId/book-appointment - Status: ${response.statusCode}');
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Erreur lors de la réservation.');
+    }
+  }
+
   // ========== LISTE DES CENTRES D'ANALYSE ==========
   static Future<List<Map<String, dynamic>>> getCentersList() async {
     final response = await http.get(
@@ -2317,5 +2377,52 @@ class ApiService {
         throw Exception('Erreur de création d\'ordonnance: ${response.statusCode}');
       }
     }
+  }
+
+  // ==========================================
+  //         CLINIC ONLINE APPOINTMENTS
+  // ==========================================
+  
+  /// Récupérer les rendez-vous pris depuis le mobile (source=mobile)
+  static Future<List<dynamic>> getOnlineAppointments() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinic-management/my/appointments?source=mobile'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getOnlineAppointments();
+    }
+    return [];
+  }
+
+  /// Mettre à jour le statut d'un rendez-vous (confirmer/annuler)
+  static Future<bool> updateAppointmentStatus(String appointmentId, String status) async {
+    final token = await getAccessToken();
+    final response = await http.put(
+      Uri.parse('$baseUrl/clinic-management/appointments/$appointmentId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'status': status,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return updateAppointmentStatus(appointmentId, status);
+    }
+    return false;
   }
 }

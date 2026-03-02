@@ -61,7 +61,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF1E88E5),
+          color: const Color(0xFF7C3AED),
           onRefresh: () async {
             _loadData();
             await _dataFuture;
@@ -99,7 +99,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF1E88E5)),
+                      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF7C3AED)),
                       onPressed: () {},
                     ),
                   )
@@ -205,8 +205,8 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
                                     'Médecins',
                                     totalDoctors.toString(),
                                     Icons.medical_services_rounded,
-                                    const Color(0xFF1E88E5),
-                                    [const Color(0xFF1E88E5), const Color(0xFF00ACC1)],
+                                    const Color(0xFF7C3AED),
+                                    [const Color(0xFF7C3AED), const Color(0xFF00ACC1)],
                                   ),
                                 ),
                                 const SizedBox(width: 14),
@@ -362,14 +362,14 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0A1628), Color(0xFF132E57), Color(0xFF1A4B8C)],
+          colors: [Color(0xFF1E1B4B), Color(0xFF132E57), Color(0xFF1A4B8C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A1628).withValues(alpha: 0.3),
+            color: const Color(0xFF1E1B4B).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -552,7 +552,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       children: [
         _buildPremiumBanner(clinicName, '...'),
         const SizedBox(height: 24),
-        const Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5))),
+        const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED))),
       ],
     );
   }

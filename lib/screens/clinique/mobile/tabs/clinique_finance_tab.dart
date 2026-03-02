@@ -71,7 +71,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF1E88E5),
+          color: const Color(0xFF7C3AED),
           onRefresh: () async {
             _loadData();
             await _invoicesFuture;
@@ -105,7 +105,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.only(top: 50.0),
-                            child: CircularProgressIndicator(color: Color(0xFF1E88E5)),
+                            child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
                           )
                         );
                       }
@@ -253,14 +253,14 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF1E88E5) : Colors.white,
+          color: isActive ? const Color(0xFF7C3AED) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? const Color(0xFF1E88E5) : AppColors.border,
+            color: isActive ? const Color(0xFF7C3AED) : AppColors.border,
           ),
           boxShadow: isActive ? [
             BoxShadow(
-              color: const Color(0xFF1E88E5).withValues(alpha: 0.3),
+              color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             )
@@ -282,7 +282,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
     switch (status) {
       case 'paid': return {'label': 'Payée', 'color': const Color(0xFF43A047)};
       case 'pending': return {'label': 'En attente', 'color': const Color(0xFFF57C00)};
-      case 'partial': return {'label': 'Partiel', 'color': const Color(0xFF1E88E5)};
+      case 'partial': return {'label': 'Partiel', 'color': const Color(0xFF7C3AED)};
       case 'cancelled': return {'label': 'Annulée', 'color': const Color(0xFFE53935)};
       default: return {'label': status, 'color': Colors.grey};
     }
@@ -378,7 +378,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E88E5), // Premium Blue
+                        color: const Color(0xFF7C3AED), // Premium Blue
                       ),
                     ),
                   ],
@@ -401,10 +401,10 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E88E5).withValues(alpha: 0.06),
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.receipt_long_rounded, size: 48, color: const Color(0xFF1E88E5).withValues(alpha: 0.4)),
+              child: Icon(Icons.receipt_long_rounded, size: 48, color: const Color(0xFF7C3AED).withValues(alpha: 0.4)),
             ),
             const SizedBox(height: 20),
             Text(

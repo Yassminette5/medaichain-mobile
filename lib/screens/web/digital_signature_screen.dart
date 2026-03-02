@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../../core/theme/app_colors.dart';
 
-/// ├ëcran de signature num├®rique pour les r├®sultats
+/// Écran de signature numérique pour les résultats
 class DigitalSignatureScreen extends StatefulWidget {
   const DigitalSignatureScreen({super.key});
 
@@ -32,7 +32,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
   }
 
   Future<void> _loadResultsToSign() async {
-    // TODO: Charger les r├®sultats en attente de signature depuis l'API
+    // TODO: Charger les résultats en attente de signature depuis l'API
     setState(() {
       _resultsToSign = [
         {
@@ -55,14 +55,14 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
 
   Future<void> _signResult() async {
     if (_selectedResult == null) {
-      _showErrorSnackBar('Veuillez s├®lectionner un r├®sultat ├á signer');
+      _showErrorSnackBar('Veuillez sélectionner un résultat à signer');
       return;
     }
 
     setState(() => _isSigning = true);
 
     try {
-      // TODO: Impl├®menter la signature num├®rique avec le backend
+      // TODO: Implémenter la signature numérique avec le backend
       // Capture de la signature depuis le canvas
       final RenderRepaintBoundary boundary =
           _signatureKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
@@ -75,7 +75,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
         await Future.delayed(const Duration(seconds: 1));
 
         if (mounted) {
-          _showSuccessSnackBar('R├®sultat sign├® avec succ├¿s');
+          _showSuccessSnackBar('Résultat signé avec succès');
           setState(() {
             _selectedResult = null;
             _resultsToSign.removeWhere(
@@ -118,7 +118,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Liste des r├®sultats ├á signer
+        // Liste des résultats à signer
         Expanded(
           flex: 1,
           child: Container(
@@ -136,7 +136,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'R├®sultats ├á signer',
+                  'Résultats à signer',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -170,7 +170,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Tous les r├®sultats sont sign├®s',
+                                'Tous les résultats sont signés',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: AppColors.textSecondary,
@@ -255,7 +255,7 @@ class _DigitalSignatureScreenState extends State<DigitalSignatureScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'S├®lectionnez un r├®sultat ├á signer',
+                          'Sélectionnez un résultat à signer',
                           style: TextStyle(
                             fontSize: 18,
                             color: AppColors.textSecondary,

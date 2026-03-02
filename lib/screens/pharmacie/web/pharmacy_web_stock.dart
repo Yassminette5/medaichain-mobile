@@ -7,7 +7,7 @@ import '../../../models/pharmacy_stock.dart';
 import '../../../models/pharmacy_dashboard.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../providers/auth_provider.dart';
-import '../../auth/login_screen.dart';
+import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_statistics.dart';
 import 'pharmacy_web_profile.dart';
@@ -342,7 +342,7 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
       
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const LoginWebScreen()),
           (route) => false,
         );
       }

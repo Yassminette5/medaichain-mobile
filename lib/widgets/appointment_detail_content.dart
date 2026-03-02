@@ -108,7 +108,7 @@ class AppointmentDetailContent extends StatelessWidget {
         _buildAnalysisInfo(analysisType),
         const SizedBox(height: 32),
         // Date et Heure
-        _buildSectionHeader('DATE ET HEURE'),
+        _buildSectionHeader('DATE DE LA DEMANDE'),
         const SizedBox(height: 16),
         _buildDateTimeInfo(appointmentDate),
         const SizedBox(height: 32),
@@ -246,7 +246,6 @@ class AppointmentDetailContent extends StatelessWidget {
       },
       children: [
         _buildTableRow('Date', _formatDate(dateString)),
-        _buildTableRow('Heure', _formatTime(dateString)),
       ],
     );
   }

@@ -68,7 +68,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF1E88E5),
+          color: const Color(0xFF7C3AED),
           onRefresh: _loadDoctors,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
@@ -102,7 +102,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.refresh_rounded, color: Color(0xFF1E88E5)),
+                      icon: const Icon(Icons.refresh_rounded, color: Color(0xFF7C3AED)),
                       onPressed: _loadDoctors,
                     ),
                   )
@@ -113,7 +113,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5)))
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)))
                       : FadeTransition(
                           opacity: _fadeAnimation,
                           child: _errorMessage != null ? _buildErrorView() : _buildDoctorsList(),
@@ -166,7 +166,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
               icon: const Icon(Icons.refresh_rounded, size: 20),
               label: const Text("Réessayer"),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1E88E5),
+                backgroundColor: const Color(0xFF7C3AED),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
@@ -186,10 +186,10 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E88E5).withValues(alpha: 0.06),
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.medical_services_outlined, size: 48, color: const Color(0xFF1E88E5).withValues(alpha: 0.4)),
+              child: Icon(Icons.medical_services_outlined, size: 48, color: const Color(0xFF7C3AED).withValues(alpha: 0.4)),
             ),
             const SizedBox(height: 24),
             Text(
@@ -265,10 +265,10 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: const Color(0xFF1E88E5).withValues(alpha: 0.1),
+              color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person_rounded, color: Color(0xFF1E88E5)),
+            child: const Icon(Icons.person_rounded, color: Color(0xFF7C3AED)),
           ),
           const SizedBox(width: 16),
           Expanded(

@@ -112,6 +112,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
         'analysisType': backendType,
         'appointmentDate': appointmentDateTime.toIso8601String(),
         'centreName': widget.centreName,
+        'labId': widget.labId,
         // Champs du backend (optionnels mais présents dans la doc)
         'hasCurrentTreatment': false,
         'hasAllergies': false,

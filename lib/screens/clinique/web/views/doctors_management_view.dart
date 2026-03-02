@@ -562,9 +562,9 @@ class _AddDoctorDialogState extends State<_AddDoctorDialog> with SingleTickerPro
                 // ======= HEADER =======
                 Container(
                   padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF0A1628), Color(0xFF132E57), Color(0xFF1A4B8C)],
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF7C3AED)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),

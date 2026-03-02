@@ -141,12 +141,12 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
       final appointmentDay = DateTime(date.year, date.month, date.day);
 
       if (appointmentDay == today) {
-        return 'Aujourd\'hui, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        return 'Aujourd\'hui';
       } else if (appointmentDay == today.add(const Duration(days: 1))) {
-        return 'Demain, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        return 'Demain';
       } else {
         final months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-        return '${date.day} ${months[date.month - 1]}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        return '${date.day} ${months[date.month - 1]} ${date.year}';
       }
     } catch (e) {
       return dateString;
@@ -633,7 +633,7 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       const Text(
-                                        'Date et heure',
+                                        'Date demandée',
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: AppColors.textSecondary,

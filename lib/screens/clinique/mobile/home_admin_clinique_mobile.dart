@@ -50,7 +50,7 @@ class _HomeAdminCliniqueMobileState extends State<HomeAdminCliniqueMobile> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E88E5).withValues(alpha: 0.15),
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -78,7 +78,7 @@ class _HomeAdminCliniqueMobileState extends State<HomeAdminCliniqueMobile> {
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
     // Premium Blue for Clinical look
-    final Color selectedColor = const Color(0xFF1E88E5);
+    final Color selectedColor = const Color(0xFF7C3AED);
     final Color unselectedColor = const Color(0xFF90A4AE);
 
     return GestureDetector(

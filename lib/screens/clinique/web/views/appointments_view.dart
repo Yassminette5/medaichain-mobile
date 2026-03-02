@@ -45,7 +45,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
     bool isLoading = false;
 
     final consultationTypes = [
-      {'icon': Icons.medical_services_rounded, 'label': 'Consultation', 'color': const Color(0xFF2563EB)},
+      {'icon': Icons.medical_services_rounded, 'label': 'Consultation', 'color': const Color(0xFF7C3AED)},
       {'icon': Icons.healing_rounded, 'label': 'Suivi', 'color': const Color(0xFF059669)},
       {'icon': Icons.vaccines_rounded, 'label': 'Vaccination', 'color': const Color(0xFF7C3AED)},
       {'icon': Icons.biotech_rounded, 'label': 'Analyse', 'color': const Color(0xFFDB2777)},
@@ -93,7 +93,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF0A1628).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 16)),
+                    BoxShadow(color: const Color(0xFF1E1B4B).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 16)),
                     BoxShadow(color: AppTheme.primaryMedical.withOpacity(0.08), blurRadius: 80, offset: const Offset(0, 30)),
                   ],
                 ),
@@ -105,7 +105,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFF0A1628), Color(0xFF1E3A5F), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        gradient: const LinearGradient(colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF7C3AED)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                         borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
                       ),
                       child: Column(
@@ -609,7 +609,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
-                      decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF0A1628), Color(0xFF1E3A5F)]), borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+                      decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF1E1B4B), Color(0xFF312E81)]), borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
                       child: Row(
                         children: [
                           Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.edit_calendar_rounded, color: Colors.white, size: 20)),

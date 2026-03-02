@@ -13,6 +13,7 @@ class InvoicesView extends StatefulWidget {
 
 class _InvoicesViewState extends State<InvoicesView> {
   List<dynamic> _invoices = [];
+  List<Map<String, dynamic>> _patients = [];
   bool _isLoading = true;
   String _filterStatus = 'all';
 
@@ -20,6 +21,31 @@ class _InvoicesViewState extends State<InvoicesView> {
   void initState() {
     super.initState();
     _loadInvoices();
+    _loadPatients();
+  }
+
+  Future<void> _loadPatients() async {
+    try {
+      final patients = await ApiService.getAllPatients();
+      if (mounted) {
+        setState(() {
+          // Flatten data for easier use
+          _patients = patients.map((p) {
+            final Map<String, dynamic> flattened = Map<String, dynamic>.from(p);
+            if (p['userId'] is Map) {
+              final user = p['userId'] as Map;
+              flattened['email'] = user['email'];
+              flattened['phone'] = user['phone'];
+              // We usually want the actual User ID for the patientId field in invoice
+              flattened['realUserId'] = user['_id'] ?? user['id'];
+            }
+            return flattened;
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading patients: $e');
+    }
   }
 
   Future<void> _loadInvoices() async {
@@ -60,33 +86,47 @@ class _InvoicesViewState extends State<InvoicesView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // ======= FINANCE SUMMARY =======
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // ======= FINANCE SUMMARY =======
         Row(
           children: [
             Expanded(child: _buildFinanceCard(
               'Revenus Totaux',
               '${_formatMoney(_totalRevenue)} DA',
               Icons.account_balance_wallet_rounded,
-              AppTheme.success,
-              const LinearGradient(colors: [Color(0xFF059669), Color(0xFF34D399)]),
+              const Color(0xFF6366F1), // Indigo
+              const LinearGradient(colors: [Color(0xFF4338CA), Color(0xFF6366F1)]),
             )),
             const SizedBox(width: 16),
             Expanded(child: _buildFinanceCard(
               'En Attente',
               '${_formatMoney(_totalPending)} DA',
               Icons.pending_actions_rounded,
-              AppTheme.warning,
-              const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)]),
+              const Color(0xFF8B5CF6), // Purple
+              const LinearGradient(colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)]),
             )),
             const SizedBox(width: 16),
             Expanded(child: _buildFinanceCard(
               'Factures',
               '${_invoices.length}',
               Icons.receipt_long_rounded,
-              AppTheme.primaryMedical,
-              AppTheme.primaryGradient,
+              const Color(0xFFC026D3), // Fuchsia/Purple
+              const LinearGradient(colors: [Color(0xFFA21CAF), Color(0xFFD946EF)]),
             )),
           ],
         ),
@@ -100,8 +140,8 @@ class _InvoicesViewState extends State<InvoicesView> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppTheme.success.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.receipt_long_rounded, color: AppTheme.success, size: 18),
+                  decoration: BoxDecoration(color: const Color(0xFF6366F1).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF6366F1), size: 18),
                 ),
                 const SizedBox(width: 12),
                 Text('Factures', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
@@ -121,7 +161,7 @@ class _InvoicesViewState extends State<InvoicesView> {
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: Text('Nouvelle Facture', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.success,
+                    backgroundColor: const Color(0xFF7C3AED),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -306,8 +346,6 @@ class _InvoicesViewState extends State<InvoicesView> {
                 await ApiService.updateInvoice(invoice['_id'], {
                   'paymentStatus': 'paid',
                   'amountPaid': invoice['totalAmount'],
-                  'amountDue': 0,
-                  'paidAt': DateTime.now().toIso8601String(),
                 });
                 _loadInvoices();
               } else if (val == 'delete') {
@@ -350,6 +388,7 @@ class _InvoicesViewState extends State<InvoicesView> {
   void _showCreateInvoiceDialog() {
     final nameCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
+    String? selectedPatientId;
     List<Map<String, dynamic>> items = [
       {'label': 'Consultation', 'quantity': 1, 'unitPrice': 2000},
     ];
@@ -371,8 +410,8 @@ class _InvoicesViewState extends State<InvoicesView> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: AppTheme.success.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.receipt_long_rounded, color: AppTheme.success, size: 20),
+                  decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.receipt_long_rounded, color: AppTheme.primaryMedical, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text('Nouvelle Facture', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 18, color: AppTheme.darkNavy)),
@@ -389,11 +428,34 @@ class _InvoicesViewState extends State<InvoicesView> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Expanded(child: _dialogField(nameCtrl, 'Nom du patient', Icons.person_rounded)),
+                        Expanded(
+                          child: DropdownButtonFormField<Map<String, dynamic>>(
+                            decoration: _fieldDecor('Sélectionner patient'),
+                            items: _patients.map((p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(p['fullName'] ?? p['email'] ?? 'Inconnu', style: GoogleFonts.plusJakartaSans(fontSize: 13)),
+                            )).toList(),
+                            onChanged: (p) {
+                              setDialogState(() {
+                                selectedPatientId = p?['realUserId'] ?? p?['_id'] ?? p?['id'];
+                                nameCtrl.text = p?['fullName'] ?? '';
+                                phoneCtrl.text = p?['phone'] ?? '';
+                              });
+                            },
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(child: _dialogField(phoneCtrl, 'Téléphone', Icons.phone_rounded)),
                       ],
                     ),
+                    if (_patients.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Aucun patient trouvé dans la base de données.',
+                          style: GoogleFonts.plusJakartaSans(color: AppTheme.error, fontSize: 11),
+                        ),
+                      ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -494,7 +556,7 @@ class _InvoicesViewState extends State<InvoicesView> {
                           Text('Total', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
                           Text(
                             '${_formatMoney(subtotal)} DA',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.success),
+                            style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.primaryMedical),
                           ),
                         ],
                       ),
@@ -513,7 +575,7 @@ class _InvoicesViewState extends State<InvoicesView> {
                 onPressed: () async {
                   if (nameCtrl.text.isEmpty) return;
                   try {
-                    // Nettoyage strict des items pour éviter les problèmes de whitelisting du backend
+                    // Nettoyage strict des items
                     final cleanItems = items.map((item) => {
                       'label': item['label'],
                       'quantity': item['quantity'],
@@ -521,7 +583,7 @@ class _InvoicesViewState extends State<InvoicesView> {
                     }).toList();
 
                     await ApiService.createInvoice(
-                      patientId: ApiService.generateObjectId(),
+                      patientId: selectedPatientId ?? ApiService.generateObjectId(),
                       patientName: nameCtrl.text,
                       items: cleanItems,
                       paymentMethod: paymentMethod,
@@ -537,7 +599,7 @@ class _InvoicesViewState extends State<InvoicesView> {
                 icon: const Icon(Icons.save_rounded, size: 18),
                 label: Text('Créer Facture', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.success,
+                  backgroundColor: AppTheme.primaryMedical,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -592,7 +654,7 @@ class _InvoicesViewState extends State<InvoicesView> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF0A1628), Color(0xFF1A4B8C)]),
+                  gradient: const LinearGradient(colors: [Color(0xFF1E1B4B), Color(0xFF4338CA)]),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -687,13 +749,13 @@ class _InvoicesViewState extends State<InvoicesView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppTheme.success.withOpacity(0.1),
+                          color: AppTheme.primaryMedical.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
                             Text('Total: ', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),
-                            Text('${_formatMoney((invoice['totalAmount'] ?? 0).toDouble())} DA', style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.success)),
+                            Text('${_formatMoney((invoice['totalAmount'] ?? 0).toDouble())} DA', style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.primaryMedical)),
                           ],
                         ),
                       ),
@@ -742,8 +804,8 @@ class _InvoicesViewState extends State<InvoicesView> {
 
   Map<String, dynamic> _getPaymentStatusInfo(String status) {
     switch (status) {
-      case 'paid': return {'label': 'Payée', 'color': AppTheme.success};
-      case 'pending': return {'label': 'En attente', 'color': AppTheme.warning};
+      case 'paid': return {'label': 'Payée', 'color': AppTheme.indigo};
+      case 'pending': return {'label': 'En attente', 'color': const Color(0xFF8B5CF6)};
       case 'partial': return {'label': 'Partiel', 'color': AppTheme.primaryMedical};
       case 'cancelled': return {'label': 'Annulée', 'color': AppTheme.error};
       default: return {'label': status, 'color': Colors.grey};
@@ -761,8 +823,8 @@ class _InvoicesViewState extends State<InvoicesView> {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: AppTheme.success.withOpacity(0.06), shape: BoxShape.circle),
-            child: Icon(Icons.receipt_long_rounded, size: 48, color: AppTheme.success.withOpacity(0.4)),
+            decoration: BoxDecoration(color: AppTheme.primaryMedical.withOpacity(0.06), shape: BoxShape.circle),
+            child: Icon(Icons.receipt_long_rounded, size: 48, color: AppTheme.primaryMedical.withOpacity(0.4)),
           ),
           const SizedBox(height: 20),
           Text('Aucune facture', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.darkNavy)),

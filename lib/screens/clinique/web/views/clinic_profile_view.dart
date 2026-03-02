@@ -208,13 +208,13 @@ class _ClinicProfileViewState extends State<ClinicProfileView>
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0A1628), Color(0xFF132E57), Color(0xFF1A4B8C)],
+          colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF7C3AED)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF0A1628).withOpacity(0.3), blurRadius: 30, offset: const Offset(0, 12)),
+          BoxShadow(color: const Color(0xFF1E1B4B).withOpacity(0.3), blurRadius: 30, offset: const Offset(0, 12)),
         ],
       ),
       child: Stack(

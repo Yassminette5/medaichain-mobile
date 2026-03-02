@@ -14,6 +14,7 @@ import 'package:medaichainmobile/screens/video_call/video_call_screen.dart';
 import 'package:medaichainmobile/medecin/screens/profile/doctor_profile_screen.dart';
 import 'package:medaichainmobile/screens/patientnesrine/notifications_screen.dart';
 import 'package:medaichainmobile/services/api_service.dart';
+import 'package:medaichainmobile/medecin/screens/agenda/agenda_screen.dart';
 
 /// Web-optimized Medecin Dashboard
 class MedecinWebDashboard extends StatefulWidget {
@@ -27,8 +28,9 @@ class _MedecinWebDashboardState extends State<MedecinWebDashboard> {
   int _selectedIndex = 0;
   bool _sidebarVisible = true;
 
-  final List<Widget> _pages = [
-    const _DashboardHomeView(),
+  List<Widget> get _pages => [
+    _DashboardHomeView(onNavigateToAgenda: () => setState(() => _selectedIndex = 1)),
+    const AgendaScreen(),
     const PatientAccessRequestScreen(),
     const _WebPatientsView(),
     const AiDecisionSupportScreen(),
@@ -37,6 +39,7 @@ class _MedecinWebDashboardState extends State<MedecinWebDashboard> {
 
   final List<String> _titles = [
     'Tableau de bord',
+    'Agenda',
     'Demandes d\'accès',
     'Dossiers médicaux',
     'Support décisionnel IA',
@@ -271,25 +274,30 @@ class _MedecinWebDashboardState extends State<MedecinWebDashboard> {
                 index: 0,
               ),
               _buildSidebarItem(
+                icon: Icons.calendar_month_rounded,
+                label: 'Agenda',
+                index: 1,
+              ),
+              _buildSidebarItem(
                 icon: Icons.people_rounded,
                 label: 'Demandes d\'accès',
-                index: 1,
+                index: 2,
               ),
               _buildSidebarItem(
                 icon: Icons.folder_rounded,
                 label: 'Dossiers médicaux',
-                index: 2,
+                index: 3,
               ),
               _buildSidebarItem(
                 icon: Icons.auto_awesome,
                 label: 'Support IA',
-                index: 3,
+                index: 4,
               ),
               const Divider(height: 32),
               _buildSidebarItem(
                 icon: Icons.person_rounded,
                 label: 'Profil',
-                index: 4,
+                index: 5,
               ),
               _buildSidebarItem(
                 icon: Icons.logout_rounded,
@@ -599,7 +607,8 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
 
 /// Dashboard Home View for Web
 class _DashboardHomeView extends StatefulWidget {
-  const _DashboardHomeView();
+  final VoidCallback? onNavigateToAgenda;
+  const _DashboardHomeView({this.onNavigateToAgenda});
 
   @override
   State<_DashboardHomeView> createState() => _DashboardHomeViewState();
@@ -1465,7 +1474,7 @@ class _DashboardHomeViewState extends State<_DashboardHomeView> {
         onTap: () {
           if (label.contains('Consult')) _showNewConsultation(context);
           else if (label.contains('Vidéo') || label.contains('Appel')) _showVideoCallPicker(context);
-          else if (label.contains('Planifier')) _showNewConsultation(context);
+          else if (label.contains('Planifier')) widget.onNavigateToAgenda?.call();
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),

@@ -5,7 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../models/pharmacy_dashboard.dart';
-import '../../auth/login_screen.dart';
+import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_statistics.dart';
@@ -85,7 +85,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
       
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const LoginWebScreen()),
           (route) => false,
         );
       }

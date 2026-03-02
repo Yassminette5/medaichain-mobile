@@ -13,7 +13,7 @@ class WebHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Header vide - titre et profil supprim├®s
+    // Header vide - titre et profil supprimés
     return const SizedBox.shrink();
   }
 }

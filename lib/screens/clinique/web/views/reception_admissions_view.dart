@@ -312,7 +312,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
     bool isLoading = false;
 
     final visitTypes = [
-      {'icon': Icons.medical_services_rounded, 'label': 'Consultation générale', 'color': const Color(0xFF2563EB)},
+      {'icon': Icons.medical_services_rounded, 'label': 'Consultation générale', 'color': const Color(0xFF7C3AED)},
       {'icon': Icons.emergency_rounded, 'label': 'Urgence', 'color': const Color(0xFFDC2626)},
       {'icon': Icons.monitor_heart_rounded, 'label': 'Suivi médical', 'color': const Color(0xFF059669)},
       {'icon': Icons.health_and_safety_rounded, 'label': 'Contrôle de routine', 'color': const Color(0xFF0891B2)},
@@ -337,7 +337,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF0A1628).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 16)),
+                    BoxShadow(color: const Color(0xFF1E1B4B).withOpacity(0.15), blurRadius: 40, offset: const Offset(0, 16)),
                     BoxShadow(color: AppTheme.primaryMedical.withOpacity(0.08), blurRadius: 80, offset: const Offset(0, 30)),
                   ],
                 ),
@@ -349,7 +349,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF0A1628), Color(0xFF1E3A5F), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        gradient: LinearGradient(colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF7C3AED)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                         borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
                       ),
                       child: Column(

@@ -30,19 +30,19 @@ class AppColors {
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Status Colors - Soft Pastels
-  static const Color success = Color(0xFF10B981);
-  static const Color successLight = Color(0xFFD1FAE5);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color warningLight = Color(0xFFFEF3C7);
+  static const Color success = Color(0xFF4F46E5); // Indigo
+  static const Color successLight = Color(0xFFE0E7FF);
+  static const Color warning = Color(0xFF8B5CF6); // Violet
+  static const Color warningLight = Color(0xFFF5F3FF);
   static const Color error = Color(0xFFEF4444);
   static const Color errorLight = Color(0xFFFEE2E2);
   static const Color info = Color(0xFF0EA5E9);
   static const Color infoLight = Color(0xFFE0F2FE);
 
   // Category Colors - Vibrant Pastels (like reference image)
-  static const Color categoryGreen = Color(0xFF34D399);
+  static const Color categoryGreen = Color(0xFF818CF8); // Indigo/Blue
   static const Color categoryCoral = Color(0xFFFB7185);
-  static const Color categoryYellow = Color(0xFFFBBF24);
+  static const Color categoryYellow = Color(0xFFA78BFA); // Purple
   static const Color categoryBlue = Color(0xFF60A5FA);
   static const Color categoryPurple = Color(0xFFA78BFA);
 
@@ -99,7 +99,7 @@ class AppColors {
   static const LinearGradient greenGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF34D399), Color(0xFF6EE7B7)],
+    colors: [Color(0xFF818CF8), Color(0xFFA78BFA)],
   );
 
   static const LinearGradient coralGradient = LinearGradient(
@@ -111,7 +111,7 @@ class AppColors {
   static const LinearGradient yellowGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFBBF24), Color(0xFFFDE68A)],
+    colors: [Color(0xFFA78BFA), Color(0xFFC4B5FD)],
   );
 
   static const LinearGradient blueGradient = LinearGradient(

@@ -130,8 +130,8 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                     'RDV en attente',
                     pendingAppointments.toString(),
                     Icons.pending_actions_rounded,
-                    AppTheme.warning,
-                    AppTheme.warningGradient,
+                    AppTheme.indigo,
+                    AppTheme.successGradient, // This is now indigo gradient in AppTheme
                     'Urgent',
                     false,
                   ))),
@@ -140,8 +140,8 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                     'RDV du jour',
                     totalAppointments.toString(),
                     Icons.event_available_rounded,
-                    AppTheme.success,
-                    AppTheme.successGradient,
+                    const Color(0xFF8B5CF6),
+                    AppTheme.warningGradient, // This is now purple gradient in AppTheme
                     '+5%',
                     true,
                   ))),
@@ -262,14 +262,14 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0A1628), Color(0xFF132E57), Color(0xFF1A4B8C)],
+          colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A1628).withOpacity(0.3),
+            color: const Color(0xFF1E1B4B).withOpacity(0.3),
             blurRadius: 30,
             offset: const Offset(0, 12),
           ),
@@ -397,7 +397,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(greetIcon, color: Colors.amber[300], size: 16),
+                              Icon(greetIcon, color: AppTheme.accentMedical, size: 16),
                               const SizedBox(width: 6),
                               Text(
                                 greeting,
@@ -417,9 +417,9 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                           builder: (ctx, child) => Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.15),
+                              color: AppTheme.indigo.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.green.withOpacity(0.2)),
+                              border: Border.all(color: AppTheme.indigo.withOpacity(0.2)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -428,7 +428,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                                   width: 6 * _heartbeatAnim.value,
                                   height: 6 * _heartbeatAnim.value,
                                   decoration: const BoxDecoration(
-                                    color: Colors.green,
+                                    color: AppTheme.indigo,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -706,7 +706,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1E88E5), Color(0xFF0097A7), Color(0xFF00BCD4)],
+          colors: [Color(0xFF7C3AED), Color(0xFF8B5CF6), Color(0xFFA78BFA)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1278,7 +1278,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
               decoration: BoxDecoration(
                 gradient: isToday
                     ? const LinearGradient(
-                        colors: [Color(0xFF1E88E5), Color(0xFF00ACC1)],
+                        colors: [Color(0xFF7C3AED), Color(0xFF9333EA)],
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                       )

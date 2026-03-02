@@ -14,6 +14,7 @@ import 'views/clinic_profile_view.dart';
 import 'views/waiting_room_view.dart';
 import 'views/appointments_calendar_view.dart';
 import 'views/invoices_view.dart';
+import 'views/online_appointments_view.dart';
 
 class DashboardMainScreen extends StatefulWidget {
   const DashboardMainScreen({super.key});
@@ -52,6 +53,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
     const WaitingRoomView(),
     const AppointmentsCalendarView(),
     const InvoicesView(),
+    const OnlineAppointmentsView(),
     ClinicProfileView(onProfileUpdated: _loadClinicProfile),
   ];
 
@@ -159,7 +161,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
                                 Text(
                                   'Clinic Dashboard',
                                   style: GoogleFonts.plusJakartaSans(
-                                    color: AppTheme.textSecondary,
+                                    color: Colors.white.withOpacity(0.5),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -177,51 +179,64 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
                     child: Divider(color: Colors.white.withOpacity(0.06), height: 1),
                   ),
                   const SizedBox(height: 16),
-                  // Section Title
-                  if (!_sidebarCollapsed)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, bottom: 8),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'MENU PRINCIPAL',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: AppTheme.textSecondary.withOpacity(0.5),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
+                  
+                  // Navigation Items - Wrapped in Expanded + SingleChildScrollView to prevent overflow
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        children: [
+                          // Section Title
+                          if (!_sidebarCollapsed)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 24, bottom: 8),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'MENU PRINCIPAL',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white.withOpacity(0.4),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          _buildNavItem(0, 'Tableau de bord', Icons.dashboard_rounded),
+                          _buildNavItem(1, 'Médecins', Icons.people_alt_rounded, badge: '5'),
+                          _buildNavItem(2, 'Réception', Icons.how_to_reg_rounded),
+                          _buildNavItem(3, 'Rendez-vous', Icons.calendar_month_rounded, badge: '3'),
+                          _buildNavItem(7, 'RDV en ligne', Icons.phone_android_rounded, badge: 'New'),
+                          _buildNavItem(4, 'Salle d\'attente', Icons.event_seat_rounded),
+                          _buildNavItem(5, 'Calendrier RDV', Icons.calendar_view_week_rounded),
+                          _buildNavItem(6, 'Facturation', Icons.receipt_long_rounded),
+                          
+                          const SizedBox(height: 16),
+                          
+                          if (!_sidebarCollapsed)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 24, bottom: 8),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'PARAMÈTRES',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white.withOpacity(0.4),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          _buildNavItem(8, 'Profil Clinique', Icons.settings_rounded),
+                        ],
                       ),
                     ),
-                  // Navigation Items
-                  _buildNavItem(0, 'Tableau de bord', Icons.dashboard_rounded),
-                  _buildNavItem(1, 'Médecins', Icons.people_alt_rounded, badge: '5'),
-                  _buildNavItem(2, 'Réception', Icons.how_to_reg_rounded),
-                  _buildNavItem(3, 'Rendez-vous', Icons.calendar_month_rounded, badge: '3'),
-                  _buildNavItem(4, 'Salle d\'attente', Icons.event_seat_rounded),
-                  _buildNavItem(5, 'Calendrier RDV', Icons.calendar_view_week_rounded),
-                  _buildNavItem(6, 'Facturation', Icons.receipt_long_rounded),
-                  const SizedBox(height: 16),
-                  if (!_sidebarCollapsed)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, bottom: 8),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'PARAMÈTRES',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: AppTheme.textSecondary.withOpacity(0.5),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                  _buildNavItem(7, 'Profil Clinique', Icons.settings_rounded),
-                  const Spacer(),
-                  // Collapse toggle
+                  ),
+
+                  // Collapse toggle sticky at bottom
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: _sidebarCollapsed ? 16 : 20),
                     child: InkWell(
@@ -551,10 +566,10 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
             duration: const Duration(milliseconds: 200),
             padding: EdgeInsets.symmetric(horizontal: _sidebarCollapsed ? 0 : 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppTheme.sidebarActive : Colors.transparent,
+              color: isSelected ? Colors.white.withOpacity(0.12) : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: isSelected
-                  ? Border.all(color: AppTheme.primaryMedical.withOpacity(0.2))
+                  ? Border.all(color: Colors.white.withOpacity(0.1))
                   : null,
             ),
             child: Row(
@@ -579,7 +594,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
                   ),
                 Icon(
                   icon,
-                  color: isSelected ? AppTheme.primaryMedical : AppTheme.textSecondary,
+                  color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
                   size: 20,
                 ),
                 if (!_sidebarCollapsed) ...[
@@ -588,7 +603,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
                     child: Text(
                       title,
                       style: GoogleFonts.plusJakartaSans(
-                        color: isSelected ? Colors.white : AppTheme.textSecondary,
+                        color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                         fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       ),
@@ -599,13 +614,13 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryMedical.withOpacity(isSelected ? 0.3 : 0.15),
+                        color: isSelected ? Colors.white.withOpacity(0.2) : AppTheme.accentMedical.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         badge,
                         style: GoogleFonts.plusJakartaSans(
-                          color: isSelected ? Colors.white : AppTheme.primaryMedical,
+                          color: isSelected ? Colors.white : AppTheme.accentMedical,
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
@@ -685,7 +700,8 @@ class _DashboardMainScreenState extends State<DashboardMainScreen>
       case 4: return 'Salle d\'attente';
       case 5: return 'Calendrier des RDV';
       case 6: return 'Facturation';
-      case 7: return 'Profil Clinique';
+      case 7: return 'Rendez-vous en ligne';
+      case 8: return 'Profil Clinique';
       default: return '';
     }
   }

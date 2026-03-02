@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../centre_analyse/centers_list_screen.dart';
 import '../centre_analyse/center_detail_screen.dart';
+import '../clinique/mobile/clinic_detail_screen.dart';
 
-enum _HealthDrawerFilter { pharmacies, analysisCenters }
+enum _HealthDrawerFilter { pharmacies, analysisCenters, clinics }
 
 class HealthDrawerScreen extends StatefulWidget {
   const HealthDrawerScreen({super.key});
@@ -15,17 +18,62 @@ class HealthDrawerScreen extends StatefulWidget {
 }
 
 class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
-  _HealthDrawerFilter _selectedFilter = _HealthDrawerFilter.pharmacies;
+  _HealthDrawerFilter _selectedFilter = _HealthDrawerFilter.clinics;
 
   bool _isLoadingCenters = false;
   String? _centersError;
   List<Map<String, dynamic>> _centers = [];
+
+  bool _isLoadingClinics = false;
+  String? _clinicsError;
+  List<Map<String, dynamic>> _clinics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClinicsIfNeeded(); // Load clinics by default since it's the default filter now
+  }
 
   void _openCentersList(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CentersListScreen()),
     );
+  }
+
+  Future<void> _loadClinicsIfNeeded() async {
+    if (_isLoadingClinics) return;
+    if (_clinics.isNotEmpty && _clinicsError == null) return;
+
+    setState(() {
+      _isLoadingClinics = true;
+      _clinicsError = null;
+    });
+
+    try {
+      final raw = await ApiService.getClinicsList();
+
+      final normalized = raw.map((clinic) {
+        return <String, dynamic>{
+          'id': clinic['_id']?.toString() ?? clinic['id']?.toString() ?? '',
+          'name': (clinic['name'] ?? 'Clinique').toString(),
+          'address': (clinic['address'] ?? '').toString(),
+          'isActive': clinic['isActive'] ?? true,
+        };
+      }).where((c) => (c['id'] as String).isNotEmpty).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _clinics = normalized;
+        _isLoadingClinics = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _clinicsError = e.toString().replaceFirst('Exception: ', '');
+        _isLoadingClinics = false;
+      });
+    }
   }
 
   Future<void> _loadCentersIfNeeded() async {
@@ -115,27 +163,40 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      _buildFilterChip(
-                        context,
-                        label: "Pharmacies",
-                        isSelected: _selectedFilter == _HealthDrawerFilter.pharmacies,
-                        onTap: () {
-                          setState(() => _selectedFilter = _HealthDrawerFilter.pharmacies);
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(
-                        context,
-                        label: "Analysis Centers",
-                        isSelected: _selectedFilter == _HealthDrawerFilter.analysisCenters,
-                        onTap: () {
-                          setState(() => _selectedFilter = _HealthDrawerFilter.analysisCenters);
-                          _loadCentersIfNeeded();
-                        },
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterChip(
+                          context,
+                          label: "Cliniques",
+                          isSelected: _selectedFilter == _HealthDrawerFilter.clinics,
+                          onTap: () {
+                            setState(() => _selectedFilter = _HealthDrawerFilter.clinics);
+                            _loadClinicsIfNeeded();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          context,
+                          label: "Pharmacies",
+                          isSelected: _selectedFilter == _HealthDrawerFilter.pharmacies,
+                          onTap: () {
+                            setState(() => _selectedFilter = _HealthDrawerFilter.pharmacies);
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          context,
+                          label: "Analysis Centers",
+                          isSelected: _selectedFilter == _HealthDrawerFilter.analysisCenters,
+                          onTap: () {
+                            setState(() => _selectedFilter = _HealthDrawerFilter.analysisCenters);
+                            _loadCentersIfNeeded();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -240,7 +301,65 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
+                    if (_selectedFilter == _HealthDrawerFilter.clinics) ...[
+                      if (_isLoadingClinics)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_clinicsError != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Erreur: $_clinicsError',
+                                style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _loadClinicsIfNeeded,
+                                  child: const Text('Réessayer'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_clinics.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            "Aucune clinique trouvée",
+                            style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                          ),
+                        )
+                      else ...[
+                        for (final c in _clinics.take(5)) ...[
+                          _buildPlaceCard(
+                            icon: Icons.local_hospital,
+                            name: (c['name'] as String),
+                            distance: (c['address'] as String).isEmpty ? 'Localisation inconnue' : (c['address'] as String),
+                            status: (c['isActive'] == true) ? 'Disponible' : 'Indisponible',
+                            statusColor: (c['isActive'] == true) ? Colors.green : Colors.orange,
+                            gradient: AppColors.primaryGradient,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ClinicDetailScreen(
+                                    clinicId: c['id'].toString(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
+                    ] else if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
                       _buildPlaceCard(
                         icon: Icons.local_pharmacy,
                         name: "MediCare Pharmacy",
@@ -358,6 +477,7 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
       ),
     );
   }
+
 
   Widget _buildPlaceCard({
     required IconData icon,

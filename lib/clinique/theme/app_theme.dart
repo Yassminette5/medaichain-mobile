@@ -3,52 +3,51 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Thème dédié au module Clinique (séparé du reste de l'app)
 class AppTheme {
-  // Palette MedIaChain - Santé + Blockchain
-  static const Color primaryMedical = Color(0xFF1E88E5); // Blue 600 - Confiance médicale
-  static const Color accentMedical = Color(0xFF00ACC1); // Cyan 600 - Tech/Blockchain
-  static const Color darkNavy = Color(0xFF0D47A1); // Blue 900 - Texte principal profond
-  static const Color background = Color(0xFFF5F8FA); // Bleu très pâle - Fond propre
+  // Palette MedIaChain - Santé + Blockchain (Version Violette pour Clinique)
+  static const Color primaryMedical = Color(0xFF7C3AED); // Purple 600
+  static const Color accentMedical = Color(0xFFEC4899); // Pink 600
+  static const Color darkNavy = Color(0xFF1E1B4B); // Deep Indigo/Navy
+  static const Color background = Color(0xFFF8FAFC); // Slate 50
   static const Color white = Color(0xFFFFFFFF);
-  static const Color error = Color(0xFFE53935); // Red 600
-  static const Color success = Color(0xFF43A047); // Green 600
-  static const Color warning = Color(0xFFFB8C00); // Orange 600
+  static const Color error = Color(0xFFEF4444); // Red 600
+  static const Color success = Color(0xFF4F46E5); // Indigo 600
+  static const Color warning = Color(0xFF8B5CF6); // Violet 500
 
   // Couleurs secondaires MedIaChain
-  static const Color lightBlue = Color(0xFFE3F2FD); // Blue 50
-  static const Color mediumBlue = Color(0xFF64B5F6); // Blue 300
-  static const Color chainAccent = Color(0xFF26C6DA); // Cyan 400 - Accent blockchain
-
-  // Backward compatibility (les anciens noms pointent vers les nouvelles couleurs)
-  static const Color primaryBlue = primaryMedical;
-  static const Color primaryTeal = accentMedical;
+  static const Color lightBlue = Color(0xFFF5F3FF); // Violet 50
+  static const Color mediumBlue = Color(0xFFA78BFA); // Violet 300
+  static const Color chainAccent = Color(0xFFEC4899); // Pink 500
+  
+  static const Color textSecondary = Color(0xFF64748B); // Slate 500
+  static const Color sidebarHover = Color(0xFFF1F5F9);
+  static const Color sidebarActive = Color(0xFFF1F5F9);
+  
+  static const LinearGradient sidebarGradient = LinearGradient(
+    colors: [Color(0xFF1E1B4B), Color(0xFF312E81)], // Dark Indigo to Deep Purple
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+  
+  static const Color dividerLight = Color(0xFFE2E8F0);
 
   // Gradients MedIaChain
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryMedical, accentMedical],
+    colors: [primaryMedical, Color(0xFFA78BFA)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient heroGradient = LinearGradient(
-    colors: [Color(0xFF1565C0), Color(0xFF0097A7)], // Blue 800 to Cyan 700
+    colors: [Color(0xFF7C3AED), Color(0xFFEC4899)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Color textSecondary = Color(0xFF64748B); // Slate 500
-  static const Color sidebarHover = Color(0xFFE2E8F0);
-  static const Color sidebarActive = Color(0xFFE2E8F0);
-  static const LinearGradient sidebarGradient = LinearGradient(
-    colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-  static const Color dividerLight = Color(0xFFE2E8F0);
   static const LinearGradient warningGradient = LinearGradient(
-    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+    colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
   );
   static const LinearGradient successGradient = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF059669)],
+    colors: [Color(0xFF4F46E5), Color(0xFF4338CA)],
   );
   static const Color indigo = Color(0xFF6366F1);
   static const LinearGradient purpleGradient = LinearGradient(
@@ -58,7 +57,7 @@ class AppTheme {
     color: white,
     borderRadius: BorderRadius.circular(16),
     boxShadow: [
-      BoxShadow(color: darkNavy.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+      BoxShadow(color: primaryMedical.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
     ],
   );
 
