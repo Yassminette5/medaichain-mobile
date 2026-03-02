@@ -188,8 +188,9 @@ class _InvoicesViewState extends State<InvoicesView> {
                     ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildFinanceCard(String label, String value, IconData icon, Color color, LinearGradient gradient) {
     return Container(
