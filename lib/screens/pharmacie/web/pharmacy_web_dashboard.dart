@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../models/pharmacy_dashboard.dart';
+import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_profile.dart';
 import 'pharmacy_web_prescription_details.dart';
@@ -317,6 +318,7 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
             icon: Icons.refresh_rounded,
             onTap: _loadDashboard,
           ),
+        const PharmacyWebNotificationsBell(),
       ],
     );
   }

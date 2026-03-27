@@ -25,6 +25,11 @@ class ApiService {
       if (!url.contains(':3000') && !url.contains(':')) url = '$url:3000';
       return url;
     }
+
+    // Optional compile-time override for CI / flavors
+    const envOverride = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (envOverride.isNotEmpty) return envOverride;
+
     if (kIsWeb) return 'http://127.0.0.1:3000';
     if (defaultTargetPlatform == TargetPlatform.android)
       return 'http://10.0.2.2:3000';
@@ -757,6 +762,28 @@ class ApiService {
       return getUnreadNotificationsCount();
     } else {
       throw Exception('Erreur de chargement du compteur');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getUnreadNotifications() async {
+    final token = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/notifications/unread'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getUnreadNotifications();
+    } else {
+      throw Exception('Erreur de chargement des notifications non lues');
     }
   }
 
@@ -2775,6 +2802,57 @@ class ApiService {
     } else {
       throw Exception('Impossible de charger les détails de la clinique.');
     }
+  }
+
+  // ========== LISTE DES PHARMACIES ==========
+  static Future<List<Map<String, dynamic>>> getPharmacies({
+    String? city,
+    String? wilaya,
+    bool? is24Hours,
+    bool? hasDelivery,
+  }) async {
+    final queryParams = <String, String>{};
+    if (city != null && city.isNotEmpty) queryParams['city'] = city;
+    if (wilaya != null && wilaya.isNotEmpty) queryParams['wilaya'] = wilaya;
+    if (is24Hours != null) queryParams['is24Hours'] = is24Hours.toString();
+    if (hasDelivery != null) queryParams['hasDelivery'] = hasDelivery.toString();
+
+    final uri = Uri.parse('$baseUrl/pharmacy/list/all').replace(
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final pharmacies =
+          data is List ? data : (data is Map && data['data'] is List ? data['data'] : []);
+      return List<Map<String, dynamic>>.from(
+        (pharmacies as List).map((p) => Map<String, dynamic>.from(p as Map)),
+      );
+    }
+
+    throw Exception('Erreur de chargement des pharmacies: ${response.statusCode}');
+  }
+
+  static Future<Map<String, dynamic>> getPharmacyDetails(String pharmacyId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/$pharmacyId'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    }
+
+    throw Exception('Impossible de charger les détails de la pharmacie.');
   }
 
   static Future<void> bookClinicAppointmentMobile(

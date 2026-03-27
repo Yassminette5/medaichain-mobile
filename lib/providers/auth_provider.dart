@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 import '../services/api_service.dart';
 import '../services/subscription_service.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -71,6 +72,13 @@ class AuthProvider with ChangeNotifier {
       // Subscription status sync
       if (_user != null) {
         await SubscriptionService().initialize(userId: _user!.id);
+
+        // Initialize notifications if user is logged in
+        try {
+          await NotificationService().init();
+        } catch (e) {
+          debugPrint('❌ Failed to initialize notifications: $e');
+        }
       }
     } catch (e) {
       _user = null;
@@ -162,6 +170,13 @@ class AuthProvider with ChangeNotifier {
       // Sync RevenueCat
       if (_user != null) {
         await SubscriptionService().initialize(userId: _user!.id);
+
+        // Initialize notifications after successful login
+        try {
+          await NotificationService().init();
+        } catch (e) {
+          debugPrint('❌ Failed to initialize notifications after login: $e');
+        }
       }
 
       _isLoading = false;

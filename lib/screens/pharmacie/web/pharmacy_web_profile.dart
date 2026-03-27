@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../models/pharmacy_dashboard.dart';
+import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
@@ -537,6 +538,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
           ),
         ),
         const Spacer(),
+        const PharmacyWebNotificationsBell(),
       ],
     );
   }

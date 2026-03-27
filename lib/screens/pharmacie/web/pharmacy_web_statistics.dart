@@ -5,6 +5,7 @@ import '../../../models/pharmacy_statistics.dart';
 import '../../../models/pharmacy_dashboard.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
@@ -352,6 +353,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
           ),
         ),
         const Spacer(),
+        const PharmacyWebNotificationsBell(),
         IconButton(
           icon: const Icon(Icons.refresh, color: AppColors.primary),
           onPressed: _loadStatistics,

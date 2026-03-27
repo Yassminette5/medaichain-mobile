@@ -4,6 +4,11 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'firebase_options.dart';
+import 'services/notification_service.dart';
 
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
@@ -33,14 +38,35 @@ import 'screens/web/medecin_web_dashboard.dart';
 import 'screens/web/center_dashboard_web.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register background handler before any Firebase init
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Test sur téléphone réel : décommenter et mettre l'IP de ton PC (même WiFi, ex: 192.168.1.10)
   // ApiService.backendUrlOverride = 'http://192.168.1.10:3000';
 
   // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)
   await initializeDateFormatting('fr_FR', null);
+
+  // Initialize Firebase for push notifications
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('⚠️ Firebase init with options failed: $e');
+    try {
+      await Firebase.initializeApp();
+      debugPrint('✅ Firebase initialized with default options');
+    } catch (e2) {
+      debugPrint('❌ Firebase initialization error (fallback failed): $e2');
+    }
+  }
 
   try {
     // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
@@ -122,6 +148,8 @@ Future<void> main() async {
     };
   }
 
+  NotificationService().attachNavigatorKey(rootNavigatorKey);
+
   runApp(const MEDAIChainApp());
 }
 
@@ -138,6 +166,7 @@ class MEDAIChainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: rootNavigatorKey,
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,

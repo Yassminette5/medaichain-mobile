@@ -9,6 +9,7 @@ import '../../models/pharmacy_stock.dart';
 import '../../services/pharmacy_service.dart';
 import '../../providers/auth_provider.dart';
 import 'web/pharmacy_web_stock.dart';
+import '../../widgets/pharmacie/mobile/pharmacy_mobile_notifications_bell.dart';
 
 /// Pharmacy Stock Screen - Automatically uses web version on web platform
 class PharmacyStockScreen extends StatelessWidget {
@@ -20,7 +21,7 @@ class PharmacyStockScreen extends StatelessWidget {
     if (kIsWeb) {
       return const PharmacyWebStock();
     }
-    
+
     // Use mobile version for mobile platforms
     return const _PharmacyStockMobile();
   }
@@ -66,9 +67,9 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       final stock = await PharmacyService.getStock(pharmacyId);
-      
+
       setState(() {
         _stock = stock;
         _isLoading = false;
@@ -83,9 +84,9 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
 
   List<MedicationStock> get _filteredMedications {
     if (_stock == null) return [];
-    
+
     var medications = _stock!.medications;
-    
+
     // Apply search only
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
@@ -95,7 +96,7 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
                m.displayName.toLowerCase().contains(query);
       }).toList();
     }
-    
+
     return medications;
   }
 
@@ -119,6 +120,7 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
           ),
         ),
         actions: [
+          const PharmacyMobileNotificationsBell(),
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
             onPressed: _loadStock,
@@ -172,7 +174,7 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
 
   Widget _buildStockSummary() {
     if (_stock == null) return const SizedBox.shrink();
-    
+
     final criticalCount = _stock!.medications.where((m) => m.stockLevel == StockLevel.critical).length;
     final alertCount = _stock!.medications.where((m) => m.stockLevel == StockLevel.alert).length;
     final normalCount = _stock!.medications.where((m) => m.stockLevel == StockLevel.normal).length;
@@ -311,7 +313,7 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
 
   Widget _buildMedicationList() {
     final medications = _filteredMedications;
-    
+
     if (medications.isEmpty) {
       return Center(
         child: Column(
@@ -422,25 +424,33 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
           ),
           const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildActionButton(
-                icon: Icons.qr_code,
-                label: 'QR Code',
-                color: const Color(0xFF4FACFE),
-                onTap: () => _showQRCode(medication),
+              Flexible(
+                child: _buildActionButton(
+                  icon: Icons.qr_code,
+                  label: 'QR Code',
+                  color: const Color(0xFF4FACFE),
+                  onTap: () => _showQRCode(medication),
+                ),
               ),
-              _buildActionButton(
-                icon: Icons.edit,
-                label: 'Modifier',
-                color: const Color(0xFF10B981),
-                onTap: () => _showEditMedicationDialog(medication),
+              const SizedBox(width: 8),
+              Flexible(
+                child: _buildActionButton(
+                  icon: Icons.edit,
+                  label: 'Modifier',
+                  color: const Color(0xFF10B981),
+                  onTap: () => _showEditMedicationDialog(medication),
+                ),
               ),
-              _buildActionButton(
-                icon: Icons.delete_outline,
-                label: 'Supprimer',
-                color: Colors.red,
-                onTap: () => _showDeleteConfirmation(medication),
+              const SizedBox(width: 8),
+              Flexible(
+                child: _buildActionButton(
+                  icon: Icons.delete_outline,
+                  label: 'Supprimer',
+                  color: Colors.red,
+                  onTap: () => _showDeleteConfirmation(medication),
+                ),
               ),
             ],
           ),
@@ -455,26 +465,27 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
               ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );
@@ -543,32 +554,40 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final data = <String, dynamic>{
-                  'name': nameController.text.trim(),
-                  'dosage': dosageController.text.trim(),
-                  'currentStock': 0,
-                  'maxStock': 100,
-                  'unit': unitController.text.trim(),
-                };
-                
-                if (priceController.text.isNotEmpty) {
-                  data['price'] = double.parse(priceController.text);
-                }
-                
-                await _addMedication(data);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              }
-            },
-            child: const Text('Ajouter'),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Annuler'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      final data = <String, dynamic>{
+                        'name': nameController.text.trim(),
+                        'dosage': dosageController.text.trim(),
+                        'currentStock': 0,
+                        'maxStock': 100,
+                        'unit': unitController.text.trim(),
+                      };
+
+                      if (priceController.text.isNotEmpty) {
+                        data['price'] = double.parse(priceController.text);
+                      }
+
+                      await _addMedication(data);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                  child: const Text('Ajouter'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -579,10 +598,10 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       await PharmacyService.createStock(pharmacyId, data);
       await _loadStock();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Médicament ajouté au catalogue')),
@@ -631,10 +650,10 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       await PharmacyService.deleteStock(pharmacyId, stockId);
       await _loadStock();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Médicament supprimé du catalogue')),
@@ -651,7 +670,7 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
 
   void _showQRCode(MedicationStock medication) {
     final qrData = '${medication.id}|${medication.name}|${medication.dosage}|${medication.price ?? 0}';
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -805,11 +824,11 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
                   'dosage': dosageController.text.trim(),
                   'unit': unitController.text.trim(),
                 };
-                
+
                 if (priceController.text.isNotEmpty) {
                   data['price'] = double.parse(priceController.text);
                 }
-                
+
                 await _updateMedication(medication.id, data);
                 if (context.mounted) {
                   Navigator.pop(context);
@@ -830,10 +849,10 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       await PharmacyService.updateStock(pharmacyId, stockId, data);
       await _loadStock();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Médicament mis à jour')),
@@ -848,5 +867,3 @@ class _PharmacyStockMobileState extends State<_PharmacyStockMobile> {
     }
   }
 }
-
-

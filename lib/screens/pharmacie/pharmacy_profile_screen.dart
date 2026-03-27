@@ -8,6 +8,7 @@ import '../../services/pharmacy_service.dart';
 import '../../models/pharmacy_dashboard.dart';
 import '../auth/login_screen.dart';
 import 'web/pharmacy_web_profile.dart';
+import '../../widgets/pharmacie/mobile/pharmacy_mobile_notifications_bell.dart';
 
 /// Pharmacy Profile Screen - Automatically uses web version on web platform
 class PharmacyProfileScreen extends StatelessWidget {
@@ -19,7 +20,7 @@ class PharmacyProfileScreen extends StatelessWidget {
     if (kIsWeb) {
       return const PharmacyWebProfile();
     }
-    
+
     // Use mobile version for mobile platforms
     return const _PharmacyProfileMobile();
   }
@@ -48,12 +49,20 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
       final profile = await PharmacyService.getPharmacyProfile();
       final raw = await PharmacyService.getPharmacyProfileRaw();
+
+      // Merge with profile taking precedence over raw
       final merged = <String, dynamic>{...raw, ...profile};
-      
+
+      // Ensure delivery service field is properly set
+      merged['hasDelivery'] = merged['hasDelivery'] ?? false;
+
+      // Ensure notifications field is properly set
+      merged['hasNotifications'] = merged['hasNotifications'] ?? true;
+
       setState(() {
         _dashboard = dashboard;
         _pharmacyProfile = merged;
@@ -99,7 +108,7 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
     if (confirmed == true) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -114,17 +123,19 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
 
+      // Optimistically update the UI
+      setState(() {
+        if (_pharmacyProfile != null) {
+          _pharmacyProfile!['hasDelivery'] = value;
+        }
+      });
+
       await PharmacyService.updatePharmacySettings(
         pharmacyId,
         {
-          // Backend variants (keep both for compatibility across environments)
           'hasDelivery': value,
-          'offersDelivery': value,
         },
       );
-
-      // Reload profile to get updated data
-      await _loadProfile();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -140,6 +151,9 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
       }
     } catch (e) {
       if (mounted) {
+        // Reload profile on error to revert UI
+        await _loadProfile();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: ${e.toString()}'),
@@ -155,13 +169,17 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
 
+      // Optimistically update the UI
+      setState(() {
+        if (_pharmacyProfile != null) {
+          _pharmacyProfile!['hasNotifications'] = value;
+        }
+      });
+
       await PharmacyService.updatePharmacySettings(
         pharmacyId,
-        {'notificationsEnabled': value},
+        {'hasNotifications': value},
       );
-
-      // Reload profile to get updated data
-      await _loadProfile();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -177,6 +195,9 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
       }
     } catch (e) {
       if (mounted) {
+        // Reload profile on error to revert UI
+        await _loadProfile();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: ${e.toString()}'),
@@ -355,6 +376,9 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
       floating: false,
       pinned: true,
       backgroundColor: AppColors.primary,
+      actions: const [
+        PharmacyMobileNotificationsBell(),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         title: const Text(
           'Mon Profil',
@@ -565,9 +589,9 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
   }
 
   Widget _buildSettingsSection() {
-    final hasDelivery = _pharmacyProfile?['hasDelivery'] ?? _pharmacyProfile?['offersDelivery'] ?? false;
-    final notificationsEnabled = _pharmacyProfile?['notificationsEnabled'] ?? false;
-    
+    final hasDelivery = _pharmacyProfile?['hasDelivery'] == true;
+    final hasNotifications = _pharmacyProfile?['hasNotifications'] != false;
+
     return _buildCard(
       title: 'Paramètres',
       icon: Icons.settings_outlined,
@@ -587,7 +611,7 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
             icon: Icons.notifications_outlined,
             label: 'Notifications',
             trailing: Switch(
-              value: notificationsEnabled,
+              value: hasNotifications,
               onChanged: (value) => _toggleNotifications(value),
               activeColor: const Color(0xFF10B981),
             ),
@@ -793,5 +817,3 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
     );
   }
 }
-
-
