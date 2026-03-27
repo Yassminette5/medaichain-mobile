@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/pharmacy_statistics.dart';
 import '../../../models/pharmacy_dashboard.dart';
+import '../../../services/api_service.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../providers/auth_provider.dart';
 import '../../auth/login_screen.dart';
+import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_profile.dart';
@@ -24,11 +26,121 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
   String? _error;
   bool _sidebarVisible = true;
 
+  bool _showingIncomingAlert = false;
+  final Set<String> _handledIncomingNotificationIds = <String>{};
+  static const Duration _pollInterval = Duration(seconds: 4);
+
   @override
   void initState() {
     super.initState();
     _loadStatistics();
     _loadPharmacyInfo();
+    _startIncomingRequestsPolling();
+  }
+
+  void _startIncomingRequestsPolling() {
+    Future<void>.delayed(const Duration(milliseconds: 500), () async {
+      while (mounted) {
+        await _pollUnreadNotificationsOnce();
+        await Future<void>.delayed(_pollInterval);
+      }
+    });
+  }
+
+  Future<void> _pollUnreadNotificationsOnce() async {
+    if (_showingIncomingAlert) return;
+    try {
+      final unread = await ApiService.getUnreadNotifications();
+      if (!mounted) return;
+
+      Map<String, dynamic>? candidate;
+      for (final n in unread) {
+        final data = (n['data'] is Map) ? (n['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
+        if (data['type']?.toString() != 'pharmacy_request_created') continue;
+        final id = (n['id'] ?? n['_id'] ?? '').toString();
+        if (id.isEmpty) continue;
+        if (_handledIncomingNotificationIds.contains(id)) continue;
+        candidate = n;
+        break;
+      }
+
+      if (candidate == null) return;
+
+      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '').toString();
+      final data = (candidate['data'] is Map) ? (candidate['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
+      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '').toString();
+      if (requestId.isEmpty) return;
+
+      _handledIncomingNotificationIds.add(notificationId);
+      _showingIncomingAlert = true;
+
+      MedicationRequest? request;
+      try {
+        request = await PharmacyService.getMyRequestById(requestId);
+      } catch (_) {
+        request = null;
+      }
+
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) {
+          final title = (candidate?['title'] ?? 'Nouvelle demande').toString();
+          final message = (candidate?['message'] ?? '').toString();
+
+          return AlertDialog(
+            title: Text(title),
+            content: SizedBox(
+              width: 560,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (message.isNotEmpty) Text(message),
+                    const SizedBox(height: 12),
+                    if (request != null) ...[
+                      Text('Patient: ${request.patient.name}'),
+                      if (request.patient.phoneNumber != null && request.patient.phoneNumber!.isNotEmpty)
+                        Text('Téléphone: ${request.patient.phoneNumber}'),
+                      const SizedBox(height: 12),
+                      const Text('Médicaments:', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      ...request.medications.map((m) {
+                        final dosage = m.dosage.isNotEmpty ? ' — ${m.dosage}' : '';
+                        final qty = '${m.quantity} ${m.unit}'.trim();
+                        return Text('- ${m.name}$dosage ($qty)');
+                      }),
+                      const SizedBox(height: 12),
+                      if (request.requestsDelivery) const Text('Livraison: demandée'),
+                      if (request.isUrgent) const Text('Urgence: oui'),
+                    ] else ...[
+                      const Text('Détails indisponibles (échec du chargement).'),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (notificationId.isNotEmpty) {
+        try {
+          await ApiService.markNotificationAsRead(notificationId);
+        } catch (_) {}
+      }
+    } catch (_) {
+      // Ignore polling errors
+    } finally {
+      _showingIncomingAlert = false;
+    }
   }
 
   Future<void> _loadStatistics() async {
@@ -352,6 +464,8 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
           ),
         ),
         const Spacer(),
+        const PharmacyWebNotificationsBell(),
+        const SizedBox(width: 12),
         IconButton(
           icon: const Icon(Icons.refresh, color: AppColors.primary),
           onPressed: _loadStatistics,

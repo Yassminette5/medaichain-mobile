@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import '../centre_analyse/centers_list_screen.dart';
 import '../centre_analyse/center_detail_screen.dart';
+import '../pharmacy/pharmacies_list_screen.dart';
 
 enum _HealthDrawerFilter { pharmacies, analysisCenters }
 
@@ -18,14 +21,79 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
   _HealthDrawerFilter _selectedFilter = _HealthDrawerFilter.pharmacies;
 
   bool _isLoadingCenters = false;
+  bool _isLoadingPharmacies = false;
   String? _centersError;
+  String? _pharmaciesError;
   List<Map<String, dynamic>> _centers = [];
+  List<Map<String, dynamic>> _pharmacies = [];
+  late MapController _mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+    _loadPharmaciesIfNeeded();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
 
   void _openCentersList(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CentersListScreen()),
     );
+  }
+
+  void _openPharmaciesList(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PharmaciesListScreen()),
+    );
+  }
+
+  Future<void> _loadPharmaciesIfNeeded() async {
+    if (_isLoadingPharmacies) return;
+    if (_pharmacies.isNotEmpty && _pharmaciesError == null) return;
+
+    setState(() {
+      _isLoadingPharmacies = true;
+      _pharmaciesError = null;
+    });
+
+    try {
+      final raw = await ApiService.getPharmacies();
+
+      final normalized = raw.map((pharmacy) {
+        return <String, dynamic>{
+          'id': (pharmacy['pharmacyId'] ?? pharmacy['_id'] ?? pharmacy['id'] ?? '').toString(),
+          'name': (pharmacy['name'] ?? pharmacy['pharmacyName'] ?? 'Pharmacy').toString(),
+          'address': (pharmacy['address'] ?? '').toString(),
+          'offersDelivery': pharmacy['offersDelivery'] == true || pharmacy['hasDelivery'] == true,
+          'gpsLatitude': (pharmacy['latitude'] ?? pharmacy['gpsLatitude']) is num
+              ? (pharmacy['latitude'] ?? pharmacy['gpsLatitude'] as num).toDouble()
+              : null,
+          'gpsLongitude': (pharmacy['longitude'] ?? pharmacy['gpsLongitude']) is num
+              ? (pharmacy['longitude'] ?? pharmacy['gpsLongitude'] as num).toDouble()
+              : null,
+        };
+      }).where((p) => (p['id'] as String).isNotEmpty).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _pharmacies = normalized;
+        _isLoadingPharmacies = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _pharmaciesError = e.toString().replaceFirst('Exception: ', '');
+        _isLoadingPharmacies = false;
+      });
+    }
   }
 
   Future<void> _loadCentersIfNeeded() async {
@@ -61,6 +129,81 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
         _isLoadingCenters = false;
       });
     }
+  }
+
+  List<Marker> _buildMarkers() {
+    List<Marker> markers = [];
+
+    if (_selectedFilter == _HealthDrawerFilter.pharmacies) {
+      for (final pharmacy in _pharmacies) {
+        final lat = pharmacy['gpsLatitude'] as double?;
+        final lng = pharmacy['gpsLongitude'] as double?;
+
+        if (lat != null && lng != null) {
+          markers.add(
+            Marker(
+              point: LatLng(lat, lng),
+              width: 60,
+              height: 60,
+              child: GestureDetector(
+                onTap: () {
+                  _openPharmaciesList(context);
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4ECDC4).withValues(alpha: 0.5),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.local_pharmacy, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        (pharmacy['name'] as String).split(' ').first,
+                        style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    } else {
+      for (final center in _centers) {
+        // Centers don't have GPS coordinates, so we'll need to show them differently
+        // For now, we'll skip them or display a generic marker
+        // This could be improved with geocoding
+      }
+    }
+
+    return markers;
   }
 
   @override
@@ -123,6 +266,7 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                         isSelected: _selectedFilter == _HealthDrawerFilter.pharmacies,
                         onTap: () {
                           setState(() => _selectedFilter = _HealthDrawerFilter.pharmacies);
+                          _loadPharmaciesIfNeeded();
                         },
                       ),
                       const SizedBox(width: 8),
@@ -141,57 +285,54 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
               ),
             ),
 
-            // Map Placeholder with Gradient Overlay
+            // OpenStreetMap with Pharmacy/Center Markers
             Expanded(
               flex: 2,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.grey.shade200, Colors.grey.shade300],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: const MapOptions(
+                        initialCenter: LatLng(36.7372, 3.0868),
+                        initialZoom: 13.0,
+                        minZoom: 5.0,
+                        maxZoom: 18.0,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.app',
+                        ),
+                        MarkerLayer(
+                          markers: _buildMarkers(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(Icons.map, size: 60, color: Colors.grey.shade400),
-                    Positioned(
-                      top: 100,
-                      left: 100,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(colors: [Color(0xFFFF6B9D), Color(0xFFFF8E9E)]),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF6B9D).withValues(alpha: 0.5),
-                              blurRadius: 12,
-                            ),
-                          ],
+                  Positioned(
+                    right: 8,
+                    bottom: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '© OpenStreetMap contributors',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
                         ),
-                        child: const Icon(Icons.location_on, color: Colors.white, size: 36),
                       ),
                     ),
-                    Positioned(
-                      top: 150,
-                      right: 80,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppColors.primaryGradient,
-                          boxShadow: AppColors.colored(AppColors.primary),
-                        ),
-                        child: const Icon(Icons.location_on, color: Colors.white, size: 36),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+
 
             // Nearby List with Premium Design
             Expanded(
@@ -224,9 +365,7 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                               _openCentersList(context);
                               return;
                             }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Liste des pharmacies: bientôt disponible')),
-                            );
+                            _openPharmaciesList(context);
                           },
                           child: Text(
                             "See All",
@@ -241,23 +380,60 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                     ),
                     const SizedBox(height: 16),
                     if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
-                      _buildPlaceCard(
-                        icon: Icons.local_pharmacy,
-                        name: "MediCare Pharmacy",
-                        distance: "1.2 km",
-                        status: "Open 24/7",
-                        statusColor: Colors.green,
-                        gradient: const LinearGradient(colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)]),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPlaceCard(
-                        icon: Icons.local_pharmacy,
-                        name: "HealthPlus Drugstore",
-                        distance: "0.8 km",
-                        status: "Open",
-                        statusColor: Colors.green,
-                        gradient: AppColors.primaryGradient,
-                      ),
+                      if (_isLoadingPharmacies)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_pharmaciesError != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Erreur: $_pharmaciesError',
+                                style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _loadPharmaciesIfNeeded,
+                                  child: const Text('Réessayer'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_pharmacies.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            "Aucune pharmacie trouvée",
+                            style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                          ),
+                        )
+                      else ...[
+                        for (final p in _pharmacies.take(5)) ...[
+                          _buildPlaceCard(
+                            icon: Icons.local_pharmacy,
+                            name: (p['name'] as String),
+                            distance: (p['address'] as String).isEmpty
+                                ? 'Localisation inconnue'
+                                : (p['address'] as String),
+                            status: (p['offersDelivery'] == true)
+                                ? 'Livraison disponible'
+                                : 'Pharmacie',
+                            statusColor: Colors.green,
+                            gradient: const LinearGradient(colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)]),
+                            onTap: () {
+                              _openPharmaciesList(context);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
                     ] else ...[
                       if (_isLoadingCenters)
                         const Padding(

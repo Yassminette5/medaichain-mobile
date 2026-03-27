@@ -13,8 +13,13 @@ class ApiService {
   /// - Android emulator: 10.0.2.2 (loopback vers la machine hôte)
   /// - Autres (iOS/desktop): localhost (à adapter si device physique)
   static String get baseUrl {
+    const override = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (override.isNotEmpty) return override;
     if (kIsWeb) return 'http://127.0.0.1:3000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // Android emulator -> host machine loopback
+      return 'http://192.168.1.10:3000';
+    }
     return 'http://127.0.0.1:3000';
   }
 
@@ -268,7 +273,7 @@ class ApiService {
   // ========== PROFIL UTILISATEUR ==========
   static Future<User> getProfile() async {
     final token = await getAccessToken();
-    
+
     final response = await http.get(
       Uri.parse('$baseUrl/auth/me'),
       headers: {
@@ -293,7 +298,7 @@ class ApiService {
   // ========== PROFIL MÉDECIN (détaillé) ==========
   static Future<DoctorProfile?> getDoctorProfile() async {
     final token = await getAccessToken();
-    
+
     final response = await http.get(
       Uri.parse('$baseUrl/profiles/me'),
       headers: {
@@ -348,7 +353,7 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
       final updatedUser = User.fromJson(data);
-      
+
       // 2. Save to SharedPreferences
       final remember = await getRememberMe();
       await _saveUser(updatedUser, persist: remember);
@@ -417,7 +422,7 @@ class ApiService {
   // ========== COMPLÉTER LE PROFIL ==========
   static Future<void> completeProfile() async {
     final token = await getAccessToken();
-    
+
     final response = await http.post(
       Uri.parse('$baseUrl/auth/complete-profile'),
       headers: {
@@ -676,11 +681,21 @@ class ApiService {
 
   // ========== NOTIFICATIONS ==========
 
-  static Future<List<Map<String, dynamic>>> getNotifications() async {
+  static Future<List<Map<String, dynamic>>> getNotifications({
+    int? limit,
+    int? skip,
+  }) async {
     final token = await getAccessToken();
 
+    final uri = Uri.parse('$baseUrl/notifications').replace(
+      queryParameters: {
+        if (limit != null) 'limit': limit.toString(),
+        if (skip != null) 'skip': skip.toString(),
+      },
+    );
+
     final response = await http.get(
-      Uri.parse('$baseUrl/notifications'),
+      uri,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -692,7 +707,7 @@ class ApiService {
       return data.cast<Map<String, dynamic>>();
     } else if (response.statusCode == 401) {
       await refreshToken();
-      return getNotifications();
+      return getNotifications(limit: limit, skip: skip);
     } else {
       throw Exception('Erreur de chargement des notifications');
     }
@@ -716,6 +731,28 @@ class ApiService {
       return getUnreadNotificationsCount();
     } else {
       throw Exception('Erreur de chargement du compteur');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getUnreadNotifications() async {
+    final token = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/notifications/unread'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getUnreadNotifications();
+    } else {
+      throw Exception('Erreur de chargement des notifications non lues');
     }
   }
 
@@ -996,7 +1033,7 @@ class ApiService {
     }
     throw Exception('Non autorisé ou pas de clinique associée');
   }
-  
+
   static void clearClinicCache() {
     _cachedClinicId = null;
   }
@@ -1135,7 +1172,7 @@ class ApiService {
   // Version pour centres d'analyse (Map)
   static Future<void> createLabAppointment(Map<String, dynamic> appointmentData) async {
     final token = await getAccessToken();
-    
+
     final response = await http.post(
       Uri.parse('$baseUrl/appointments'),
       headers: {
@@ -1153,8 +1190,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur de création du rendez-vous';
         throw Exception(errorMessage);
@@ -1259,7 +1296,7 @@ class ApiService {
       'patientName': patientName,
       'items': cleanItems,
     };
-    
+
     if (discount > 0) body['discount'] = discount;
     if (discountPercentage > 0) body['discountPercentage'] = discountPercentage;
     if (doctorId != null) body['doctorId'] = doctorId;
@@ -1293,7 +1330,7 @@ class ApiService {
 
   /// Dossiers médicaux de ma clinique (optionnel: filtrer par patientId pour lier clinique-patient)
   static Future<List<dynamic>> getMyMedicalRecords({String? patientId}) async {
-    final headers = await _clinicHeaders();
+    final headers = await _getClinicHeaders();
     var uri = Uri.parse('$baseUrl/clinic-management/my/medical-records');
     if (patientId != null && patientId.isNotEmpty) {
       uri = uri.replace(queryParameters: {'patientId': patientId});
@@ -1304,12 +1341,12 @@ class ApiService {
       await refreshToken();
       return getMyMedicalRecords(patientId: patientId);
     }
-    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger les dossiers médicaux'));
+    throw Exception('Impossible de charger les dossiers médicaux');
   }
 
   /// Historique médical complet d'un patient (toutes cliniques)
   static Future<List<dynamic>> getPatientMedicalHistory(String patientId) async {
-    final headers = await _clinicHeaders();
+    final headers = await _getClinicHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/clinic-management/patient/$patientId/medical-history'),
       headers: headers,
@@ -1319,7 +1356,7 @@ class ApiService {
       await refreshToken();
       return getPatientMedicalHistory(patientId);
     }
-    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger l\'historique médical'));
+    throw Exception('Impossible de charger l\'historique médical');
   }
 
   /// Résultats d'analyse du patient (centre d'analyse) — médecin ou patient (ses propres résultats)
@@ -1338,13 +1375,13 @@ class ApiService {
       return getPatientAnalysisResults(patientId);
     }
     if (response.statusCode == 403 || response.statusCode == 404) return [];
-    throw Exception(_extractHttpErrorMessage(response, fallback: 'Impossible de charger les analyses'));
+    throw Exception('Impossible de charger les analyses');
   }
 
   // ========== PROFIL LABORATOIRE ==========
   static Future<Map<String, dynamic>> getLabProfile() async {
     final token = await getAccessToken();
-    
+
     debugPrint('🔵 API Service: Récupération du profil lab...');
     debugPrint('🔵 API Service: URL (try): $baseUrl/lab/profile puis $baseUrl/profiles/me');
     debugPrint('🔵 API Service: Token présent: ${token != null && token.isNotEmpty}');
@@ -1387,21 +1424,21 @@ class ApiService {
       final decoded = jsonDecode(response.body);
       final data = _extractFirstMap(decoded);
       debugPrint('✅ API Service: Profil récupéré avec succès');
-      
+
       // Si le backend retourne un message indiquant que le profil doit être initialisé
       if (data['needsInit'] == true) {
         debugPrint('⚠️ API Service: Profil nécessite une initialisation');
         final init = await _initLabProfile();
         return _normalizeLabProfile(init);
       }
-      
+
       // Vérifier si les données sont valides
       if (data.isEmpty || (data['centreName'] == null && data['name'] == null && data['centre_name'] == null)) {
         debugPrint('⚠️ API Service: Profil vide ou incomplet, tentative d\'initialisation');
         final init = await _initLabProfile();
         return _normalizeLabProfile(init);
       }
-      
+
       return _normalizeLabProfile(data);
     } else if (response.statusCode == 404) {
       debugPrint('⚠️ API Service: Profil non trouvé (404), tentative d\'initialisation');
@@ -1416,14 +1453,14 @@ class ApiService {
         final error = jsonDecode(response.body);
         final errorMessage = error['message'] ?? 'Erreur de récupération du profil laboratoire';
         debugPrint('❌ API Service: Erreur du backend: $errorMessage');
-        
-        if (errorMessage.toLowerCase().contains('profil') && 
+
+        if (errorMessage.toLowerCase().contains('profil') &&
             errorMessage.toLowerCase().contains('trouvé')) {
           debugPrint('⚠️ API Service: Message "profil non trouvé" détecté, tentative d\'initialisation');
           final init = await _initLabProfile();
           return _normalizeLabProfile(init);
         }
-        
+
         throw Exception(errorMessage);
       } catch (e) {
         debugPrint('❌ API Service: Erreur lors du parsing de la réponse: $e');
@@ -1437,9 +1474,9 @@ class ApiService {
   // Initialiser le profil lab s'il n'existe pas
   static Future<Map<String, dynamic>> _initLabProfile() async {
     final token = await getAccessToken();
-    
+
     debugPrint('🔵 API Service: Tentative d\'initialisation du profil...');
-    
+
     try {
       // Nouveau backend
       http.Response response;
@@ -1480,13 +1517,13 @@ class ApiService {
     } catch (e) {
       debugPrint('⚠️ API Service: Endpoint init non disponible: $e');
     }
-    
+
     // Si l'endpoint n'existe pas, récupérer les données de l'utilisateur
     debugPrint('⚠️ API Service: Récupération des données utilisateur...');
     try {
       final user = await getProfile();
       debugPrint('✅ API Service: Données utilisateur récupérées');
-      
+
       final defaultProfile = {
         'name': user.fullName ?? 'Centre d\'Analyses',
         'centreName': user.fullName ?? 'Centre d\'Analyses',
@@ -1563,7 +1600,7 @@ class ApiService {
     if (data.containsKey('isActive') && !payload.containsKey('is_active')) {
       payload['is_active'] = data['isActive'];
     }
-    
+
     // Backend lab (principal) d'abord, fallback alias /profiles/lab
     http.Response response;
     try {
@@ -1610,7 +1647,7 @@ class ApiService {
   // ========== RENDEZ-VOUS LABORATOIRE ==========
   static Future<List<Map<String, dynamic>>> getLabAppointments() async {
     final token = await getAccessToken();
-    
+
     final response = await http.get(
       Uri.parse('$baseUrl/appointments/lab/my-appointments'),
       headers: {
@@ -1635,8 +1672,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur de récupération des rendez-vous';
         throw Exception(errorMessage);
@@ -1652,12 +1689,12 @@ class ApiService {
   // ========== RÉSULTATS D'ANALYSE ==========
   static Future<List<Map<String, dynamic>>> getAnalysisResults({String? patientEmail}) async {
     final token = await getAccessToken();
-    
+
     String url = '$baseUrl/lab/results';
     if (patientEmail != null && patientEmail.isNotEmpty) {
       url += '?patientEmail=$patientEmail';
     }
-    
+
     final response = await http.get(
       Uri.parse(url),
       headers: {
@@ -1687,17 +1724,17 @@ class ApiService {
   // ========== UPLOAD PHOTO PROFIL LABORATOIRE ==========
   static Future<String> uploadLabProfilePhoto(List<int> imageBytes, String fileName) async {
     final token = await getAccessToken();
-    
+
     debugPrint('🔵 API Service: Upload de la photo du profil lab...');
     debugPrint('🔵 API Service: Nom du fichier: $fileName');
     debugPrint('🔵 API Service: Taille: ${imageBytes.length} bytes');
-    
+
     // Certains navigateurs donnent un nom sans extension (ex: "blob").
     // Le backend filtre souvent par mimetype ET/OU extension → on force les deux.
     final safe = _normalizeImageFileNameAndType(imageBytes, fileName);
     final safeFileName = safe.fileName;
     final contentType = safe.contentType;
-    
+
     Future<http.Response> sendTo(String url, {required String fieldName}) async {
       final request = http.MultipartRequest('POST', Uri.parse(url));
       request.headers['Authorization'] = 'Bearer $token';
@@ -1767,11 +1804,71 @@ class ApiService {
       if (response.statusCode == 404) {
         response = await sendTo('$baseUrl/profiles/lab/photo', fieldName: 'image');
       }
-      
+
       return await handleResponse(response);
     } catch (e) {
       debugPrint('❌ API Service: Exception lors de l\'upload: $e');
       throw Exception('Erreur lors de l\'upload de la photo: $e');
+    }
+  }
+
+  // ========== UPLOAD ORDONNANCE ==========
+  static Future<String> uploadPrescriptionImage(List<int> imageBytes, String fileName) async {
+    final token = await getAccessToken();
+    if (token == null) {
+      throw Exception('Token d\'accès non disponible');
+    }
+
+    debugPrint('🔵 API Service: Upload ordonnance...');
+    debugPrint('🔵 API Service: Nom du fichier: $fileName');
+    debugPrint('🔵 API Service: Taille: ${imageBytes.length} bytes');
+
+    final safe = _normalizeImageFileNameAndType(imageBytes, fileName);
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/pharmacy/upload/prescription'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'prescription',
+        imageBytes,
+        filename: safe.fileName,
+        contentType: MediaType.parse(safe.contentType),
+      ),
+    );
+
+    try {
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final url = data['url'] ?? data['prescriptionUrl'] ?? data['prescriptionImageUrl'];
+        if (url == null || (url is String && url.isEmpty)) {
+          throw Exception('URL de l\'ordonnance non renvoyée');
+        }
+        final fullUrl = url.toString().startsWith('http')
+            ? url.toString()
+            : '$baseUrl/$url'.replaceAll('//', '/').replaceAll(':/', '://');
+        debugPrint('✅ API Service: Ordonnance uploadée: $fullUrl');
+        return fullUrl;
+      } else if (response.statusCode == 401) {
+        await refreshToken();
+        return uploadPrescriptionImage(imageBytes, fileName);
+      } else {
+        try {
+          final err = jsonDecode(response.body);
+          throw Exception(err['message'] ?? 'Erreur upload ordonnance');
+        } catch (_) {
+          throw Exception('Erreur upload ordonnance: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ API Service: Exception upload ordonnance: $e');
+      throw Exception('Erreur upload ordonnance: $e');
     }
   }
 
@@ -1928,13 +2025,13 @@ class ApiService {
     String? notes,
   }) async {
     final token = await getAccessToken();
-    
+
     debugPrint('🔵 API Service: Upload résultat d\'analyse...');
     debugPrint('🔵 API Service: Patient: $patientName ($patientEmail)');
     debugPrint('🔵 API Service: Type: $analysisType');
     debugPrint('🔵 API Service: Date: $analysisDate');
     debugPrint('🔵 API Service: Fichier: $fileName (${fileBytes.length} bytes)');
-    
+
     String contentType = 'application/pdf';
     final extension = fileName.toLowerCase().split('.').last;
     switch (extension) {
@@ -1953,13 +2050,13 @@ class ApiService {
         contentType = 'application/msword';
         break;
     }
-    
+
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/lab/results'),
       );
-      
+
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['patientName'] = patientName;
       request.fields['patientEmail'] = patientEmail;
@@ -1971,7 +2068,7 @@ class ApiService {
       if (notes != null && notes.isNotEmpty) {
         request.fields['notes'] = notes;
       }
-      
+
       request.files.add(
         http.MultipartFile.fromBytes(
           'file',
@@ -1980,10 +2077,10 @@ class ApiService {
           contentType: MediaType.parse(contentType),
         ),
       );
-      
+
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         debugPrint('✅ API Service: Résultat uploadé avec succès');
@@ -2014,7 +2111,7 @@ class ApiService {
   // ========== ACCEPTER/REFUSER RENDEZ-VOUS ==========
   static Future<void> acceptAppointment(String appointmentId) async {
     final token = await getAccessToken();
-    
+
     final response = await http.put(
       Uri.parse('$baseUrl/appointments/lab/$appointmentId/accept'),
       headers: {
@@ -2031,8 +2128,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur d\'acceptation du rendez-vous';
         throw Exception(errorMessage);
@@ -2047,7 +2144,7 @@ class ApiService {
 
   static Future<void> rejectAppointment(String appointmentId, {String? reason}) async {
     final token = await getAccessToken();
-    
+
     final response = await http.put(
       Uri.parse('$baseUrl/appointments/lab/$appointmentId/reject'),
       headers: {
@@ -2065,8 +2162,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur de refus du rendez-vous';
         throw Exception(errorMessage);
@@ -2082,7 +2179,7 @@ class ApiService {
   // ========== GESTION DES CATÉGORIES LABORATOIRE ==========
   static Future<List<String>> getLabCategories() async {
     final token = await getAccessToken();
-    
+
     final response = await http.get(
       Uri.parse('$baseUrl/lab/categories'),
       headers: {
@@ -2109,11 +2206,11 @@ class ApiService {
 
   static Future<void> addLabCategories(List<String> categories) async {
     final token = await getAccessToken();
-    
+
     if (token == null) {
       throw Exception('Non authentifié');
     }
-    
+
     final response = await http.post(
       Uri.parse('$baseUrl/lab/categories'),
       headers: {
@@ -2131,8 +2228,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur d\'ajout des catégories';
         throw Exception(errorMessage);
@@ -2147,11 +2244,11 @@ class ApiService {
 
   static Future<void> removeLabCategories(List<String> categories) async {
     final token = await getAccessToken();
-    
+
     if (token == null) {
       throw Exception('Non authentifié');
     }
-    
+
     final response = await http.post(
       Uri.parse('$baseUrl/lab/categories/remove'),
       headers: {
@@ -2169,8 +2266,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur de suppression des catégories';
         throw Exception(errorMessage);
@@ -2196,7 +2293,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      
+
       if (data is List) {
         return List<Map<String, dynamic>>.from(data);
       } else if (data is Map) {
@@ -2229,8 +2326,8 @@ class ApiService {
     } else {
       try {
         final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
+        final errorMessage = errorData['message'] ??
+                            errorData['error'] ??
                             errorData['statusMessage'] ??
                             'Erreur de récupération du laboratoire';
         throw Exception(errorMessage);
@@ -2241,6 +2338,23 @@ class ApiService {
         throw Exception('Erreur de récupération du laboratoire: ${response.statusCode}');
       }
     }
+  }
+
+  static Future<List<dynamic>> getMyPrescriptions() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/my'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) return json.decode(response.body);
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return getMyPrescriptions();
+    }
+    throw Exception('Impossible de charger les ordonnances');
   }
 
   static Future<Map<String, dynamic>> createPrescription({
@@ -2271,6 +2385,157 @@ class ApiService {
       } catch (_) {
         throw Exception('Erreur de création d\'ordonnance: ${response.statusCode}');
       }
+    }
+  }
+
+  // ========== METTRE À JOUR LE TOKEN FCM (PUSH NOTIFICATIONS) ==========
+  static Future<void> updateFCMToken(String fcmToken) async {
+    final token = await getAccessToken();
+    if (token == null) {
+      debugPrint('❌ Cannot update FCM token: access token is null');
+      throw Exception('Token d\'accès non disponible');
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/me/fcm-token'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'fcmToken': fcmToken}),
+    );
+
+    if (response.statusCode != 200) {
+      debugPrint(
+        '❌ FCM token update failed: status=${response.statusCode} body=${response.body}',
+      );
+      try {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Erreur lors de la mise à jour du token FCM');
+      } catch (_) {
+        throw Exception('Erreur mise à jour token FCM: ${response.statusCode}');
+      }
+    }
+
+    debugPrint('✅ FCM Token updated successfully');
+  }
+
+  // ========== PHARMACY ENDPOINTS ==========
+
+  /// Get all pharmacies from database
+  static Future<List<Map<String, dynamic>>> getPharmacies({
+    String? city,
+    String? wilaya,
+    bool? is24Hours,
+    bool? hasDelivery,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (city != null) queryParams['city'] = city;
+      if (wilaya != null) queryParams['wilaya'] = wilaya;
+      if (is24Hours != null) queryParams['is24Hours'] = is24Hours.toString();
+      if (hasDelivery != null) queryParams['hasDelivery'] = hasDelivery.toString();
+
+      final listUri = Uri.parse('$baseUrl/pharmacy/list/all').replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        listUri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final pharmacies = data is List ? data : (data['data'] is List ? data['data'] : []);
+
+        return List<Map<String, dynamic>>.from(
+          (pharmacies as List).map((p) => Map<String, dynamic>.from(p as Map))
+        );
+      } else {
+        throw Exception('Failed to load pharmacies: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching pharmacies: $e');
+      rethrow;
+    }
+  }
+
+  /// Get single pharmacy details
+  static Future<Map<String, dynamic>> getPharmacyDetails(String pharmacyId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/pharmacy/$pharmacyId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+      } else {
+        throw Exception('Failed to load pharmacy details: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching pharmacy details: $e');
+      rethrow;
+    }
+  }
+
+  /// Send medication request (ordonnance) to pharmacy
+  static Future<Map<String, dynamic>> sendMedicationRequest({
+    required String pharmacyId,
+    required String patientId,
+    required String patientName,
+    required String patientPhone,
+    required List<Map<String, dynamic>> medications,
+    String? prescriptionImageUrl,
+    String? doctorName,
+    bool isUrgent = false,
+    bool requestsDelivery = false,
+  }) async {
+    final token = await getAccessToken();
+    if (token == null) {
+      throw Exception('Token d\'accès non disponible');
+    }
+
+    try {
+      final body = {
+        'pharmacyId': pharmacyId,
+        'patient': {
+          'id': patientId,
+          'name': patientName,
+          'phoneNumber': patientPhone,
+        },
+        'medications': medications,
+        'isUrgent': isUrgent,
+        'requestsDelivery': requestsDelivery,
+        if (prescriptionImageUrl != null) 'prescriptionImageUrl': prescriptionImageUrl,
+        if (doctorName != null) 'doctorName': doctorName,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/pharmacy/medication-request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+      } else {
+        try {
+          final errorData = jsonDecode(response.body);
+          throw Exception(errorData['message'] ?? 'Erreur lors de l\'envoi de la demande');
+        } catch (_) {
+          throw Exception('Erreur: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error sending medication request: $e');
+      rethrow;
     }
   }
 }

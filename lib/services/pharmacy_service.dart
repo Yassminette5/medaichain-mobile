@@ -20,7 +20,7 @@ class PharmacyService {
   static Future<Map<String, String>> _headers() async {
     final token = await ApiService.getAccessToken();
     if (token == null || token.isEmpty) {
-      throw Exception('Non connectÃ©');
+      throw Exception('Non connecte');
     }
     return {
       'Content-Type': 'application/json',
@@ -231,6 +231,24 @@ class PharmacyService {
 
   static Future<MedicationRequest> updateRequest(String pharmacyId, String requestId, Map<String, dynamic> updates) async => updateMyRequest(requestId, updates);
 
+  static Future<MedicationRequest> getMyRequestById(String requestId) async {
+    final headers = await _headers();
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return MedicationRequest.fromJson(data);
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getMyRequestById(requestId);
+    } else {
+      throw Exception('Failed to load request');
+    }
+  }
+
   static Future<void> deleteMyRequest(String requestId) async {
     final headers = await _headers();
     final response = await http.delete(
@@ -350,10 +368,24 @@ class PharmacyService {
   // Legacy signature used by imported UI (pharmacyId is ignored on preprod1; resolved from JWT).
   static Future<void> updatePharmacySettings(String pharmacyId, Map<String, dynamic> settings) async {
     final headers = await _headers();
+
+    // Normalize field names for consistency
+    final normalizedSettings = Map<String, dynamic>.from(settings);
+
+    // Handle both old and new field names for backward compatibility
+    if (normalizedSettings.containsKey('notificationsEnabled')) {
+      normalizedSettings['hasNotifications'] = normalizedSettings['notificationsEnabled'];
+      normalizedSettings.remove('notificationsEnabled');
+    }
+    if (normalizedSettings.containsKey('offersDelivery')) {
+      normalizedSettings['hasDelivery'] = normalizedSettings['offersDelivery'];
+      normalizedSettings.remove('offersDelivery');
+    }
+
     final response = await http.put(
       Uri.parse('$baseUrl/pharmacy/profile'),
       headers: headers,
-      body: jsonEncode(settings),
+      body: jsonEncode(normalizedSettings),
     );
 
     if (response.statusCode == 200) {

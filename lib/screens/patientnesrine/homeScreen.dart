@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _prescriptionsLoading = true);
     try {
       final list = await ApiService.getMyPrescriptions();
-      if (mounted) setState(() { _prescriptions = list; _prescriptionsLoading = false; });
+      if (mounted) setState(() { _prescriptions = List<Map<String, dynamic>>.from(list); _prescriptionsLoading = false; });
     } catch (_) {
       if (mounted) setState(() { _prescriptions = []; _prescriptionsLoading = false; });
     }

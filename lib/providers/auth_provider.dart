@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -23,7 +24,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final savedUser = await ApiService.getSavedUser();
-      
+
       // Attempt to fetch fresh profile
       User? fetchedUser;
       try {
@@ -54,8 +55,8 @@ class AuthProvider with ChangeNotifier {
           age: fetchedUser.age ?? savedUser?.age,
           height: fetchedUser.height ?? savedUser?.height,
           weight: fetchedUser.weight ?? savedUser?.weight,
-          allergies: (fetchedUser.allergies != null && fetchedUser.allergies!.isNotEmpty) 
-              ? fetchedUser.allergies 
+          allergies: (fetchedUser.allergies != null && fetchedUser.allergies!.isNotEmpty)
+              ? fetchedUser.allergies
               : savedUser?.allergies,
         );
         debugPrint('[AuthProvider] Merged user fullName: ${_user?.fullName}');
@@ -66,6 +67,15 @@ class AuthProvider with ChangeNotifier {
       // Modifier: If we have a user, check for doctor profile
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
+      }
+
+      // Initialize notifications if user is logged in
+      if (_user != null) {
+        try {
+          await NotificationService().init();
+        } catch (e) {
+          debugPrint('❌ Failed to initialize notifications: $e');
+        }
       }
     } catch (e) {
       _user = null;
@@ -154,6 +164,14 @@ class AuthProvider with ChangeNotifier {
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
       }
+
+      // Initialize notifications after successful login
+      try {
+        await NotificationService().init();
+      } catch (e) {
+        debugPrint('❌ Failed to initialize notifications after login: $e');
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -207,7 +225,7 @@ class AuthProvider with ChangeNotifier {
     _isLoading = true;
     _error = null;
     notifyListeners();
-    
+
     try {
       final updatedUser = await ApiService.updatePatientInformation(
         fullName: fullName,
