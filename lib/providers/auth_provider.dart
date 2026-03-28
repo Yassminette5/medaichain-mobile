@@ -72,6 +72,7 @@ class AuthProvider with ChangeNotifier {
       // Subscription status sync
       if (_user != null) {
         await SubscriptionService().initialize(userId: _user!.id);
+        await SubscriptionService().initialize(userId: _user!.id);
 
         // Initialize notifications if user is logged in
         try {
@@ -170,7 +171,6 @@ class AuthProvider with ChangeNotifier {
       // Sync RevenueCat
       if (_user != null) {
         await SubscriptionService().initialize(userId: _user!.id);
-
         // Initialize notifications after successful login
         try {
           await NotificationService().init();

@@ -59,13 +59,8 @@ Future<void> main() async {
     );
     debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
-    debugPrint('⚠️ Firebase init with options failed: $e');
-    try {
-      await Firebase.initializeApp();
-      debugPrint('✅ Firebase initialized with default options');
-    } catch (e2) {
-      debugPrint('❌ Firebase initialization error (fallback failed): $e2');
-    }
+    debugPrint('❌ Firebase initialization error: $e');
+    rethrow;
   }
 
   try {
