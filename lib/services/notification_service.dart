@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,7 +21,7 @@ final FlutterLocalNotificationsPlugin _backgroundLocalNotifications =
     FlutterLocalNotificationsPlugin();
 
 const AndroidInitializationSettings _bgInitSettingsAndroid =
-    AndroidInitializationSettings('ic_launcher');
+  AndroidInitializationSettings('ic_notification');
 const DarwinInitializationSettings _bgInitSettingsIOS =
     DarwinInitializationSettings();
 const InitializationSettings _bgInitSettings = InitializationSettings(
@@ -54,7 +56,7 @@ Future<void> _showBackgroundLocalNotification(RemoteMessage message) async {
     priority: Priority.high,
     showWhen: true,
     playSound: true,
-    icon: 'ic_launcher',
+    icon: 'ic_notification',
   );
 
   final NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -83,12 +85,20 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   } catch (_) {
     // If already initialized, ignore.
   }
-  await _ensureBackgroundLocalNotificationsInitialized();
+  try {
+    await _ensureBackgroundLocalNotificationsInitialized();
+  } catch (e) {
+    debugPrint('⚠️ Background local notifications init failed: $e');
+  }
   // If the message includes a notification payload, Android/iOS will usually
   // display it automatically when the app is backgrounded/terminated.
   // Only show a local notification for data-only messages.
   if (message.notification == null) {
-    await _showBackgroundLocalNotification(message);
+    try {
+      await _showBackgroundLocalNotification(message);
+    } catch (e) {
+      debugPrint('⚠️ Background local notification display failed: $e');
+    }
   }
   debugPrint('🔔 Handling a background message: ${message.messageId}');
 }
@@ -101,8 +111,13 @@ class NotificationService {
   late FirebaseMessaging _firebaseMessaging;
   late FlutterLocalNotificationsPlugin _localNotifications;
   bool _initialized = false;
+  Future<void>? _initFuture;
+  bool _localNotificationsReady = false;
   bool _tokenRefreshListenerAttached = false;
   GlobalKey<NavigatorState>? _navigatorKey;
+  static const String _webVapidKey = String.fromEnvironment(
+    'FIREBASE_WEB_VAPID_KEY',
+  );
 
   GlobalKey<NavigatorState>? get navigatorKey => _navigatorKey;
 
@@ -112,53 +127,92 @@ class NotificationService {
 
   /// Initialize the notification service with Firebase and local notifications
   Future<void> init() async {
+    if (_initFuture != null) {
+      await _initFuture;
+      return;
+    }
+
+    _initFuture = _initInternal();
+    try {
+      await _initFuture;
+    } finally {
+      _initFuture = null;
+    }
+  }
+
+  Future<void> _initInternal() async {
     // Initialize the plumbing once, but allow token registration retries
     // (init() may be called before login, then again after login).
     if (_initialized) {
-      if (!kIsWeb) {
-        await registerFcmTokenIfPossible();
-      }
+      await registerFcmTokenIfPossible();
       return;
     }
 
     try {
-      if (!kIsWeb) {
-        if (Firebase.apps.isEmpty) {
-          await Firebase.initializeApp(
-            options: DefaultFirebaseOptions.currentPlatform,
-          );
-        }
-        _firebaseMessaging = FirebaseMessaging.instance;
-
-        // Initialize local notifications
-        await _initializeLocalNotifications();
-
-        // Request notification permissions
-        await _requestNotificationPermissions();
-
-        // Handle background messages
-        FirebaseMessaging.onBackgroundMessage(
-          firebaseMessagingBackgroundHandler,
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
         );
+      }
 
-        // Handle foreground messages with in-app popup + fallback notification
-        FirebaseMessaging.onMessage.listen((message) async {
-          await _handleForegroundMessage(message);
-        });
+      _firebaseMessaging = FirebaseMessaging.instance;
 
-        // Handle notification taps
-        FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+      // Local notifications plugin is mobile-only. Web uses browser notifications.
+      if (!kIsWeb) {
+        await _initializeLocalNotificationsSafely();
+      }
 
-        // Mark initialized before registering token so registration works on first run.
-        _initialized = true;
-
-        // Register token now (if logged in) and on refresh
-        await registerFcmTokenIfPossible();
-        _attachTokenRefreshListener();
-
-        debugPrint('✅ NotificationService initialized with Firebase');
+      // On web, permission prompts should be triggered by a direct user action.
+      if (!kIsWeb) {
+        try {
+          await _requestNotificationPermissions();
+        } catch (e) {
+          debugPrint('⚠️ Notification permission request failed: $e');
+        }
       } else {
-        debugPrint('✅ NotificationService initialized (Web mode)');
+        final settings = await _firebaseMessaging.getNotificationSettings();
+        debugPrint(
+          '🌐 Web notification permission status: ${settings.authorizationStatus}',
+        );
+      }
+
+      // Handle background messages (mobile only).
+      if (!kIsWeb) {
+        try {
+          FirebaseMessaging.onBackgroundMessage(
+            firebaseMessagingBackgroundHandler,
+          );
+        } catch (e) {
+          debugPrint('⚠️ Background message handler registration failed: $e');
+        }
+      }
+
+      // Handle foreground messages with in-app popup + fallback notification
+      FirebaseMessaging.onMessage.listen((message) async {
+        await _handleForegroundMessage(message);
+      });
+
+      // Handle notification taps
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
+      // Handle notification tap when app was terminated.
+      final initialMessage = await _firebaseMessaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
+
+      // Mark initialized before registering token so registration works on first run.
+      _initialized = true;
+
+      // Register token now (if logged in) and on refresh.
+      // On web this only succeeds after permission has been granted.
+      await registerFcmTokenIfPossible();
+      _attachTokenRefreshListener();
+
+      if (kIsWeb) {
+        debugPrint('✅ NotificationService initialized with Firebase (Web mode)');
+      } else {
+        debugPrint('✅ NotificationService initialized with Firebase');
       }
 
       // _initialized may already be true (set above). Keep it true.
@@ -168,6 +222,58 @@ class NotificationService {
       // This allows a later retry after Firebase is properly configured.
       debugPrint('❌ Error initializing NotificationService: $e');
       _initialized = false;
+    }
+  }
+
+  Future<void> promptWebPermissionAndRegisterToken() async {
+    if (!kIsWeb) return;
+
+    try {
+      // Keep this prompt as close to the user click as possible on web.
+      _firebaseMessaging = FirebaseMessaging.instance;
+
+      final settings = await _requestNotificationPermissions();
+      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional) {
+        await registerFcmTokenIfPossible();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Web permission prompt failed: $e');
+    }
+  }
+
+  Future<void> registerWebTokenIfPermissionGranted() async {
+    if (!kIsWeb) return;
+
+    try {
+      _firebaseMessaging = FirebaseMessaging.instance;
+      final settings = await _firebaseMessaging.getNotificationSettings();
+      final allowed =
+          settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (!allowed) {
+        debugPrint(
+          '🌐 Web token sync skipped: permission is still not granted.',
+        );
+        return;
+      }
+
+      await registerFcmTokenIfPossible();
+    } catch (e) {
+      debugPrint('⚠️ Web token sync failed: $e');
+    }
+  }
+
+  Future<void> _initializeLocalNotificationsSafely() async {
+    try {
+      await _initializeLocalNotifications();
+      _localNotificationsReady = true;
+    } catch (e) {
+      _localNotificationsReady = false;
+      debugPrint(
+        '⚠️ Local notifications init failed; Firebase messaging will continue: $e',
+      );
     }
   }
 
@@ -189,7 +295,7 @@ class NotificationService {
     _localNotifications = FlutterLocalNotificationsPlugin();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('ic_launcher');
+      AndroidInitializationSettings('ic_notification');
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings();
@@ -217,10 +323,12 @@ class NotificationService {
         // Ignore: older devices / vendor implementations.
       }
     }
+
+    _localNotificationsReady = true;
   }
 
   /// Request notification permissions from the user
-  Future<void> _requestNotificationPermissions() async {
+  Future<NotificationSettings> _requestNotificationPermissions() async {
     final settings = await _firebaseMessaging.requestPermission(
       alert: true,
       announcement: true,
@@ -239,20 +347,66 @@ class NotificationService {
     } else {
       debugPrint('❌ Notification permissions denied');
     }
+
+    if (kIsWeb) {
+      debugPrint(
+        '🌐 Web notification permission status: ${settings.authorizationStatus}',
+      );
+    }
+
+    return settings;
+  }
+
+  Future<String?> _getFcmToken({String? tokenOverride}) async {
+    if (tokenOverride != null && tokenOverride.isNotEmpty) {
+      return tokenOverride;
+    }
+
+    if (kIsWeb) {
+      if (_webVapidKey.isNotEmpty) {
+        return _firebaseMessaging
+            .getToken(vapidKey: _webVapidKey)
+            .timeout(const Duration(seconds: 15));
+      }
+
+      debugPrint(
+        '⚠️ FIREBASE_WEB_VAPID_KEY is not set. Web FCM token may fail on some browsers.',
+      );
+      return _firebaseMessaging.getToken().timeout(const Duration(seconds: 15));
+    }
+
+    return _firebaseMessaging.getToken().timeout(const Duration(seconds: 15));
   }
 
   /// Register the FCM token with the backend (requires user to be logged in).
   /// This is safe to call multiple times.
   Future<void> registerFcmTokenIfPossible({String? tokenOverride}) async {
     try {
-      if (kIsWeb) return;
-      final token = tokenOverride ?? await _firebaseMessaging.getToken();
+      if (kIsWeb) {
+        final settings = await _firebaseMessaging.getNotificationSettings();
+        final allowed =
+            settings.authorizationStatus == AuthorizationStatus.authorized ||
+            settings.authorizationStatus == AuthorizationStatus.provisional;
+        if (!allowed) {
+          debugPrint(
+            '🌐 Web push token skipped: notification permission is not granted yet.',
+          );
+          return;
+        }
+      }
+
+      final token = await _getFcmToken(tokenOverride: tokenOverride);
       if (token == null || token.isEmpty) {
         debugPrint(
           '⚠️ FCM getToken() returned null/empty. Push will not work. '
           'Most common causes: Firebase not configured for Android in this build, '
           'wrong Firebase app/package name, or Google Play services issue.',
         );
+        if (kIsWeb) {
+          debugPrint(
+            '🌐 Web hint: ensure notifications are allowed for this site and set FIREBASE_WEB_VAPID_KEY in --dart-define.',
+          );
+        }
         return;
       }
 
@@ -306,8 +460,43 @@ class NotificationService {
     debugPrint('🎯 Local notification tapped: ${response.payload}');
     final payload = response.payload;
     if (payload != null && payload.isNotEmpty) {
-      _navigateToScreen({'payload': payload});
+      _navigateToScreen(_decodePayload(payload));
     }
+  }
+
+  Map<String, dynamic> _decodePayload(String payload) {
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return decoded.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+      }
+    } catch (_) {
+      // Legacy fallback: payload may look like
+      // "{type: pharmacy_request_created, requestId: ...}".
+      final raw = payload.trim();
+      if (raw.startsWith('{') && raw.endsWith('}')) {
+        final body = raw.substring(1, raw.length - 1);
+        final parts = body.split(',');
+        final parsed = <String, dynamic>{};
+        for (final part in parts) {
+          final idx = part.indexOf(':');
+          if (idx <= 0) continue;
+          final key = part.substring(0, idx).trim();
+          final value = part.substring(idx + 1).trim();
+          parsed[key] = value;
+        }
+        if (parsed.isNotEmpty) {
+          return parsed;
+        }
+      }
+    }
+
+    return {'payload': payload};
   }
 
   /// Show a local notification
@@ -317,6 +506,10 @@ class NotificationService {
     Map<String, dynamic>? payload,
   }) async {
     try {
+      if (!_localNotificationsReady) {
+        return;
+      }
+
       final AndroidNotificationDetails androidPlatformChannelSpecifics =
           AndroidNotificationDetails(
         kDefaultNotificationChannel.id,
@@ -326,7 +519,7 @@ class NotificationService {
         priority: Priority.high,
         showWhen: true,
         playSound: true,
-        icon: 'ic_launcher',
+        icon: 'ic_notification',
       );
 
       const DarwinNotificationDetails iOSPlatformChannelSpecifics =
@@ -344,7 +537,7 @@ class NotificationService {
         title,
         body,
         platformChannelSpecifics,
-        payload: payload != null ? payload.toString() : null,
+        payload: payload != null ? jsonEncode(payload) : null,
       );
     } catch (e) {
       debugPrint('❌ Error showing local notification: $e');
@@ -455,19 +648,34 @@ class NotificationService {
 
   /// Navigate to the appropriate screen based on notification data
   void _navigateToScreen(Map<String, dynamic> data) {
-    final type = data['type'];
-    final prescriptionId = data['prescriptionId'];
+    final type = (data['type'] ?? '').toString().toLowerCase();
+    final role =
+        (data['role'] ?? data['targetRole'] ?? '').toString().toLowerCase();
+    final requestId = (data['requestId'] ?? '').toString();
 
     debugPrint('🔀 Navigating based on notification type: $type');
-    debugPrint('Prescription ID: $prescriptionId');
+    if (requestId.isNotEmpty) {
+      debugPrint('Request ID: $requestId');
+    }
 
-    // TODO: Implement navigation based on notification type
-    // Example:
-    // if (type == 'prescription_new') {
-    //   // Navigate to prescription detail screen
-    // } else if (type == 'order_status_update') {
-    //   // Navigate to order tracking screen
-    // }
+    final navigator = _navigatorKey?.currentState;
+    if (navigator == null) {
+      debugPrint('⚠️ Cannot navigate from notification: navigator not ready');
+      return;
+    }
+
+    final isPharmacyNotification =
+        type.startsWith('pharmacy_') ||
+        type == 'pharmacy_message' ||
+        role == 'pharmacie' ||
+        role == 'pharmacy';
+
+    if (isPharmacyNotification) {
+      navigator.pushNamedAndRemoveUntil('/pharmacie_dashboard.html', (_) => false);
+      return;
+    }
+
+    navigator.pushNamed('/patient_home');
   }
 
   /// Schedule a notification for a calendar event

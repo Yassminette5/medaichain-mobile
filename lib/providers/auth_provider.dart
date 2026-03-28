@@ -71,11 +71,13 @@ class AuthProvider with ChangeNotifier {
 
       // Initialize notifications if user is logged in
       if (_user != null) {
-        try {
-          await NotificationService().init();
-        } catch (e) {
-          debugPrint('❌ Failed to initialize notifications: $e');
-        }
+        Future<void>(() async {
+          try {
+            await NotificationService().init();
+          } catch (e) {
+            debugPrint('❌ Failed to initialize notifications: $e');
+          }
+        });
       }
     } catch (e) {
       _user = null;
@@ -166,11 +168,13 @@ class AuthProvider with ChangeNotifier {
       }
 
       // Initialize notifications after successful login
-      try {
-        await NotificationService().init();
-      } catch (e) {
-        debugPrint('❌ Failed to initialize notifications after login: $e');
-      }
+      Future<void>(() async {
+        try {
+          await NotificationService().init();
+        } catch (e) {
+          debugPrint('❌ Failed to initialize notifications after login: $e');
+        }
+      });
 
       _isLoading = false;
       notifyListeners();

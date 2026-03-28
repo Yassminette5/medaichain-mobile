@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async' show TimeoutException;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
@@ -11,6 +12,7 @@ import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../web/medecin_web_dashboard.dart';
 import '../clinique/web/dashboard_main_screen.dart';
+import '../../services/notification_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../clinique/mobile/home_admin_clinique_mobile.dart';
 import 'signup_screen.dart';
@@ -414,45 +416,72 @@ class _LoginWebScreenState extends State<LoginWebScreen> {
       return;
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.login(email: email, password: password);
+    bool success = false;
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (success) {
-        final user = authProvider.user;
-        final userRole = user?.role ?? UserRole.patient;
-        final userEmail = user?.email ?? '';
-
-        Widget dashboard;
-
-        // Rediriger vers le bon dashboard selon le rôle
-        if (userEmail.toLowerCase() == 'admin@medaichain.com' ||
-            userEmail.toLowerCase().contains('admin')) {
-          dashboard = const AdminDashboardScreen();
-        } else if (userRole == UserRole.centreAnalyse) {
-          // Use web dashboard for center analysis on web platform
-          dashboard = const CenterDashboardWeb();
-        } else if (userRole == UserRole.pharmacie) {
-          dashboard = const PharmacieDashboardScreen();
-        } else if (userRole == UserRole.medecin) {
-          dashboard = const MedecinWebDashboard();
-        } else if (userRole == UserRole.clinique) {
-          // Dashboard clinique (mobile vs web)
-          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
-        } else {
-          dashboard = const MainScreen();
+    try {
+      if (kIsWeb) {
+        // Keep permission prompt in the click chain so browsers can show it.
+        // If it stalls, continue login after a short timeout.
+        try {
+          await NotificationService()
+              .promptWebPermissionAndRegisterToken()
+              .timeout(const Duration(seconds: 10));
+        } on TimeoutException {
+          // Continue sign-in even if permission flow takes longer.
+          Future<void>(() async {
+            await Future.delayed(const Duration(seconds: 6));
+            await NotificationService().registerWebTokenIfPermissionGranted();
+          });
+        } catch (_) {
+          // Ignore notification setup errors during sign-in.
         }
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => dashboard),
-        );
-      } else {
-        _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }
+
+      success = await authProvider.login(email: email, password: password);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      final user = authProvider.user;
+      final userRole = user?.role ?? UserRole.patient;
+      final userEmail = user?.email ?? '';
+
+      Widget dashboard;
+
+      // Rediriger vers le bon dashboard selon le rôle
+      if (userEmail.toLowerCase() == 'admin@medaichain.com' ||
+          userEmail.toLowerCase().contains('admin')) {
+        dashboard = const AdminDashboardScreen();
+      } else if (userRole == UserRole.centreAnalyse) {
+        // Use web dashboard for center analysis on web platform
+        dashboard = const CenterDashboardWeb();
+      } else if (userRole == UserRole.pharmacie) {
+        dashboard = const PharmacieDashboardScreen();
+      } else if (userRole == UserRole.medecin) {
+        dashboard = const MedecinWebDashboard();
+      } else if (userRole == UserRole.clinique) {
+        // Dashboard clinique (mobile vs web)
+        dashboard =
+            kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
+      } else {
+        dashboard = const MainScreen();
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => dashboard),
+      );
+    } else {
+      _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
     }
   }
 

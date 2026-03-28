@@ -55,6 +55,17 @@
   </div>
   <script src="flutter_bootstrap.js" async></script>
   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('firebase-messaging-sw.js', {
+          scope: '/firebase-cloud-messaging-push-scope',
+        }).catch(function (error) {
+          console.warn('Firebase messaging service worker registration failed:', error);
+        });
+      });
+    }
+  </script>
+  <script>
     // Masquer le loader une fois Flutter monté (le canevas remplace le body)
     document.addEventListener('flutter-first-frame', function() {
       var loading = document.getElementById('loading');
