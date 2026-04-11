@@ -29,6 +29,8 @@ dependencies:
   file_picker: ^8.1.4
   agora_rtc_engine: ^6.3.2
   permission_handler: ^11.3.1
+  purchases_flutter: ^8.9.0
+  google_mobile_ads: ^5.3.0
 
 dev_dependencies:
   flutter_test:

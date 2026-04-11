@@ -1,0 +1,10 @@
+datasets
+Pillow
+torch
+torchvision
+transformers
+unsloth
+bitsandbytes
+peft
+accelerate
+sentencepiece

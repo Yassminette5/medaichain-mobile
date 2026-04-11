@@ -49,7 +49,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   Widget build(BuildContext context) {
     const textColor = Color(0xFF1E293B); // Slate 800
     const subTextColor = Color(0xFF64748B); // Slate 500
-    const primaryColor = Color(0xFF7C3AED); // Purple
+    const primaryColor = Color(0xFF1565C0); // Medical Blue
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC), // Light background
@@ -78,7 +78,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 height: 60,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
+                    colors: [Color(0xFF1565C0), Color(0xFF0288D1)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -147,7 +147,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   prefixIcon: const Icon(Icons.lock, color: subTextColor),
                 ),
               ),
-              
+
               if (_errorMessage != null) ...[
                 const SizedBox(height: 20),
                 Text(

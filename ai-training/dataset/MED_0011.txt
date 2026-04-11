@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Bilan lipidique normal. Pas de dyslipidémie détectée.",
+  "advice": "Continuer un mode de vie sain. Limiter les aliments riches en graisses saturées. Contrôle annuel recommandé.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

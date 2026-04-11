@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Types d'événements médicaux
 enum EventType {
@@ -33,7 +33,7 @@ extension EventTypeExtension on EventType {
   Color get color {
     switch (this) {
       case EventType.consultation:
-        return const Color(0xFF7C3AED); // Purple
+        return const Color(0xFF1565C0); // Medical Blue
       case EventType.operation:
         return const Color(0xFFEF4444); // Red
       case EventType.note:

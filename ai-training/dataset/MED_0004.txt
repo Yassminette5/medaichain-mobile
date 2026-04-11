@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Fonction rénale potentiellement altérée avec DFG diminué. Possible insuffisance rénale débutante. Paramètres anormaux : Créatinine: 2 mg/L (bas, norme: 6-12); Urée: 0.13 g/L (bas, norme: 0.15-0.45); DFG estimé: 76 mL/min (bas, norme: 90-120).",
+  "advice": "Hydratation régulière (1.5 à 2L/jour). Réduire le sel et les protéines animales. Éviter les anti-inflammatoires (AINS).",
+  "prescription_suggestions": [
+    {
+      "name": "Bicarbonate de Sodium",
+      "dosage": "500 mg",
+      "frequency": "2 gélules par jour",
+      "duration": "1 mois"
+    }
+  ],
+  "emergency_level": "moyen"
+}

@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Hypocholestérolémie ou taux de HDL bas. Risque cardiovasculaire accru lié à un profil lipidique défavorable. Paramètres anormaux : Triglycérides: 0.43 g/L (bas, norme: 0.5-1.5).",
+  "advice": "Consommer des acides gras oméga-3 (poisson gras, noix). Éviter les graisses saturées. Activité physique régulière.",
+  "prescription_suggestions": [
+    {
+      "name": "Oméga-3 (Maxepa)",
+      "dosage": "1000 mg",
+      "frequency": "2 capsules par jour",
+      "duration": "3 mois"
+    }
+  ],
+  "emergency_level": "faible"
+}

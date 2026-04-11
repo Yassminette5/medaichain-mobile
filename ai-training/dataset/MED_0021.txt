@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Élévation de la créatinine et de l'urée. Surcharge rénale détectée. Possible déshydratation ou atteinte rénale. Paramètres anormaux : Créatinine: 19 mg/L (élevé, norme: 6-12); DFG estimé: 143 mL/min (élevé, norme: 90-120).",
+  "advice": "Hydratation intensive. Régime hypoprotéique. Arrêt des médicaments néphrotoxiques. Consultation néphrologique urgente recommandée.",
+  "prescription_suggestions": [
+    {
+      "name": "Kayexalate",
+      "dosage": "15 g",
+      "frequency": "1 sachet 3 fois/jour",
+      "duration": "5 jours"
+    }
+  ],
+  "emergency_level": "critique"
+}

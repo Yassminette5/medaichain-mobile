@@ -1,0 +1,19 @@
+{
+  "diagnosis": "Hypercholestérolémie et/ou hypertriglycéridémie détectée. Risque cardiovasculaire augmenté nécessitant une prise en charge. Paramètres anormaux : Cholestérol Total: 3.41 g/L (élevé, norme: 1.5-2).",
+  "advice": "Régime pauvre en graisses saturées. Augmenter les fibres. Exercice physique 5 fois/semaine pendant 30 min. Arrêt du tabac si applicable.",
+  "prescription_suggestions": [
+    {
+      "name": "Atorvastatine",
+      "dosage": "20 mg",
+      "frequency": "1 comprimé le soir",
+      "duration": "6 mois"
+    },
+    {
+      "name": "Fénofibrate",
+      "dosage": "160 mg",
+      "frequency": "1 comprimé par jour",
+      "duration": "3 mois"
+    }
+  ],
+  "emergency_level": "moyen"
+}

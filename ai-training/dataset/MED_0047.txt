@@ -1,0 +1,19 @@
+{
+  "diagnosis": "Hyperthyroïdie suspectée avec TSH basse et T4/T3 élevées. Hyperactivité thyroïdienne. Paramètres anormaux : T4 Libre: 32.65 pmol/L (élevé, norme: 12-22); T3 Libre: 13.01 pmol/L (élevé, norme: 3.1-6.8).",
+  "advice": "Éviter les excitants (café, thé). Repos en cas de palpitations. Consultation endocrinologue recommandée.",
+  "prescription_suggestions": [
+    {
+      "name": "Carbimazole (Néo-Mercazole)",
+      "dosage": "20 mg",
+      "frequency": "1 comprimé par jour",
+      "duration": "1 mois"
+    },
+    {
+      "name": "Propranolol",
+      "dosage": "40 mg",
+      "frequency": "1 comprimé 2 fois/jour",
+      "duration": "15 jours"
+    }
+  ],
+  "emergency_level": "moyen"
+}

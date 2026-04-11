@@ -1,0 +1,19 @@
+{
+  "diagnosis": "Cytolyse hépatique détectée avec élévation des transaminases. Possible atteinte hépatique d'origine médicamenteuse, virale ou alcoolique. Paramètres anormaux : ASAT (TGO): 169 UI/L (élevé, norme: 10-40); ALAT (TGP): 287 UI/L (élevé, norme: 7-56); GGT: 208 UI/L (élevé, norme: 9-48); Bilirubine Totale: 18 mg/L (élevé, norme: 3-10); Phosphatases Alcalines: 312 UI/L (élevé, norme: 44-147).",
+  "advice": "Arrêt immédiat de l'alcool. Éviter les médicaments hépatotoxiques. Régime léger sans graisses. Hydratation importante.",
+  "prescription_suggestions": [
+    {
+      "name": "Desmodium (Hépatoprotecteur)",
+      "dosage": "200 mg",
+      "frequency": "3 gélules par jour",
+      "duration": "1 mois"
+    },
+    {
+      "name": "Silymarine (Légalon)",
+      "dosage": "140 mg",
+      "frequency": "1 comprimé 3 fois/jour",
+      "duration": "2 mois"
+    }
+  ],
+  "emergency_level": "critique"
+}

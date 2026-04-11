@@ -129,7 +129,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
+                          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -231,7 +231,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 // Content Body
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)))
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
                       : Padding(
                           padding: const EdgeInsets.all(40),
                           child: _buildContent(),
@@ -253,7 +253,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     bool isDestructive = false,
   }) {
     final isActive = _currentSection == id;
-    final activeColor = const Color(0xFF7C3AED);
+    final activeColor = const Color(0xFF1565C0);
     final inactiveColor = const Color(0xFF64748B);
     
     return InkWell(
@@ -371,7 +371,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         const SizedBox(width: 20),
         Expanded(child: _StatCard(title: 'Cliniques', value: '${_stats!['clinique']}', icon: Icons.apartment, color: const Color(0xFFFFD93D))),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Total', value: '${_stats!['total']}', icon: Icons.groups, color: const Color(0xFF7C3AED), isTotal: true)),
+        Expanded(child: _StatCard(title: 'Total', value: '${_stats!['total']}', icon: Icons.groups, color: const Color(0xFF1565C0), isTotal: true)),
       ],
     );
   }
@@ -380,7 +380,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (_stats == null) return const SizedBox();
     
     const gradient = LinearGradient(
-      colors: [Color(0xFF22D3EE), Color(0xFF7C3AED)],
+      colors: [Color(0xFF00897B), Color(0xFF1565C0)],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     );
@@ -413,7 +413,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 children: [
                   TextSpan(
                     text: (rod.toY).toInt().toString(),
-                    style: GoogleFonts.plusJakartaSans(color: const Color(0xFF7C3AED)),
+                    style: GoogleFonts.plusJakartaSans(color: const Color(0xFF1565C0)),
                   ),
                 ],
               );
@@ -502,7 +502,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             case 'centre_analyse': badgeColor = const Color(0xFF4D96FF); break;
             case 'pharmacie': badgeColor = const Color(0xFFFF6B6B); break;
             case 'clinique': badgeColor = const Color(0xFFFFD93D); break;
-            case 'admin': badgeColor = const Color(0xFF7C3AED); break;
+            case 'admin': badgeColor = const Color(0xFF1565C0); break;
             default: badgeColor = Colors.grey;
           }
 
@@ -679,7 +679,7 @@ class _InviteUserFormState extends State<_InviteUserForm> {
               filled: true,
               fillColor: const Color(0xFFF1F5F9), // Light grey input
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF7C3AED))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF1565C0))),
               prefixIcon: const Icon(Icons.email, color: Color(0xFF64748B)),
             ),
           ),
@@ -711,7 +711,7 @@ class _InviteUserFormState extends State<_InviteUserForm> {
               icon: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send),
               label: Text(_isLoading ? 'Envoi en cours...' : 'Envoyer l\'invitation'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
+                backgroundColor: const Color(0xFF1565C0),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 4,
@@ -725,7 +725,7 @@ class _InviteUserFormState extends State<_InviteUserForm> {
 
   Widget _roleItem(String value, String label, IconData icon) {
     final isSelected = _selectedRole == value;
-    final activeColor = const Color(0xFF7C3AED);
+    final activeColor = const Color(0xFF1565C0);
 
     return InkWell(
       onTap: () => setState(() => _selectedRole = value),

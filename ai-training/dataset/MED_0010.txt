@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Fonction hépatique normale. Aucune anomalie des enzymes hépatiques.",
+  "advice": "Maintenir une consommation d'alcool modérée. Alimentation riche en légumes. Éviter l'automédication excessive.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

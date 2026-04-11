@@ -1,0 +1,19 @@
+{
+  "diagnosis": "Syndrome inflammatoire biologique détecté (CRP et/ou VS élevées). Possible infection ou inflammation chronique. Paramètres anormaux : CRP: 152 mg/L (élevé, norme: 0-5); Fibrinogène: 7.88 g/L (élevé, norme: 2-4).",
+  "advice": "Repos relatif. Hydratation abondante. Surveiller la température. Consulter si fièvre persistante.",
+  "prescription_suggestions": [
+    {
+      "name": "Paracétamol",
+      "dosage": "1000 mg",
+      "frequency": "1 comprimé 3 fois/jour",
+      "duration": "5 jours"
+    },
+    {
+      "name": "Ibuprofène",
+      "dosage": "400 mg",
+      "frequency": "1 comprimé 2 fois/jour au repas",
+      "duration": "5 jours"
+    }
+  ],
+  "emergency_level": "moyen"
+}

@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Bilan sanguin dans les normes. Aucune anomalie détectée sur la numération formule sanguine.",
+  "advice": "Maintenir une alimentation équilibrée et variée. Activité physique régulière recommandée (30 min/jour). Contrôle de routine dans 1 an.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

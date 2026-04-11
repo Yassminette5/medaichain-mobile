@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 import '../services/api_service.dart';
+import '../services/subscription_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -66,6 +67,10 @@ class AuthProvider with ChangeNotifier {
       // Modifier: If we have a user, check for doctor profile
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
+      }
+      // Subscription status sync
+      if (_user != null) {
+        await SubscriptionService().initialize(userId: _user!.id);
       }
     } catch (e) {
       _user = null;
@@ -154,6 +159,11 @@ class AuthProvider with ChangeNotifier {
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
       }
+      // Sync RevenueCat
+      if (_user != null) {
+        await SubscriptionService().initialize(userId: _user!.id);
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -242,6 +252,7 @@ class AuthProvider with ChangeNotifier {
   // Déconnexion
   Future<void> logout() async {
     await ApiService.logout();
+    await SubscriptionService().logout();
     _user = null;
     _doctorProfile = null;
     notifyListeners();
