@@ -30,15 +30,15 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
 
     try {
       final appointments = await ApiService.getLabAppointments();
-      // Filtrer pour ne garder que les demandes en attente
-      final pending = appointments.where((apt) {
+      // Afficher aussi les demandes acceptées (le centre doit recevoir la notif "accepted")
+      final relevant = appointments.where((apt) {
         final status = apt['status']?.toString().toLowerCase() ?? '';
-        return status == 'pending';
+        return status == 'pending' || status == 'accepted';
       }).toList();
 
       if (mounted) {
         setState(() {
-          _notifications = pending;
+          _notifications = relevant;
           _isLoading = false;
         });
       }
@@ -152,7 +152,7 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
   }
 
   Widget _buildNotificationCard(Map<String, dynamic> notification) {
-    final patientId = notification['patientId'];
+    final patientId = notification['patientInfo'] ?? notification['patientId'];
     String patientName = 'Patient Inconnu';
     if (patientId != null && patientId is Map) {
       final firstName = patientId['firstName']?.toString() ?? '';
@@ -166,6 +166,9 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
     final id = notification['_id']?.toString() ?? notification['id']?.toString() ?? '';
     final type = notification['analysisType'] ?? 'Analyse médicale';
     final dateStr = _formatDate(notification['appointmentDate']?.toString() ?? '');
+    final status = notification['status']?.toString().toLowerCase() ?? 'pending';
+    final statusLabel = status == 'accepted' ? 'Acceptée' : 'En attente';
+    final statusColor = status == 'accepted' ? AppColors.success : AppColors.accentOrange;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -226,29 +229,34 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
                     _buildInfoChip(Icons.biotech_rounded, type),
                     const SizedBox(width: 12),
                     _buildInfoChip(Icons.calendar_today_rounded, dateStr),
+                    const SizedBox(width: 12),
+                    _buildStatusChip(statusLabel, statusColor),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(width: 32),
-          Row(
-            children: [
-              _buildMinimalActionButton(
-                Icons.delete_outline_rounded,
-                'Supprimer',
-                AppColors.error,
-                () => _handleAction(id, false),
-              ),
-              const SizedBox(width: 12),
-              _buildPremiumActionButton(
-                Icons.done_all_rounded,
-                'Lue',
-                AppColors.success,
-                () => _handleAction(id, true),
-              ),
-            ],
-          ),
+          if (status == 'pending')
+            Row(
+              children: [
+                _buildMinimalActionButton(
+                  Icons.close_rounded,
+                  'Refuser',
+                  AppColors.error,
+                  () => _handleAction(id, false),
+                ),
+                const SizedBox(width: 12),
+                _buildPremiumActionButton(
+                  Icons.done_all_rounded,
+                  'Accepter',
+                  AppColors.success,
+                  () => _handleAction(id, true),
+                ),
+              ],
+            )
+          else
+            const SizedBox.shrink(),
         ],
       ),
     );
@@ -272,6 +280,35 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: color,
             ),
           ),
         ],

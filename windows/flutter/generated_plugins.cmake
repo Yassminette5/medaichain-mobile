@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   agora_rtc_engine
   iris_method_channel
   permission_handler_windows
+  share_plus
   url_launcher_windows
 )
 

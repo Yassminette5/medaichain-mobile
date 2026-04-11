@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../patientnesrine/doctor.dart';
 import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/doctors_list_screen.dart';
+import '../patientnesrine/document_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -145,6 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              // Dossier médical déplacé au Profil (supprimé de l'accueil)
+              const SizedBox(height: 8),
 
               // Enhanced Search Bar
               Container(

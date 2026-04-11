@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
+
+
 /// Écran de prise de rendez-vous pour les patients
 class AppointmentBookingScreen extends StatefulWidget {
   final String labId;
@@ -21,8 +23,9 @@ class AppointmentBookingScreen extends StatefulWidget {
 class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _analysisTypeController =
-      TextEditingController();
+  // Le controller du champ Autocomplete est fourni par Autocomplete via fieldViewBuilder.
+  // On le garde pour lire la valeur réellement tapée/sélectionnée au moment de l'envoi.
+  TextEditingController? _analysisFieldController;
 
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
@@ -45,7 +48,6 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
   void dispose() {
     _notesController.dispose();
     _dateController.dispose();
-    _analysisTypeController.dispose();
     super.dispose();
   }
 
@@ -100,40 +102,42 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
       return;
     }
 
-    final appointmentDateTime =
-        DateTime.utc(parsedDate.year, parsedDate.month, parsedDate.day, 9, 0);
+    // Convention actuelle: heure fixe à 09:00 (locale), envoyée en UTC au backend.
+    // Si la date choisie est "aujourd'hui" et que 09:00 est déjà passé, certains backends renvoient 400.
+    final localAtNine = DateTime(parsedDate.year, parsedDate.month, parsedDate.day, 9, 0);
+    final appointmentDateTimeUtc = localAtNine.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    if (!appointmentDateTimeUtc.isAfter(nowUtc.add(const Duration(minutes: 1)))) {
+      _showErrorSnackBar('Veuillez choisir une date future (au moins demain).');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
-      final backendType = _toBackendAnalysisType(_analysisTypeController.text);
+      final rawAnalysis = _analysisFieldController?.text ?? '';
+      final backendType = _toBackendAnalysisType(rawAnalysis);
+
       final appointmentData = {
         // Backend attend une valeur enum: analyse_sanguin | scanner | radiologie | imagerie | biologie | autre
         'analysisType': backendType,
-        'appointmentDate': appointmentDateTime.toIso8601String(),
+        'appointmentDate': appointmentDateTimeUtc.toIso8601String(),
         'centreName': widget.centreName,
         'labId': widget.labId,
-        // Champs du backend (optionnels mais présents dans la doc)
+        // Champs optionnels: gardés à false par défaut (le backend gère l'automatisation).
         'hasCurrentTreatment': false,
         'hasAllergies': false,
+        // Tier d'abonnement: en attendant Stripe, on envoie 'free' par défaut
+        'subscriptionTier': 'free',
         if (_notesController.text.trim().isNotEmpty) 'notes': _notesController.text.trim(),
       };
 
-      await ApiService.createLabAppointment(appointmentData);
+      final created = await ApiService.createLabAppointment(appointmentData);
 
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rendez-vous créé avec succès'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-          ),
-        );
-        Navigator.pop(context, true);
+        // SnackBar gérée au retour dans `CenterDetailScreen` (avec bouton "Voir" + détails).
+        Navigator.pop(context, created);
       }
     } catch (e) {
       if (mounted) {
@@ -232,10 +236,12 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                         e.toLowerCase().contains(value.text.toLowerCase()));
                   },
                   onSelected: (value) {
-                    _analysisTypeController.text = value;
+                    _analysisFieldController?.text = value;
                   },
                   fieldViewBuilder:
                       (context, controller, focusNode, onEditingComplete) {
+                    // Garder une référence au controller réellement utilisé par Autocomplete.
+                    _analysisFieldController = controller;
                     return TextFormField(
                       controller: controller,
                       focusNode: focusNode,
@@ -474,7 +480,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(bottom: 60),
                       child: _buildInputPrefixIcon(
-                        icon: Icons.note_alt_rounded,
+                        icon: Icons.edit_note_rounded,
                         iconColor: AppColors.secondary,
                         noMargin: true,
                       ),

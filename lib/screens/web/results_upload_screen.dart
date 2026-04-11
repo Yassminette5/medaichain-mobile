@@ -121,22 +121,13 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        // Backend: PDF uniquement
-        allowedExtensions: ['pdf'],
+        // Autoriser PDF et images
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
         allowMultiple: false,
       );
 
       if (result != null && result.files.single.bytes != null) {
         final picked = result.files.single;
-        final name = picked.name.toLowerCase();
-        final ext = name.contains('.') ? name.split('.').last : '';
-        if (ext != 'pdf') {
-          _showErrorDialog(
-            title: 'Format non autorisé',
-            message: 'Seul le format PDF est accepté.',
-          );
-          return;
-        }
         setState(() {
           _selectedFile = picked;
         });
@@ -155,18 +146,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     }
 
     if (_selectedFile == null || _selectedFile!.bytes == null) {
-      _showErrorDialog(title: 'Fichier manquant', message: 'Veuillez sélectionner un fichier PDF.');
-      return;
-    }
-
-    // Double sécurité côté front
-    final fileName = _selectedFile!.name.toLowerCase();
-    final ext = fileName.contains('.') ? fileName.split('.').last : '';
-    if (ext != 'pdf') {
-      _showErrorDialog(
-        title: 'Format non autorisé',
-        message: 'Seul le format PDF est accepté.',
-      );
+      _showErrorDialog(title: 'Fichier manquant', message: 'Veuillez sélectionner un fichier.');
       return;
     }
 
@@ -923,7 +903,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-                  'PDF uniquement (jusqu’à 50MB)',
+                  'PDF ou Image (JPG, PNG, WEBP) – jusqu’à 50MB',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,

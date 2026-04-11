@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../services/api_service.dart';
+import '../../providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'ocr_analyze_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import 'ocr_document_detail_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
-class DocumentListScreen extends StatelessWidget {
+class DocumentListScreen extends StatefulWidget {
   final String title;
   final IconData icon;
   final LinearGradient gradient;
@@ -15,6 +23,53 @@ class DocumentListScreen extends StatelessWidget {
   });
 
   @override
+  State<DocumentListScreen> createState() => _DocumentListScreenState();
+}
+
+class _DocumentListScreenState extends State<DocumentListScreen> {
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _docs = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final auth = mounted ? Provider.of<AuthProvider>(context, listen: false) : null;
+      final patientId = auth?.user?.id;
+      List<Map<String, dynamic>> list = const [];
+      if (patientId != null && patientId.isNotEmpty) {
+        final raw = await ApiService.getPatientAnalysisResults(patientId);
+        list = raw.map<Map<String, dynamic>>((e) => (e as Map).cast<String, dynamic>()).toList();
+      } else {
+        list = await ApiService.getOcrDocuments();
+      }
+      if (mounted) {
+        setState(() {
+          _docs = list;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _docs = const [];
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -25,14 +80,14 @@ class DocumentListScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
               decoration: BoxDecoration(
-                gradient: gradient,
+                gradient: widget.gradient,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: gradient.colors.first.withOpacity(0.3),
+                    color: widget.gradient.colors.first.withOpacity(0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -58,11 +113,11 @@ class DocumentListScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Icon(icon, color: Colors.white, size: 28),
+                      Icon(widget.icon, color: Colors.white, size: 28),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          title,
+                          widget.title,
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -71,7 +126,7 @@ class DocumentListScreen extends StatelessWidget {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: _load,
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -108,7 +163,7 @@ class DocumentListScreen extends StatelessWidget {
                               const Icon(Icons.description, color: Colors.white, size: 18),
                               const SizedBox(width: 8),
                               Text(
-                                "8 Documents",
+                                "${_docs.length} Documents",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -137,7 +192,7 @@ class DocumentListScreen extends StatelessWidget {
                               const Icon(Icons.cloud_done, color: Colors.white, size: 18),
                               const SizedBox(width: 8),
                               Text(
-                                "All Synced",
+                                "Synchro",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -154,15 +209,31 @@ class DocumentListScreen extends StatelessWidget {
               ),
             ),
 
-            // Document List
+            // Document List (dynamique depuis backend, via état local)
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: 8,
-                itemBuilder: (context, index) {
-                  return _buildDocumentCard(context, index);
-                },
-              ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(
+                          child: Text(
+                            'Erreur: $_error',
+                            style: GoogleFonts.poppins(color: AppColors.error),
+                          ),
+                        )
+                      : _docs.isEmpty
+                          ? Center(
+                              child: Text(
+                                'Aucun document',
+                                style: GoogleFonts.poppins(color: AppColors.textSecondary),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: _docs.length,
+                              itemBuilder: (context, index) {
+                                return _buildDocumentCard(context, _docs[index]);
+                              },
+                            ),
             ),
           ],
         ),
@@ -170,90 +241,50 @@ class DocumentListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDocumentCard(BuildContext context, int index) {
-    final List<Map<String, dynamic>> documents = [
-      {
-        "name": "Blood Test Results",
-        "date": "Dec 15, 2024",
-        "size": "2.4 MB",
-        "type": "PDF",
-        "status": "Verified",
-        "color": const Color(0xFFFF6B9D),
-      },
-      {
-        "name": "X-Ray Chest",
-        "date": "Dec 10, 2024",
-        "size": "5.1 MB",
-        "type": "IMAGE",
-        "status": "Pending",
-        "color": const Color(0xFF6C63FF),
-      },
-      {
-        "name": "Medical Certificate",
-        "date": "Dec 5, 2024",
-        "size": "1.2 MB",
-        "type": "PDF",
-        "status": "Verified",
-        "color": const Color(0xFF4ECDC4),
-      },
-      {
-        "name": "Prescription - Amoxicillin",
-        "date": "Nov 28, 2024",
-        "size": "0.8 MB",
-        "type": "PDF",
-        "status": "Active",
-        "color": const Color(0xFFFF9B71),
-      },
-      {
-        "name": "ECG Report",
-        "date": "Nov 20, 2024",
-        "size": "3.2 MB",
-        "type": "PDF",
-        "status": "Verified",
-        "color": const Color(0xFFB4A5FF),
-      },
-      {
-        "name": "Vaccination Record",
-        "date": "Nov 15, 2024",
-        "size": "1.5 MB",
-        "type": "PDF",
-        "status": "Verified",
-        "color": const Color(0xFF44A08D),
-      },
-      {
-        "name": "Allergy Test",
-        "date": "Nov 10, 2024",
-        "size": "2.1 MB",
-        "type": "PDF",
-        "status": "Pending",
-        "color": const Color(0xFFFF8E9E),
-      },
-      {
-        "name": "Annual Checkup",
-        "date": "Oct 30, 2024",
-        "size": "4.3 MB",
-        "type": "PDF",
-        "status": "Verified",
-        "color": const Color(0xFF8F89FF),
-      },
-    ];
+  Widget _buildDocumentCard(BuildContext context, Map<String, dynamic> doc) {
+    // Nom labo et métadonnées (compat lab results + OCR)
+    final dynamic lab = doc['labId'];
+    final String labName = lab is Map
+        ? (lab['centreName']?.toString() ?? lab['name']?.toString() ?? 'Laboratoire')
+        : (lab?.toString() ?? '');
+    final String analysisType = (doc['analysisType'] ?? '').toString();
+    final String resultFile = (doc['resultFile'] ?? '').toString();
+    final String fileName = resultFile.isNotEmpty ? resultFile.split('/').last : '';
 
-    final doc = documents[index % documents.length];
-    final bool isVerified = doc["status"] == "Verified";
-    final bool isActive = doc["status"] == "Active";
+    final String name = (labName.isNotEmpty
+            ? labName
+            : (doc['name'] ?? doc['title'] ?? doc['analysisType'] ?? 'Document'))
+        .toString();
+
+    final String rawDate = (doc['analysisDate'] ?? doc['date'] ?? doc['createdAt'] ?? '').toString();
+    String date = rawDate;
+    try {
+      if (rawDate.isNotEmpty) {
+        date = DateFormat('dd MMM yyyy', 'fr').format(DateTime.parse(rawDate));
+      }
+    } catch (_) {}
+    final String type = (doc['type'] ?? (doc['isPdf'] == true ? 'PDF' : 'PDF')).toString().toUpperCase();
+    final String sizeStr = (doc['size'] ?? doc['sizeMB'] ?? '').toString();
+    final String status = (doc['status'] ?? 'Verified').toString();
+    final bool isVerified = status.toLowerCase().contains('ver') || status.toLowerCase() == 'verified';
+    final bool isActive = status.toLowerCase() == 'active';
+    final Color accentColor = AppColors.primary;
 
     return GestureDetector(
       onTap: () {
-        // Open document viewer
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OcrDocumentDetailScreen(document: doc)),
+        );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: (doc["color"] as Color).withOpacity(0.15),
+              color: accentColor.withOpacity(0.15),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -273,8 +304,8 @@ class DocumentListScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        doc["color"] as Color,
-                        (doc["color"] as Color).withOpacity(0.5),
+                        accentColor,
+                        accentColor.withOpacity(0.5),
                       ],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -284,31 +315,31 @@ class DocumentListScreen extends StatelessWidget {
               ),
 
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
                     // Document Icon with gradient background
                     Container(
-                      width: 60,
-                      height: 60,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            (doc["color"] as Color).withOpacity(0.2),
-                            (doc["color"] as Color).withOpacity(0.1),
+                            accentColor.withOpacity(0.2),
+                            accentColor.withOpacity(0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Center(
                         child: Icon(
-                          doc["type"] == "PDF" ? Icons.picture_as_pdf : Icons.image,
-                          color: doc["color"] as Color,
-                          size: 28,
+                          type == "PDF" ? Icons.picture_as_pdf : Icons.image,
+                          color: accentColor,
+                          size: 22,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
 
                     // Document Info
                     Expanded(
@@ -319,7 +350,7 @@ class DocumentListScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  doc["name"],
+                                  name,
                                   style: GoogleFonts.poppins(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -359,7 +390,7 @@ class DocumentListScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      doc["status"],
+                                      status,
                                       style: GoogleFonts.poppins(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -375,22 +406,26 @@ class DocumentListScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
 
                           // Date and Size
                           Row(
                             children: [
                               Icon(Icons.calendar_today, size: 13, color: AppColors.textGrey),
                               const SizedBox(width: 6),
-                              Text(
-                                doc["date"],
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: AppColors.textGrey,
-                                  fontWeight: FontWeight.w500,
+                              Expanded(
+                                child: Text(
+                                  date.isEmpty ? '—' : date,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: AppColors.textGrey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                               Container(
                                 width: 4,
                                 height: 4,
@@ -399,15 +434,19 @@ class DocumentListScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                               Icon(Icons.storage, size: 13, color: AppColors.textGrey),
                               const SizedBox(width: 6),
-                              Text(
-                                doc["size"],
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: AppColors.textGrey,
-                                  fontWeight: FontWeight.w500,
+                              Flexible(
+                                child: Text(
+                                  sizeStr.isEmpty ? '—' : sizeStr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: AppColors.textGrey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
@@ -416,24 +455,52 @@ class DocumentListScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
 
                     // Action Buttons
                     Column(
                       children: [
+                        if (type != 'PDF')
+                          GestureDetector(
+                            onTap: () {
+                              // Ouvre l'écran d'analyse (l'utilisateur choisira l'image à envoyer)
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const OcrAnalyzeScreen()),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.psychology_alt_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        if (type != 'PDF') const SizedBox(height: 8),
+                        // Voir document (ouvre le PDF)
                         GestureDetector(
-                          onTap: () {
-                            // Share document
+                          onTap: () async {
+                            if (fileName.isEmpty) return;
+                            final url = '${ApiService.baseUrl}/lab/uploads/results/$fileName'
+                                .replaceAll('//lab', '/lab'); // éviter les doubles '/'
+                            final uri = Uri.parse(url);
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: (doc["color"] as Color).withOpacity(0.1),
+                              color: accentColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              Icons.share_outlined,
-                              color: doc["color"] as Color,
+                              Icons.picture_as_pdf_rounded,
+                              color: accentColor,
                               size: 18,
                             ),
                           ),
@@ -441,7 +508,7 @@ class DocumentListScreen extends StatelessWidget {
                         const SizedBox(height: 8),
                         GestureDetector(
                           onTap: () {
-                            _showDocumentOptions(context);
+                            _showDocumentOptions(context, doc);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
@@ -468,70 +535,159 @@ class DocumentListScreen extends StatelessWidget {
     );
   }
 
-  void _showDocumentOptions(BuildContext context) {
+  void _showDocumentOptions(BuildContext context, Map<String, dynamic> doc) {
+    final String resultFile = (doc['resultFile'] ?? '').toString();
+    final String fileName = resultFile.isNotEmpty ? resultFile.split('/').last : '';
+    final String url = fileName.isEmpty
+        ? ''
+        : '${ApiService.baseUrl}/lab/uploads/results/$fileName'.replaceAll('//lab', '/lab');
+    final String? docId = (doc['_id'] ?? doc['id'])?.toString();
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundDark,
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.9,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom + 16),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundDark,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildOptionTile(
+                    Icons.ios_share_rounded,
+                    "Partager",
+                    AppColors.primary,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (url.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Lien indisponible"), backgroundColor: AppColors.error),
+                        );
+                        return;
+                      }
+                      await Share.share(url, subject: "Document médical");
+                    },
+                  ),
+                  _buildOptionTile(
+                    Icons.download_outlined,
+                    "Download",
+                    const Color(0xFF4ECDC4),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (url.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Lien indisponible"), backgroundColor: AppColors.error),
+                        );
+                        return;
+                      }
+                      final uri = Uri.parse(url);
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    },
+                  ),
+                  _buildOptionTile(
+                    Icons.delete_outline,
+                    "Delete",
+                    const Color(0xFFFF6B9D),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final ok = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Supprimer'),
+                              content: const Text('Confirmer la suppression de ce document ?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Supprimer')),
+                              ],
+                            ),
+                          ) ??
+                          false;
+                      if (!ok) return;
+                      if (docId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("ID document manquant"), backgroundColor: AppColors.error),
+                        );
+                        return;
+                      }
+                      final success = await ApiService.deleteOcrDocuments([docId]);
+                      if (!mounted) return;
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Document supprimé"), backgroundColor: AppColors.success),
+                        );
+                        _load();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Échec de la suppression"), backgroundColor: AppColors.error),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-            _buildOptionTile(Icons.visibility_outlined, "View Document", AppColors.primary),
-            _buildOptionTile(Icons.download_outlined, "Download", const Color(0xFF4ECDC4)),
-            _buildOptionTile(Icons.edit_outlined, "Rename", const Color(0xFFFF9B71)),
-            _buildOptionTile(Icons.delete_outline, "Delete", const Color(0xFFFF6B9D)),
-            const SizedBox(height: 12),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildOptionTile(IconData icon, String title, Color color) {
+  Widget _buildOptionTile(IconData icon, String title, Color color, {VoidCallback? onTap}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

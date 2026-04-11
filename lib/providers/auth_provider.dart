@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../models/doctor_profile_model.dart';
 import '../services/api_service.dart';
 
+
 class AuthProvider with ChangeNotifier {
   User? _user;
   DoctorProfile? _doctorProfile;
@@ -67,6 +68,8 @@ class AuthProvider with ChangeNotifier {
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
       }
+
+      // Stripe: aucune action ici (sera géré côté backend/checkout)
     } catch (e) {
       _user = null;
     }
@@ -154,6 +157,7 @@ class AuthProvider with ChangeNotifier {
       if (_user?.role == UserRole.medecin) {
         await fetchDoctorProfile();
       }
+      // In-App Purchase : pas de login nécessaire
       _isLoading = false;
       notifyListeners();
       return true;

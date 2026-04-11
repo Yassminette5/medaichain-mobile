@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+
+
+
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
 import 'screens/clinique/web/dashboard_main_screen.dart';
@@ -42,6 +45,8 @@ Future<void> main() async {
 
   // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)
   await initializeDateFormatting('fr_FR', null);
+
+  // Abonnements Stripe à venir (aucune init ici)
 
   try {
     // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)

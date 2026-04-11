@@ -142,7 +142,7 @@ class AppointmentDetailScreen extends StatelessWidget {
               const SizedBox(height: 24),
             ],
             // Boutons d'action
-            if (status == 'pending') _buildActionButtons(context),
+            if (status.toLowerCase() == 'pending') _buildActionButtons(context),
             const SizedBox(height: 20),
           ],
         ),

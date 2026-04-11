@@ -97,12 +97,12 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
           ),
         ),
 
-        const SizedBox(height: 40),
+        const SizedBox(height: 24),
 
         // Circular Dial
         Container(
-          width: 300,
-          height: 300,
+          width: 240,
+          height: 240,
           child: CustomPaint(
             painter: WeightDialPainter(
               currentWeight: currentWeight,
@@ -113,7 +113,7 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
 
         // Linear Slider
         Padding(
@@ -138,7 +138,7 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
           ),
         ),
 
-        const Spacer(),
+        const SizedBox(height: 16),
 
         // Next Button (Standardized with Gender Screen)
         Padding(

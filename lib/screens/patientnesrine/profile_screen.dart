@@ -7,7 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+
 import '../patientnesrine/edit_profile_screen.dart';
+import '../patientnesrine/subscription_screen.dart';
+import '../patientnesrine/document_list_screen.dart';
 
 
 class ProfileScreen extends StatelessWidget {
@@ -283,6 +286,79 @@ class ProfileScreen extends StatelessWidget {
                 if (userId == null || userId.isEmpty) return const SizedBox.shrink();
                 return _ProfileAnalysisResultsSection(userId: userId);
               },
+            ),
+            const SizedBox(height: 32),
+
+            // ── Plan & Abonnement ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Mon Abonnement",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.grey.shade400, Colors.grey.shade600]),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: AppColors.colored(AppColors.primary),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Plan Gratuit',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Gérez votre abonnement',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
 
@@ -728,7 +804,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Résultats d'analyse",
+            "Dossier médical",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -736,58 +812,61 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
             ),
           ),
           const SizedBox(height: 16),
-          _loading
-              ? Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: AppColors.small,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentListScreen(
+                    title: 'Dossier médical',
+                    icon: Icons.folder_shared_rounded,
+                    gradient: LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
                   ),
-                  child: const Center(
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppColors.small,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
+                      borderRadius: BorderRadius.circular(14),
                     ),
+                    child: const Icon(Icons.folder_shared_rounded, color: Colors.white),
                   ),
-                )
-              : _results.isEmpty
-                  ? Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: AppColors.small,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Icons.science_rounded, color: AppColors.primary, size: 22),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              "Aucun résultat d'analyse pour le moment.",
-                              style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (int i = 0; i < _results.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 12),
-                          _buildResultItem(_results[i]),
-                        ],
+                        Text(
+                          'Accéder à vos documents (analyses, ordonnances, examens)',
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "Ouvrir le dossier",
+                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary),
+                        ),
                       ],
                     ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

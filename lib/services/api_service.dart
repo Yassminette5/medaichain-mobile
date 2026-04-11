@@ -29,6 +29,28 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
+  /// Supprimer des documents OCR (liste d'IDs)
+  /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
+  static Future<bool> deleteOcrDocuments(List<String> ids) async {
+    if (ids.isEmpty) return true;
+    final token = await getAccessToken();
+    final url = '$baseUrl/patient/ocr/documents';
+    final response = await http.delete(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'ids': ids}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 204) return true;
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return deleteOcrDocuments(ids);
+    }
+    return false;
+  }
+
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
@@ -1157,7 +1179,8 @@ class ApiService {
   }
 
   // Version pour centres d'analyse (patient) — POST /lab-appointments
-  static Future<void> createLabAppointment(Map<String, dynamic> appointmentData) async {
+  // Retourne l'objet RDV créé (incluant désormais `status`: accepted|pending|rejected)
+  static Future<Map<String, dynamic>> createLabAppointment(Map<String, dynamic> appointmentData) async {
     final token = await getAccessToken();
     
     final response = await http.post(
@@ -1170,23 +1193,136 @@ class ApiService {
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      return;
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic>) {
+          if (data['appointment'] is Map) {
+            return Map<String, dynamic>.from(data['appointment'] as Map);
+          }
+          if (data['data'] is Map) {
+            return Map<String, dynamic>.from(data['data'] as Map);
+          }
+          return data;
+        }
+      } catch (_) {
+        // Certains backends peuvent répondre vide même en 201; on renvoie un fallback exploitable
+      }
+      return Map<String, dynamic>.from(appointmentData);
     } else if (response.statusCode == 401) {
       await refreshToken();
       return createLabAppointment(appointmentData);
     } else {
+      // Essayer d'extraire un message d'erreur utile (souvent validation => 400)
       try {
-        final errorData = jsonDecode(response.body);
-        final errorMessage = errorData['message'] ?? 
-                            errorData['error'] ?? 
-                            errorData['statusMessage'] ??
-                            'Erreur de création du rendez-vous';
-        throw Exception(errorMessage);
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          final errorData = Map<String, dynamic>.from(decoded);
+          final errorMessage = errorData['message'] ??
+              errorData['error'] ??
+              errorData['statusMessage'] ??
+              (errorData['errors']?.toString()) ??
+              'Erreur de création du rendez-vous';
+          throw Exception(errorMessage.toString());
+        }
+        throw Exception(decoded.toString());
       } catch (e) {
+        // Si le backend renvoie du texte/HTML, garder un extrait pour debug
+        final body = response.body.toString();
+        final snippet = body.length > 400 ? '${body.substring(0, 400)}…' : body;
+        debugPrint('[ApiService] createLabAppointment failed: ${response.statusCode} body=$snippet');
         if (e is Exception && e.toString().contains('Erreur')) {
           rethrow;
         }
-        throw Exception('Erreur de création du rendez-vous: ${response.statusCode}');
+        throw Exception('Erreur de création du rendez-vous (${response.statusCode})${snippet.trim().isNotEmpty ? ': $snippet' : ''}');
+      }
+    }
+  }
+
+  /// Liste des RDV du patient connecté — GET /lab-appointments/my
+  static Future<List<Map<String, dynamic>>> getMyLabAppointments() async {
+    final token = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab-appointments/my'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) return List<Map<String, dynamic>>.from(data);
+      if (data is Map && data['appointments'] != null) {
+        return List<Map<String, dynamic>>.from(data['appointments']);
+      }
+      if (data is Map && data['data'] != null) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMyLabAppointments();
+    } else {
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ??
+            errorData['error'] ??
+            errorData['statusMessage'] ??
+            'Erreur de récupération des rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) rethrow;
+        throw Exception('Erreur de récupération des rendez-vous: ${response.statusCode}');
+      }
+    }
+  }
+
+  /// Détails d'un RDV de labo (patient) — GET /lab-appointments/:id
+  /// Si l'endpoint n'existe pas côté backend, on tentera un fallback via /lab-appointments/my.
+  static Future<Map<String, dynamic>> getLabAppointmentById(String appointmentId) async {
+    final token = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/lab-appointments/$appointmentId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is Map<String, dynamic>) {
+        if (data['appointment'] is Map) return Map<String, dynamic>.from(data['appointment'] as Map);
+        if (data['data'] is Map) return Map<String, dynamic>.from(data['data'] as Map);
+        return data;
+      }
+      throw Exception('Réponse invalide pour les détails du rendez-vous');
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getLabAppointmentById(appointmentId);
+    } else {
+      // Fallback: chercher dans la liste /my
+      try {
+        final list = await getMyLabAppointments();
+        final found = list.firstWhere(
+          (e) => (e['_id']?.toString() ?? e['id']?.toString()) == appointmentId,
+          orElse: () => <String, dynamic>{},
+        );
+        if (found.isNotEmpty) return found;
+      } catch (_) {}
+
+      try {
+        final errorData = jsonDecode(response.body);
+        final errorMessage = errorData['message'] ??
+            errorData['error'] ??
+            errorData['statusMessage'] ??
+            'Erreur de chargement du rendez-vous';
+        throw Exception(errorMessage);
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Erreur')) rethrow;
+        throw Exception('Erreur de chargement du rendez-vous: ${response.statusCode}');
       }
     }
   }
@@ -2032,6 +2168,149 @@ class ApiService {
     } catch (e) {
       debugPrint('❌ API Service: Exception lors de l\'upload: $e');
       throw Exception('Erreur lors de l\'upload du résultat: $e');
+    }
+  }
+
+  // ========== ML OCR (proxy backend → Flask) ==========
+  /// Envoie une image ou un PDF vers /ml/ocr-analyze et retourne la réponse JSON du modèle.
+  /// Le champ multipart attendu est 'file'.
+  static Future<Map<String, dynamic>> mlOcrAnalyze({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final token = await getAccessToken();
+
+    // Déterminer le content-type
+    String contentType = 'application/octet-stream';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) contentType = 'application/pdf';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
+    if (lower.endsWith('.png')) contentType = 'image/png';
+    if (lower.endsWith('.webp')) contentType = 'image/webp';
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/ml/ocr-analyze'),
+      );
+      request.headers['Authorization'] = 'Bearer $token';
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          fileBytes,
+          filename: fileName,
+          contentType: MediaType.parse(contentType),
+        ),
+      );
+
+      final streamed = await request.send();
+      final response = await http.Response.fromStream(streamed);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic>) {
+          // Normaliser si { message, data } est renvoyé
+          if (data.containsKey('data') && data['data'] is Map) {
+            return Map<String, dynamic>.from(data['data'] as Map);
+          }
+          return data;
+        }
+        return {'data': data};
+      } else if (response.statusCode == 401) {
+        await refreshToken();
+        return mlOcrAnalyze(fileBytes: fileBytes, fileName: fileName);
+      } else {
+        String msg = 'Erreur OCR (${response.statusCode})';
+        try {
+          final err = jsonDecode(response.body);
+          msg = (err['message'] ??
+                  err['detail'] ??
+                  err['error'] ??
+                  msg)
+              .toString();
+        } catch (_) {}
+        throw Exception(msg);
+      }
+    } catch (e) {
+      debugPrint('❌ API Service: OCR exception: $e');
+      throw Exception('Erreur OCR: $e');
+    }
+  }
+
+  /// Sauvegarder un résultat OCR (après analyse) pour le patient connecté
+  /// Backend attendu: POST /patient/ocr/save
+  /// Body flexible: { filename, data } ou { filename, result } selon implémentation
+  static Future<bool> saveOcrResult({
+    required String fileName,
+    required Map<String, dynamic> result,
+    String? mimeType,
+    String? sourceType,
+  }) async {
+    final token = await getAccessToken();
+    final url = '$baseUrl/patient/ocr/save';
+    final body = <String, dynamic>{ 'filename': fileName, 'data': result };
+    if (mimeType != null) body['mimeType'] = mimeType;
+    if (sourceType != null) body['sourceType'] = sourceType;
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return saveOcrResult(fileName: fileName, result: result);
+    }
+    return false;
+  }
+
+  // ========== OCR Documents (stockés côté backend) ==========
+  /// Liste des documents OCR du patient connecté.
+  static Future<List<Map<String, dynamic>>> getOcrDocuments() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/ocr/documents'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) return List<Map<String, dynamic>>.from(data);
+      if (data is Map && data['data'] is List) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      }
+      if (data is Map && data['results'] is List) {
+        return List<Map<String, dynamic>>.from(data['results']);
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getOcrDocuments();
+    } else {
+      throw Exception('Erreur chargement documents OCR');
+    }
+  }
+
+  /// Détail d’un document OCR par ID
+  static Future<Map<String, dynamic>> getOcrDocumentById(String id) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/ocr/documents/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is Map<String, dynamic>) return data;
+      return {'data': data};
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getOcrDocumentById(id);
+    } else {
+      throw Exception('Erreur chargement document OCR');
     }
   }
 

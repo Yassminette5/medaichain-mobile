@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import 'appointment_booking_screen.dart';
+import '../patientnesrine/lab_appointment_detail_screen.dart';
 
 /// Écran de détails d'un centre d'analyse pour les patients
 class CenterDetailScreen extends StatefulWidget {
@@ -422,19 +423,84 @@ class _CenterDetailScreenState extends State<CenterDetailScreen> {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final centreName = _centerData!['centreName'] ??
+              _centerData!['name'] ??
+              _centerData!['centre_name'] ??
+              'Centre';
+
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => AppointmentBookingScreen(
                 labId: widget.centerId,
-                centreName: _centerData!['centreName'] ?? 
-                           _centerData!['name'] ?? 
-                           _centerData!['centre_name'] ?? 
-                           'Centre',
+                centreName: centreName,
               ),
             ),
           );
+
+          if (!mounted) return;
+
+          if (result is Map) {
+            final created = Map<String, dynamic>.from(result);
+            final status = (created['status']?.toString().toLowerCase() ?? 'pending').trim();
+            final apptId = (created['_id'] ?? created['id'])?.toString().trim();
+            final dateStr = created['appointmentDate']?.toString() ?? '';
+            final dateLabel = dateStr.isNotEmpty ? dateStr.split('T').first : '';
+
+            SnackBar snackBar;
+            if (status == 'accepted') {
+              snackBar = SnackBar(
+                content: Text('✅ Demande acceptée automatiquement\n$dateLabel • $centreName'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+                action: (apptId != null && apptId.isNotEmpty)
+                    ? SnackBarAction(
+                        label: 'Voir',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LabAppointmentDetailScreen(
+                                appointmentId: apptId,
+                                notificationData: {
+                                  'appointmentId': apptId,
+                                  'status': status,
+                                  'centreName': centreName,
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : null,
+              );
+            } else if (status == 'rejected') {
+              snackBar = SnackBar(
+                content: Text('❌ Demande refusée\n$dateLabel • $centreName'),
+                backgroundColor: AppColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              );
+            } else {
+              snackBar = SnackBar(
+                content: Text('🕐 En attente de confirmation\n$dateLabel • $centreName'),
+                backgroundColor: AppColors.accentOrange,
+                behavior: SnackBarBehavior.floating,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              );
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
         },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
