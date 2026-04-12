@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/pharmacy_statistics.dart';
 import '../../../models/pharmacy_dashboard.dart';
+import '../../../services/api_service.dart';
 import '../../../services/pharmacy_service.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
@@ -10,6 +11,7 @@ import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_profile.dart';
+import 'pharmacy_web_medication_statistics.dart';
 
 class PharmacyWebStatistics extends StatefulWidget {
   const PharmacyWebStatistics({super.key});
@@ -25,11 +27,136 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
   String? _error;
   bool _sidebarVisible = true;
 
+  bool _showingIncomingAlert = false;
+  final Set<String> _handledIncomingNotificationIds = <String>{};
+  static const Duration _pollInterval = Duration(seconds: 4);
+
   @override
   void initState() {
     super.initState();
     _loadStatistics();
     _loadPharmacyInfo();
+    _startIncomingRequestsPolling();
+  }
+
+  void _startIncomingRequestsPolling() {
+    Future<void>.delayed(const Duration(milliseconds: 500), () async {
+      while (mounted) {
+        await _pollUnreadNotificationsOnce();
+        await Future<void>.delayed(_pollInterval);
+      }
+    });
+  }
+
+  Future<void> _pollUnreadNotificationsOnce() async {
+    if (_showingIncomingAlert) return;
+    try {
+      final unread = await ApiService.getUnreadNotifications();
+      if (!mounted) return;
+
+      Map<String, dynamic>? candidate;
+      for (final n in unread) {
+        final data = (n['data'] is Map)
+            ? (n['data'] as Map).cast<String, dynamic>()
+            : <String, dynamic>{};
+        if (data['type']?.toString() != 'pharmacy_request_created') continue;
+        final id = (n['id'] ?? n['_id'] ?? '').toString();
+        if (id.isEmpty) continue;
+        if (_handledIncomingNotificationIds.contains(id)) continue;
+        candidate = n;
+        break;
+      }
+
+      if (candidate == null) return;
+
+      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '')
+          .toString();
+      final data = (candidate['data'] is Map)
+          ? (candidate['data'] as Map).cast<String, dynamic>()
+          : <String, dynamic>{};
+      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '')
+          .toString();
+      if (requestId.isEmpty) return;
+
+      _handledIncomingNotificationIds.add(notificationId);
+      _showingIncomingAlert = true;
+
+      MedicationRequest? request;
+      try {
+        request = await PharmacyService.getMyRequestById(requestId);
+      } catch (_) {
+        request = null;
+      }
+
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) {
+          final title = (candidate?['title'] ?? 'Nouvelle demande').toString();
+          final message = (candidate?['message'] ?? '').toString();
+
+          return AlertDialog(
+            title: Text(title),
+            content: SizedBox(
+              width: 560,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (message.isNotEmpty) Text(message),
+                    const SizedBox(height: 12),
+                    if (request != null) ...[
+                      Text('Patient: ${request.patient.name}'),
+                      if (request.patient.phoneNumber != null &&
+                          request.patient.phoneNumber!.isNotEmpty)
+                        Text('Téléphone: ${request.patient.phoneNumber}'),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Médicaments:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      ...request.medications.map((m) {
+                        final dosage = m.dosage.isNotEmpty
+                            ? ' — ${m.dosage}'
+                            : '';
+                        final qty = '${m.quantity} ${m.unit}'.trim();
+                        return Text('- ${m.name}$dosage ($qty)');
+                      }),
+                      const SizedBox(height: 12),
+                      if (request.requestsDelivery)
+                        const Text('Livraison: demandée'),
+                      if (request.isUrgent) const Text('Urgence: oui'),
+                    ] else ...[
+                      const Text(
+                        'Détails indisponibles (échec du chargement).',
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (notificationId.isNotEmpty) {
+        try {
+          await ApiService.markNotificationAsRead(notificationId);
+        } catch (_) {}
+      }
+    } catch (_) {
+      // Ignore polling errors
+    } finally {
+      _showingIncomingAlert = false;
+    }
   }
 
   Future<void> _loadStatistics() async {
@@ -41,9 +168,9 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       final statistics = await PharmacyService.getStatistics(pharmacyId);
-      
+
       setState(() {
         _statistics = statistics;
         _isLoading = false;
@@ -60,9 +187,9 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
-      
+
       setState(() {
         _dashboard = dashboard;
       });
@@ -82,61 +209,61 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadStatistics,
-                        child: const Text('Réessayer'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadStatistics,
+                    child: const Text('Réessayer'),
                   ),
-                )
-              : Row(
-                  children: [
-                    if (showSidebar) _buildSidebar(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(isMediumScreen ? 40 : 24),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1400),
-                            child: Column(
+                ],
+              ),
+            )
+          : Row(
+              children: [
+                if (showSidebar) _buildSidebar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(isMediumScreen ? 40 : 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1400),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 32),
+                            _buildSalesOverview(),
+                            const SizedBox(height: 24),
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildHeader(),
-                                const SizedBox(height: 32),
-                                _buildSalesOverview(),
-                                const SizedBox(height: 24),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: _buildDeliveryTrends(),
-                                    ),
-                                    const SizedBox(width: 24),
-                                    Expanded(
-                                      flex: 1,
-                                      child: _buildCategoryDistribution(),
-                                    ),
-                                  ],
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildDeliveryTrends(),
                                 ),
-                                const SizedBox(height: 24),
-                                _buildTopMedications(),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  flex: 1,
+                                  child: _buildCategoryDistribution(),
+                                ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 24),
+                            _buildTopMedications(),
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -216,6 +343,18 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   isSelected: true,
                   onTap: () {},
                 ),
+                _buildSidebarItem(
+                  icon: Icons.medication_rounded,
+                  label: 'Statistiques Médicaments',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PharmacyWebMedicationStatistics(),
+                      ),
+                    );
+                  },
+                ),
                 const Divider(height: 32),
                 _buildSidebarItem(
                   icon: Icons.person_rounded,
@@ -253,7 +392,9 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: isSelected ? null : onTap,
@@ -264,7 +405,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
               children: [
                 Icon(
                   icon,
-                  color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textSecondary),
+                  color: isLogout
+                      ? Colors.red
+                      : (isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary),
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -273,7 +418,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textPrimary),
+                    color: isLogout
+                        ? Colors.red
+                        : (isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary),
                   ),
                 ),
               ],
@@ -316,7 +465,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
     if (confirmed == true && mounted) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginWebScreen()),
@@ -329,7 +478,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
   Widget _buildHeader() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMediumScreen = screenWidth > 800;
-    
+
     return Row(
       children: [
         if (isMediumScreen) ...[
@@ -366,7 +515,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
   Widget _buildSalesOverview() {
     if (_statistics == null) return const SizedBox.shrink();
     final sales = _statistics!.salesOverview;
-    
+
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -390,10 +539,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
               children: [
                 const Text(
                   'Ventes totales',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -408,7 +554,10 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -416,7 +565,9 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                       child: Row(
                         children: [
                           Icon(
-                            sales.percentageChange > 0 ? Icons.trending_up : Icons.trending_down,
+                            sales.percentageChange > 0
+                                ? Icons.trending_up
+                                : Icons.trending_down,
                             color: Colors.white,
                             size: 20,
                           ),
@@ -464,7 +615,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
 
   Widget _buildDeliveryTrends() {
     if (_statistics == null) return const SizedBox.shrink();
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -489,7 +640,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.show_chart, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.show_chart,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -503,10 +658,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
             ],
           ),
           const SizedBox(height: 32),
-          SizedBox(
-            height: 250,
-            child: _buildChart(),
-          ),
+          SizedBox(height: 250, child: _buildChart()),
         ],
       ),
     );
@@ -517,26 +669,20 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
       return Center(
         child: Text(
           'Aucune donnée disponible',
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       );
     }
-    
+
     final maxValue = _statistics!.deliveryTrends.dataPoints
         .map((e) => e.value)
         .reduce((a, b) => a > b ? a : b);
-    
+
     if (maxValue == 0) {
       return Center(
         child: Text(
           'Aucune livraison enregistrée',
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       );
     }
@@ -573,10 +719,7 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
             const SizedBox(height: 12),
             Text(
               '${point.date.day}/${point.date.month}',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         );
@@ -585,7 +728,8 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
   }
 
   Widget _buildCategoryDistribution() {
-    if (_statistics == null || _statistics!.categoryDistribution.categories.isEmpty) {
+    if (_statistics == null ||
+        _statistics!.categoryDistribution.categories.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -610,7 +754,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.pie_chart, color: AppColors.primary, size: 20),
+                  child: Icon(
+                    Icons.pie_chart,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -627,17 +775,14 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
             Center(
               child: Text(
                 'Aucune catégorie',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
             ),
           ],
         ),
       );
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -662,7 +807,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.pie_chart, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.pie_chart,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -753,7 +902,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.medication, color: AppColors.primary, size: 20),
+                  child: Icon(
+                    Icons.medication,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -770,17 +923,14 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
             Center(
               child: Text(
                 'Aucun médicament vendu',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
             ),
           ],
         ),
       );
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -805,7 +955,11 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.medication, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.medication,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -903,5 +1057,3 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
     );
   }
 }
-
-

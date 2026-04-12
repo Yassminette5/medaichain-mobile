@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:async' show TimeoutException;
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
@@ -902,10 +901,25 @@ class _LoginWebScreenState extends State<LoginWebScreen>
   // ── LOGIN LOGIC ────────────────────────────────────────────────────────────
 
   void _handleLogin() async {
-    final email    = _emailController.text.trim();
+    if (kIsWeb) {
+      debugPrint('🔔 Login button clicked on auth/login_web_screen.dart');
+      debugPrint('🔔 Web login click: requesting notification permission...');
+      try {
+        final reason =
+            await NotificationService().debugWebPushSetupAndRequestPermission();
+        if (reason != null && mounted) {
+          _showErrorSnackBar(reason);
+        }
+      } catch (e) {
+        debugPrint('⚠️ Web permission prompt from login screen failed: $e');
+      }
+    }
+
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
+      debugPrint('⚠️ Login aborted: empty email or password');
       _showErrorSnackBar('Veuillez remplir tous les champs');
       return;
     }
@@ -917,24 +931,6 @@ class _LoginWebScreenState extends State<LoginWebScreen>
     bool success = false;
 
     try {
-      if (kIsWeb) {
-        // Keep permission prompt in the click chain so browsers can show it.
-        // If it stalls, continue login after a short timeout.
-        try {
-          await NotificationService()
-              .promptWebPermissionAndRegisterToken()
-              .timeout(const Duration(seconds: 10));
-        } on TimeoutException {
-          // Continue sign-in even if permission flow takes longer.
-          Future<void>(() async {
-            await Future.delayed(const Duration(seconds: 6));
-            await NotificationService().registerWebTokenIfPermissionGranted();
-          });
-        } catch (_) {
-          // Ignore notification setup errors during sign-in.
-        }
-      }
-
       success = await authProvider.login(email: email, password: password);
     } finally {
       if (mounted) {

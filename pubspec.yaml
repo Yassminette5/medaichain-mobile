@@ -13,6 +13,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  pdf: ^3.11.1
   mobile_scanner: ^7.1.4
   table_calendar: ^3.2.0
   fl_chart: 0.68.0

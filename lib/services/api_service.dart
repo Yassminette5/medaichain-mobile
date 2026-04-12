@@ -31,8 +31,10 @@ class ApiService {
     if (envOverride.isNotEmpty) return envOverride;
 
     if (kIsWeb) return 'http://127.0.0.1:3000';
-    if (defaultTargetPlatform == TargetPlatform.android)
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // Android emulator -> host machine loopback
       return 'http://10.0.2.2:3000';
+    }
     return 'http://127.0.0.1:3000';
   }
 
