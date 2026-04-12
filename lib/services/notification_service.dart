@@ -115,10 +115,7 @@ class NotificationService {
   bool _localNotificationsReady = false;
   bool _tokenRefreshListenerAttached = false;
   GlobalKey<NavigatorState>? _navigatorKey;
-  static const String _webVapidKey = String.fromEnvironment(
-    'FIREBASE_WEB_VAPID_KEY',
-  );
-
+  static const String _webVapidKey = "BOf3Z9YzxqDXn3ADpXdDvYlM-5YVtmzh1SC6dOGM0jYV18Eilxxk7f7TEBc3v9P9I_67E0T7cyhPaOa0LevkEBM" ; 
   GlobalKey<NavigatorState>? get navigatorKey => _navigatorKey;
 
   void attachNavigatorKey(GlobalKey<NavigatorState> navigatorKey) {
@@ -156,7 +153,7 @@ class NotificationService {
       }
 
       _firebaseMessaging = FirebaseMessaging.instance;
-
+      
       // Local notifications plugin is mobile-only. Web uses browser notifications.
       if (!kIsWeb) {
         await _initializeLocalNotificationsSafely();
@@ -229,10 +226,14 @@ class NotificationService {
     if (!kIsWeb) return;
 
     try {
+      debugPrint('🔔 promptWebPermissionAndRegisterToken() invoked');
       // Keep this prompt as close to the user click as possible on web.
       _firebaseMessaging = FirebaseMessaging.instance;
 
+      await _logWebPermissionDiagnostics('before requestPermission()');
+
       final settings = await _requestNotificationPermissions();
+      await _logWebPermissionDiagnostics('after requestPermission()');
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
         await registerFcmTokenIfPossible();
@@ -242,11 +243,61 @@ class NotificationService {
     }
   }
 
+  /// Web-only helper to diagnose why browser prompt may not appear.
+  /// Returns null when setup is usable; otherwise returns a user-facing reason.
+  Future<String?> debugWebPushSetupAndRequestPermission() async {
+    if (!kIsWeb) return null;
+
+    try {
+      _firebaseMessaging = FirebaseMessaging.instance;
+      if (_webVapidKey.isEmpty) {
+        debugPrint('❌ Web preflight failed: VAPID key is missing.');
+        return 'VAPID key is missing. Configure FIREBASE_WEB_VAPID_KEY before requesting web push token.';
+      }
+
+      // Important: request permission first while still inside direct click chain.
+      // Awaiting other async calls before this can cause browsers to suppress prompt.
+      final requested = await _requestNotificationPermissions().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () async {
+          debugPrint('⚠️ requestPermission() timed out; reading current settings.');
+          return _firebaseMessaging.getNotificationSettings();
+        },
+      );
+
+      await _logWebPermissionDiagnostics('login post-request');
+
+      final after = await _firebaseMessaging.getNotificationSettings();
+      debugPrint('🌐 Web status after prompt attempt: ${after.authorizationStatus}');
+
+      if (after.authorizationStatus == AuthorizationStatus.denied) {
+        return 'Notifications are blocked for this site. Allow notifications in browser site settings and retry.';
+      }
+
+      final allowed =
+          requested.authorizationStatus == AuthorizationStatus.authorized ||
+          requested.authorizationStatus == AuthorizationStatus.provisional;
+      if (!allowed) {
+        if (requested.authorizationStatus == AuthorizationStatus.notDetermined) {
+          return 'Browser did not show the notification prompt. This is usually browser suppression (quiet UI), insecure origin, or site-level policy.';
+        }
+        return 'Notification permission is not granted.';
+      }
+
+      await registerFcmTokenIfPossible();
+      return null;
+    } catch (e) {
+      debugPrint('❌ Web preflight error: $e');
+      return 'Web notification setup failed: $e';
+    }
+  }
+
   Future<void> registerWebTokenIfPermissionGranted() async {
     if (!kIsWeb) return;
 
     try {
       _firebaseMessaging = FirebaseMessaging.instance;
+      await _logWebPermissionDiagnostics('before registerWebTokenIfPermissionGranted()');
       final settings = await _firebaseMessaging.getNotificationSettings();
       final allowed =
           settings.authorizationStatus == AuthorizationStatus.authorized ||
@@ -329,6 +380,7 @@ class NotificationService {
 
   /// Request notification permissions from the user
   Future<NotificationSettings> _requestNotificationPermissions() async {
+    debugPrint('🌐 Calling FirebaseMessaging.requestPermission() on web...');
     final settings = await _firebaseMessaging.requestPermission(
       alert: true,
       announcement: true,
@@ -352,6 +404,13 @@ class NotificationService {
       debugPrint(
         '🌐 Web notification permission status: ${settings.authorizationStatus}',
       );
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('🌐 Browser already authorized notifications, so no prompt is shown.');
+      } else if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('🌐 Browser has notifications blocked for this site, so no prompt is shown.');
+      } else if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+        debugPrint('🌐 Permission is still notDetermined. Browser may be suppressing prompt (quiet UI/policy/insecure context).');
+      }
     }
 
     return settings;
@@ -363,16 +422,31 @@ class NotificationService {
     }
 
     if (kIsWeb) {
-      if (_webVapidKey.isNotEmpty) {
-        return _firebaseMessaging
-            .getToken(vapidKey: _webVapidKey)
-            .timeout(const Duration(seconds: 15));
+      final vapidKey = _webVapidKey.trim();
+      if (vapidKey.isEmpty) {
+        debugPrint(
+          '⚠️ FIREBASE_WEB_VAPID_KEY is not set. Web getToken(vapidKey: ...) is required for reliable FCM on web.',
+        );
+        return null;
+      }
+
+      if (!_isLikelyValidWebVapidPublicKey(vapidKey)) {
+        debugPrint(
+          '❌ FIREBASE_WEB_VAPID_KEY looks invalid for Web Push. Expected Firebase Web Push public key (base64url, usually starts with "B" and is around 87 chars).',
+        );
+        debugPrint(
+          '❌ Current key shape: length=${vapidKey.length}, startsWith=${vapidKey.isNotEmpty ? vapidKey.substring(0, 1) : ""}',
+        );
+        return null;
       }
 
       debugPrint(
-        '⚠️ FIREBASE_WEB_VAPID_KEY is not set. Web FCM token may fail on some browsers.',
+        '🌐 VAPID key detected (length=${vapidKey.length}, prefix=${vapidKey.substring(0, vapidKey.length < 8 ? vapidKey.length : 8)}...).',
       );
-      return _firebaseMessaging.getToken().timeout(const Duration(seconds: 15));
+
+      return _firebaseMessaging
+          .getToken(vapidKey: vapidKey)
+          .timeout(const Duration(seconds: 15));
     }
 
     return _firebaseMessaging.getToken().timeout(const Duration(seconds: 15));
@@ -399,12 +473,12 @@ class NotificationService {
       if (token == null || token.isEmpty) {
         debugPrint(
           '⚠️ FCM getToken() returned null/empty. Push will not work. '
-          'Most common causes: Firebase not configured for Android in this build, '
-          'wrong Firebase app/package name, or Google Play services issue.',
+          'Most common causes: missing/invalid VAPID key on web, '
+          'or Firebase device configuration issues on mobile.',
         );
         if (kIsWeb) {
           debugPrint(
-            '🌐 Web hint: ensure notifications are allowed for this site and set FIREBASE_WEB_VAPID_KEY in --dart-define.',
+            '🌐 Web hint: ensure notifications are allowed for this site, service worker is registered at /firebase-messaging-sw.js, and set FIREBASE_WEB_VAPID_KEY in --dart-define.',
           );
         }
         return;
@@ -417,8 +491,23 @@ class NotificationService {
         debugPrint('✅ FCM token registered with backend');
       }
     } catch (e) {
+      if (kIsWeb &&
+          e.toString().contains('applicationServerKey is not valid')) {
+        debugPrint(
+          '❌ Web Push subscribe failed: invalid VAPID public key format. Use Firebase Console > Project Settings > Cloud Messaging > Web Push certificates > Key pair (public key).',
+        );
+      }
       debugPrint('❌ Error registering FCM token: $e');
     }
+  }
+
+  bool _isLikelyValidWebVapidPublicKey(String key) {
+    final base64Url = RegExp(r'^[A-Za-z0-9_-]+$');
+    // Firebase public VAPID keys are base64url and usually ~87 chars.
+    return key.length >= 80 &&
+        key.length <= 120 &&
+        key.startsWith('B') &&
+        base64Url.hasMatch(key);
   }
 
   /// Handle foreground messages
@@ -704,5 +793,17 @@ class NotificationService {
       title: 'Test Notification',
       body: 'This is a test notification from MedaiChain',
     );
+  }
+
+  Future<void> _logWebPermissionDiagnostics(String stage) async {
+    if (!kIsWeb) return;
+    try {
+      final current = await _firebaseMessaging.getNotificationSettings();
+      debugPrint(
+        '🌐 Web diagnostics [$stage]: authorizationStatus=${current.authorizationStatus}',
+      );
+    } catch (e) {
+      debugPrint('⚠️ Web diagnostics [$stage] failed: $e');
+    }
   }
 }

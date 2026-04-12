@@ -39,6 +39,7 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   // Register background handler before any Firebase init
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await initializeDateFormatting('fr_FR', null);

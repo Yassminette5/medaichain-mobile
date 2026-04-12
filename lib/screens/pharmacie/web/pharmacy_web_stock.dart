@@ -13,6 +13,7 @@ import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_statistics.dart';
 import 'pharmacy_web_profile.dart';
+import 'pharmacy_web_medication_statistics.dart';
 
 class PharmacyWebStock extends StatefulWidget {
   const PharmacyWebStock({super.key});
@@ -59,7 +60,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
 
       Map<String, dynamic>? candidate;
       for (final n in unread) {
-        final data = (n['data'] is Map) ? (n['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
+        final data = (n['data'] is Map)
+            ? (n['data'] as Map).cast<String, dynamic>()
+            : <String, dynamic>{};
         if (data['type']?.toString() != 'pharmacy_request_created') continue;
         final id = (n['id'] ?? n['_id'] ?? '').toString();
         if (id.isEmpty) continue;
@@ -70,9 +73,13 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
 
       if (candidate == null) return;
 
-      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '').toString();
-      final data = (candidate['data'] is Map) ? (candidate['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
-      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '').toString();
+      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '')
+          .toString();
+      final data = (candidate['data'] is Map)
+          ? (candidate['data'] as Map).cast<String, dynamic>()
+          : <String, dynamic>{};
+      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '')
+          .toString();
       if (requestId.isEmpty) return;
 
       _handledIncomingNotificationIds.add(notificationId);
@@ -105,21 +112,30 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                     const SizedBox(height: 12),
                     if (request != null) ...[
                       Text('Patient: ${request.patient.name}'),
-                      if (request.patient.phoneNumber != null && request.patient.phoneNumber!.isNotEmpty)
+                      if (request.patient.phoneNumber != null &&
+                          request.patient.phoneNumber!.isNotEmpty)
                         Text('Téléphone: ${request.patient.phoneNumber}'),
                       const SizedBox(height: 12),
-                      const Text('Médicaments:', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const Text(
+                        'Médicaments:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 6),
                       ...request.medications.map((m) {
-                        final dosage = m.dosage.isNotEmpty ? ' — ${m.dosage}' : '';
+                        final dosage = m.dosage.isNotEmpty
+                            ? ' — ${m.dosage}'
+                            : '';
                         final qty = '${m.quantity} ${m.unit}'.trim();
                         return Text('- ${m.name}$dosage ($qty)');
                       }),
                       const SizedBox(height: 12),
-                      if (request.requestsDelivery) const Text('Livraison: demandée'),
+                      if (request.requestsDelivery)
+                        const Text('Livraison: demandée'),
                       if (request.isUrgent) const Text('Urgence: oui'),
                     ] else ...[
-                      const Text('Détails indisponibles (échec du chargement).'),
+                      const Text(
+                        'Détails indisponibles (échec du chargement).',
+                      ),
                     ],
                   ],
                 ),
@@ -201,8 +217,8 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
       final query = _searchQuery.toLowerCase();
       medications = medications.where((m) {
         return m.name.toLowerCase().contains(query) ||
-               m.dosage.toLowerCase().contains(query) ||
-               m.displayName.toLowerCase().contains(query);
+            m.dosage.toLowerCase().contains(query) ||
+            m.displayName.toLowerCase().contains(query);
       }).toList();
     }
 
@@ -220,46 +236,46 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadStock,
-                        child: const Text('Réessayer'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(_error!, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadStock,
+                    child: const Text('Réessayer'),
                   ),
-                )
-              : Row(
-                  children: [
-                    if (showSidebar) _buildSidebar(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(isMediumScreen ? 40 : 24),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1400),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildHeader(),
-                                const SizedBox(height: 24),
-                                _buildSearchBar(),
-                                const SizedBox(height: 24),
-                                _buildMedicationGrid(),
-                              ],
-                            ),
-                          ),
+                ],
+              ),
+            )
+          : Row(
+              children: [
+                if (showSidebar) _buildSidebar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(isMediumScreen ? 40 : 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1400),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(),
+                            const SizedBox(height: 24),
+                            _buildSearchBar(),
+                            const SizedBox(height: 24),
+                            _buildMedicationGrid(),
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -351,6 +367,18 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                     );
                   },
                 ),
+                _buildSidebarItem(
+                  icon: Icons.medication_rounded,
+                  label: 'Statistiques Médicaments',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PharmacyWebMedicationStatistics(),
+                      ),
+                    );
+                  },
+                ),
                 const Divider(height: 32),
                 _buildSidebarItem(
                   icon: Icons.person_rounded,
@@ -388,7 +416,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: isSelected ? null : onTap,
@@ -399,7 +429,11 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
               children: [
                 Icon(
                   icon,
-                  color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textSecondary),
+                  color: isLogout
+                      ? Colors.red
+                      : (isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary),
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -408,7 +442,11 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textPrimary),
+                    color: isLogout
+                        ? Colors.red
+                        : (isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary),
                   ),
                 ),
               ],
@@ -509,10 +547,7 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
             icon: const Icon(Icons.add, size: 20),
             label: const Text(
               'Ajouter un médicament',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -582,10 +617,7 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
               const SizedBox(height: 24),
               Text(
                 'Aucun médicament',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -806,7 +838,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                       labelText: 'Prix (DA)',
                       hintText: 'Ex: 250.00',
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final price = double.tryParse(value);
@@ -870,9 +904,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
       }
     }
   }
@@ -898,9 +932,7 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                 Navigator.pop(context);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Supprimer'),
           ),
         ],
@@ -923,15 +955,16 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: ${e.toString()}')));
       }
     }
   }
 
   void _showQRCode(MedicationStock medication) {
-    final qrData = '${medication.id}|${medication.name}|${medication.dosage}|${medication.price ?? 0}';
+    final qrData =
+        '${medication.id}|${medication.name}|${medication.dosage}|${medication.price ?? 0}';
 
     showDialog(
       context: context,
@@ -953,7 +986,11 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.qr_code_2, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.qr_code_2,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -977,7 +1014,10 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF4FACFE).withValues(alpha: 0.3), width: 2),
+                  border: Border.all(
+                    color: const Color(0xFF4FACFE).withValues(alpha: 0.3),
+                    width: 2,
+                  ),
                 ),
                 child: QrImageView(
                   data: qrData,
@@ -998,10 +1038,7 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
               const SizedBox(height: 8),
               Text(
                 medication.displayPrice,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -1015,7 +1052,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
     final dosageController = TextEditingController(text: medication.dosage);
     final unitController = TextEditingController(text: medication.unit);
     final priceController = TextEditingController(
-      text: medication.price != null ? medication.price!.toStringAsFixed(2) : '',
+      text: medication.price != null
+          ? medication.price!.toStringAsFixed(2)
+          : '',
     );
     final formKey = GlobalKey<FormState>();
 
@@ -1065,7 +1104,9 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                       labelText: 'Prix (DA)',
                       hintText: 'Ex: 250.00',
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
                         final price = double.tryParse(value);
@@ -1115,12 +1156,17 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
     );
   }
 
-  Future<void> _updateMedication(String stockId, Map<String, dynamic> data) async {
+  Future<void> _updateMedication(
+    String stockId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
 
-      print('Updating stock: pharmacyId=$pharmacyId, stockId=$stockId, data=$data');
+      print(
+        'Updating stock: pharmacyId=$pharmacyId, stockId=$stockId, data=$data',
+      );
 
       await PharmacyService.updateStock(pharmacyId, stockId, data);
       await _loadStock();

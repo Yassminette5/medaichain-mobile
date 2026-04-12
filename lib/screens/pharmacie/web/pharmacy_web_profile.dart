@@ -11,6 +11,7 @@ import '../../../widgets/pharmacie/web/pharmacy_web_notifications_bell.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_statistics.dart';
+import 'pharmacy_web_medication_statistics.dart';
 
 class PharmacyWebProfile extends StatefulWidget {
   const PharmacyWebProfile({super.key});
@@ -53,7 +54,9 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
 
       Map<String, dynamic>? candidate;
       for (final n in unread) {
-        final data = (n['data'] is Map) ? (n['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
+        final data = (n['data'] is Map)
+            ? (n['data'] as Map).cast<String, dynamic>()
+            : <String, dynamic>{};
         if (data['type']?.toString() != 'pharmacy_request_created') continue;
         final id = (n['id'] ?? n['_id'] ?? '').toString();
         if (id.isEmpty) continue;
@@ -64,9 +67,13 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
 
       if (candidate == null) return;
 
-      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '').toString();
-      final data = (candidate['data'] is Map) ? (candidate['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
-      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '').toString();
+      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '')
+          .toString();
+      final data = (candidate['data'] is Map)
+          ? (candidate['data'] as Map).cast<String, dynamic>()
+          : <String, dynamic>{};
+      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '')
+          .toString();
       if (requestId.isEmpty) return;
 
       _handledIncomingNotificationIds.add(notificationId);
@@ -99,21 +106,30 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                     const SizedBox(height: 12),
                     if (request != null) ...[
                       Text('Patient: ${request.patient.name}'),
-                      if (request.patient.phoneNumber != null && request.patient.phoneNumber!.isNotEmpty)
+                      if (request.patient.phoneNumber != null &&
+                          request.patient.phoneNumber!.isNotEmpty)
                         Text('Téléphone: ${request.patient.phoneNumber}'),
                       const SizedBox(height: 12),
-                      const Text('Médicaments:', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const Text(
+                        'Médicaments:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 6),
                       ...request.medications.map((m) {
-                        final dosage = m.dosage.isNotEmpty ? ' — ${m.dosage}' : '';
+                        final dosage = m.dosage.isNotEmpty
+                            ? ' — ${m.dosage}'
+                            : '';
                         final qty = '${m.quantity} ${m.unit}'.trim();
                         return Text('- ${m.name}$dosage ($qty)');
                       }),
                       const SizedBox(height: 12),
-                      if (request.requestsDelivery) const Text('Livraison: demandée'),
+                      if (request.requestsDelivery)
+                        const Text('Livraison: demandée'),
                       if (request.isUrgent) const Text('Urgence: oui'),
                     ] else ...[
-                      const Text('Détails indisponibles (échec du chargement).'),
+                      const Text(
+                        'Détails indisponibles (échec du chargement).',
+                      ),
                     ],
                   ],
                 ),
@@ -220,12 +236,9 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
         }
       });
 
-      await PharmacyService.updatePharmacySettings(
-        pharmacyId,
-        {
-          'hasDelivery': value,
-        },
-      );
+      await PharmacyService.updatePharmacySettings(pharmacyId, {
+        'hasDelivery': value,
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -266,18 +279,15 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
         }
       });
 
-      await PharmacyService.updatePharmacySettings(
-        pharmacyId,
-        {'hasNotifications': value},
-      );
+      await PharmacyService.updatePharmacySettings(pharmacyId, {
+        'hasNotifications': value,
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              value
-                  ? 'Notifications activées'
-                  : 'Notifications désactivées',
+              value ? 'Notifications activées' : 'Notifications désactivées',
             ),
             backgroundColor: const Color(0xFF10B981),
           ),
@@ -399,7 +409,10 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
     );
   }
 
-  Future<void> _updatePassword(String currentPassword, String newPassword) async {
+  Future<void> _updatePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       await PharmacyService.changePassword(
         currentPassword: currentPassword,
@@ -508,6 +521,18 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                     );
                   },
                 ),
+                _buildSidebarItem(
+                  icon: Icons.medication_rounded,
+                  label: 'Statistiques Médicaments',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PharmacyWebMedicationStatistics(),
+                      ),
+                    );
+                  },
+                ),
                 const Divider(height: 32),
                 _buildSidebarItem(
                   icon: Icons.person_rounded,
@@ -539,7 +564,9 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: isSelected ? null : onTap,
@@ -550,7 +577,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
               children: [
                 Icon(
                   icon,
-                  color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textSecondary),
+                  color: isLogout
+                      ? Colors.red
+                      : (isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary),
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -559,7 +590,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textPrimary),
+                    color: isLogout
+                        ? Colors.red
+                        : (isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary),
                   ),
                 ),
               ],
@@ -722,11 +757,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.verified,
-                  size: 18,
-                  color: Colors.white,
-                ),
+                Icon(Icons.verified, size: 18, color: Colors.white),
                 SizedBox(width: 8),
                 Text(
                   'Compte Vérifié',
@@ -773,7 +804,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.analytics_outlined, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.analytics_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -832,10 +867,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
         Expanded(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ),
         Text(
@@ -875,7 +907,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -981,7 +1017,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.settings_outlined, color: AppColors.primary, size: 20),
+                child: Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(

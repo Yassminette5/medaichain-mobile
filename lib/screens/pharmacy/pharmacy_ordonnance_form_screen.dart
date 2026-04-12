@@ -58,6 +58,27 @@ class _PharmacyOrdonnanceFormScreenState
     });
   }
 
+  bool _isMedicationRowBlank(MedicationItem medication) {
+    final name = medication.nameController.text.trim();
+    final dosage = medication.dosageController.text.trim();
+    final quantity = medication.quantityController.text.trim();
+    final quantityIsDefault = quantity.isEmpty || quantity == '1';
+
+    return name.isEmpty && dosage.isEmpty && quantityIsDefault;
+  }
+
+  List<Map<String, dynamic>> _buildManualMedicationsPayload() {
+    return _medications
+        .where((m) => !_isMedicationRowBlank(m))
+        .map((m) => {
+              'name': m.nameController.text.trim(),
+              'dosage': m.dosageController.text.trim(),
+              'quantity': int.tryParse(m.quantityController.text.trim()) ?? 1,
+              'unit': m.unit,
+            })
+        .toList();
+  }
+
   Future<void> _pickAndUploadPrescription() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -119,17 +140,23 @@ class _PharmacyOrdonnanceFormScreenState
       return;
     }
 
-    if (_medications.isEmpty ||
-        _medications.every((m) => m.nameController.text.isEmpty)) {
+    if (_isUploadingImage) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one medication')),
+        const SnackBar(content: Text('Patientez, l\'ordonnance est en cours d\'upload')),
       );
       return;
     }
 
-    if (_isUploadingImage) {
+    final medicationsData = _buildManualMedicationsPayload();
+    final hasPrescriptionImage = _uploadedPrescriptionUrl != null;
+
+    if (medicationsData.isEmpty && !hasPrescriptionImage) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Patientez, l\'ordonnance est en cours d\'upload')),
+        const SnackBar(
+          content: Text(
+            'Ajoutez au moins un medicament manuellement ou joignez une image de l\'ordonnance',
+          ),
+        ),
       );
       return;
     }
@@ -143,16 +170,6 @@ class _PharmacyOrdonnanceFormScreenState
       if (user == null) {
         throw Exception('User not authenticated');
       }
-
-      final medicationsData = _medications
-          .where((m) => m.nameController.text.isNotEmpty)
-          .map((m) => {
-                'name': m.nameController.text,
-                'dosage': m.dosageController.text,
-                'quantity': int.tryParse(m.quantityController.text) ?? 1,
-                'unit': m.unit,
-              })
-          .toList();
 
       final response = await ApiService.sendMedicationRequest(
         pharmacyId: widget.pharmacy.id,
@@ -312,7 +329,7 @@ class _PharmacyOrdonnanceFormScreenState
 
               // Prescription Image (Optional)
               Text(
-                'Prescription Image (Optional)',
+                'Prescription Image (Optional - use image or manual entry)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -418,7 +435,7 @@ class _PharmacyOrdonnanceFormScreenState
 
               // Medications Section
               Text(
-                'Medications',
+                'Medications (Manual - optional if image is attached)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -580,7 +597,10 @@ class _PharmacyOrdonnanceFormScreenState
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (_isMedicationRowBlank(medication)) {
+                  return null;
+                }
+                if (value == null || value.trim().isEmpty) {
                   return 'Medication name is required';
                 }
                 return null;
@@ -615,10 +635,13 @@ class _PharmacyOrdonnanceFormScreenState
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (_isMedicationRowBlank(medication)) {
+                        return null;
+                      }
+                      if (value == null || value.trim().isEmpty) {
                         return 'Required';
                       }
-                      if (int.tryParse(value) == null) {
+                      if (int.tryParse(value.trim()) == null) {
                         return 'Invalid number';
                       }
                       return null;

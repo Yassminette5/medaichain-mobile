@@ -18,7 +18,7 @@ class ApiService {
     if (kIsWeb) return 'http://127.0.0.1:3000';
     if (defaultTargetPlatform == TargetPlatform.android) {
       // Android emulator -> host machine loopback
-      return 'http://192.168.1.10:3000';
+      return 'http://192.168.128.182:3000';
     }
     return 'http://127.0.0.1:3000';
   }

@@ -80,6 +80,40 @@ class AdminService {
     return null;
   }
 
+  Future<List<dynamic>?> getMedicationStatistics({String? month}) async {
+    final token = await _getToken();
+    if (token == null) return null;
+
+    try {
+      final query = (month != null && month.trim().isNotEmpty)
+          ? '?month=${Uri.encodeQueryComponent(month.trim())}'
+          : '';
+      final response = await http.get(
+        Uri.parse('$baseUrl/pharmacy/admin/medication-statistics$query'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) return decoded;
+        return <dynamic>[];
+      }
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        return null;
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error fetching medication statistics: $e');
+      return <dynamic>[];
+    }
+
+    return <dynamic>[];
+  }
+
   Future<String?> inviteUser(String email, String role) async {
     final token = await _getToken();
     if (token == null) return 'Not authenticated';

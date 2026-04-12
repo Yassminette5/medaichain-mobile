@@ -1,8 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../../services/admin_service.dart';
+import '../../models/pharmacy_statistics.dart';
+import '../../utils/pdf_export.dart';
 import 'admin_login_screen.dart';
 import '../auth/login_web_screen.dart';
 
@@ -25,6 +31,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _currentSection = 'dashboard';
   Map<String, dynamic>? _stats;
   List<dynamic>? _users;
+  List<TopMedication> _topMedications = const [];
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   bool _isLoading = false;
 
   void _goToLogin() {
@@ -96,6 +104,170 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
+  Future<void> _fetchMedicationStats() async {
+    setState(() => _isLoading = true);
+    final monthParam = _formatMonthParam(_selectedMonth);
+    final list = await _adminService.getMedicationStatistics(month: monthParam);
+    if (!mounted) return;
+
+    if (list == null) {
+      await _logout();
+      return;
+    }
+
+    final meds = list
+        .whereType<Map<String, dynamic>>()
+        .map((item) => TopMedication.fromJson(item))
+        .toList();
+
+    setState(() {
+      _topMedications = meds;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _exportMedicationStatsPdf() async {
+    if (_topMedications.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aucune donnée à exporter.')),
+      );
+      return;
+    }
+
+    try {
+      final bytes = await _buildMedicationStatsPdfBytes();
+      final month = _formatMonthParam(_selectedMonth);
+      final filename = 'rapport_medicaments_$month.pdf';
+
+      await savePdf(bytes, filename: filename);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Rapport PDF exporté.')));
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString().contains('Save cancelled')
+          ? 'Export annulé.'
+          : 'Échec export PDF: $e';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<Uint8List> _buildMedicationStatsPdfBytes() async {
+    final doc = pw.Document();
+    final monthLabel = _formatMonthLabel(_selectedMonth);
+    final generatedAt = DateTime.now();
+
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return [
+            pw.Text(
+              'Rapport — Statistiques Médicaments',
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+            pw.Text('Mois: $monthLabel'),
+            pw.Text(
+              'Généré le: ${generatedAt.toIso8601String().replaceFirst('T', ' ').split('.').first}',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
+            pw.SizedBox(height: 16),
+            pw.Table(
+              border: pw.TableBorder.all(width: 0.5),
+              columnWidths: {
+                0: const pw.FixedColumnWidth(28),
+                1: const pw.FlexColumnWidth(),
+                2: const pw.FixedColumnWidth(90),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+                  children: [
+                    _pdfCell('#', header: true),
+                    _pdfCell('Médicament', header: true),
+                    _pdfCell('Demandes', header: true),
+                  ],
+                ),
+                ..._topMedications.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final med = entry.value;
+                  return pw.TableRow(
+                    children: [
+                      _pdfCell('${index + 1}'),
+                      _pdfCell(med.displayName.trim()),
+                      _pdfCell('${med.requestCount}'),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ];
+        },
+      ),
+    );
+
+    return doc.save();
+  }
+
+  pw.Widget _pdfCell(String text, {bool header = false}) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: header ? 11 : 10,
+          fontWeight: header ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  String _formatMonthParam(DateTime month) {
+    final m = month.month.toString().padLeft(2, '0');
+    return '${month.year}-$m';
+  }
+
+  String _formatMonthLabel(DateTime month) {
+    const months = [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
+    ];
+    return '${months[month.month - 1]} ${month.year}';
+  }
+
+  Future<void> _pickMonth() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(_selectedMonth.year, _selectedMonth.month, 1),
+      firstDate: DateTime(2020, 1, 1),
+      lastDate: DateTime(DateTime.now().year + 1, 12, 31),
+      helpText: 'Choisir un mois',
+    );
+
+    if (picked == null) return;
+
+    setState(() {
+      _selectedMonth = DateTime(picked.year, picked.month);
+    });
+
+    await _fetchMedicationStats();
+  }
+
   Future<void> _logout() async {
     await _adminService.logout();
     _goToLogin();
@@ -133,7 +305,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.local_hospital, color: Colors.white),
+                      child: const Icon(
+                        Icons.local_hospital,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -147,7 +322,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 50),
-                
+
                 // Nav Items
                 _navItem(
                   icon: Icons.dashboard,
@@ -175,6 +350,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     _fetchUsers();
                   },
                 ),
+                _navItem(
+                  icon: Icons.medication,
+                  label: 'Statistiques Médicaments',
+                  id: 'medicationStats',
+                  onTap: () {
+                    setState(() => _currentSection = 'medicationStats');
+                    _fetchMedicationStats();
+                  },
+                ),
 
                 const Spacer(),
                 const Divider(color: borderColor),
@@ -196,7 +380,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 20,
+                  ),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     border: Border(bottom: BorderSide(color: borderColor)),
@@ -231,7 +418,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 // Content Body
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)))
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF7C3AED),
+                          ),
+                        )
                       : Padding(
                           padding: const EdgeInsets.all(40),
                           child: _buildContent(),
@@ -255,7 +446,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final isActive = _currentSection == id;
     final activeColor = const Color(0xFF7C3AED);
     final inactiveColor = const Color(0xFF64748B);
-    
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -293,19 +484,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   String _getHeaderTitle() {
     switch (_currentSection) {
-      case 'dashboard': return 'Tableau de bord';
-      case 'invite': return 'Envoyer une invitation';
-      case 'users': return 'Liste des utilisateurs';
-      default: return '';
+      case 'dashboard':
+        return 'Tableau de bord';
+      case 'invite':
+        return 'Envoyer une invitation';
+      case 'users':
+        return 'Liste des utilisateurs';
+      case 'medicationStats':
+        return 'Statistiques Médicaments';
+      default:
+        return '';
     }
   }
 
   String _getHeaderSubtitle() {
     switch (_currentSection) {
-      case 'dashboard': return 'Aperçu global de l\'activité';
-      case 'invite': return 'Envoyez un lien d\'inscription aux professionnels';
-      case 'users': return 'Gérer les comptes utilisateurs';
-      default: return '';
+      case 'dashboard':
+        return 'Aperçu global de l\'activité';
+      case 'invite':
+        return 'Envoyez un lien d\'inscription aux professionnels';
+      case 'users':
+        return 'Gérer les comptes utilisateurs';
+      case 'medicationStats':
+        return 'Médicaments les plus demandés (filtre par mois)';
+      default:
+        return '';
     }
   }
 
@@ -350,9 +553,226 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         );
-      case 'invite': return const _InviteUserForm();
-      case 'users': return _buildUsersList();
-      default: return const SizedBox();
+      case 'invite':
+        return const _InviteUserForm();
+      case 'users':
+        return _buildUsersList();
+      case 'medicationStats':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Top médicaments demandés',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: _pickMonth,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 18,
+                              color: Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _formatMonthLabel(_selectedMonth),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.expand_more,
+                              size: 18,
+                              color: Color(0xFF64748B),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: _fetchMedicationStats,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: const Icon(
+                          Icons.refresh,
+                          size: 18,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: _exportMedicationStatsPdf,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.picture_as_pdf,
+                              size: 18,
+                              color: Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Exporter PDF',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: _topMedications.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Aucune demande sur ce mois',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: _topMedications.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final med = _topMedications[index];
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF7C3AED,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '${index + 1}',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF7C3AED),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        med.displayName.trim(),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF1E293B),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${med.requestCount} demandes',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          color: const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  _formatMonthParam(_selectedMonth),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
+          ],
+        );
+      default:
+        return const SizedBox();
     }
   }
 
@@ -361,24 +781,67 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Row(
       children: [
-        Expanded(child: _StatCard(title: 'Médecins', value: '${_stats!['medecin']}', icon: Icons.medical_services, color: const Color(0xFF00BFA6))),
+        Expanded(
+          child: _StatCard(
+            title: 'Médecins',
+            value: '${_stats!['medecin']}',
+            icon: Icons.medical_services,
+            color: const Color(0xFF00BFA6),
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Patients', value: '${_stats!['patient']}', icon: Icons.person, color: const Color(0xFF64748B))), // Grey icon for patient
+        Expanded(
+          child: _StatCard(
+            title: 'Patients',
+            value: '${_stats!['patient']}',
+            icon: Icons.person,
+            color: const Color(0xFF64748B),
+          ),
+        ), // Grey icon for patient
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Pharmacies', value: '${_stats!['pharmacie']}', icon: Icons.local_pharmacy, color: const Color(0xFFFF6B6B))),
+        Expanded(
+          child: _StatCard(
+            title: 'Pharmacies',
+            value: '${_stats!['pharmacie']}',
+            icon: Icons.local_pharmacy,
+            color: const Color(0xFFFF6B6B),
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Laboratoires', value: '${_stats!['centre_analyse']}', icon: Icons.science, color: const Color(0xFF4D96FF))),
+        Expanded(
+          child: _StatCard(
+            title: 'Laboratoires',
+            value: '${_stats!['centre_analyse']}',
+            icon: Icons.science,
+            color: const Color(0xFF4D96FF),
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Cliniques', value: '${_stats!['clinique']}', icon: Icons.apartment, color: const Color(0xFFFFD93D))),
+        Expanded(
+          child: _StatCard(
+            title: 'Cliniques',
+            value: '${_stats!['clinique']}',
+            icon: Icons.apartment,
+            color: const Color(0xFFFFD93D),
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(title: 'Total', value: '${_stats!['total']}', icon: Icons.groups, color: const Color(0xFF7C3AED), isTotal: true)),
+        Expanded(
+          child: _StatCard(
+            title: 'Total',
+            value: '${_stats!['total']}',
+            icon: Icons.groups,
+            color: const Color(0xFF7C3AED),
+            isTotal: true,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildBarChart() {
     if (_stats == null) return const SizedBox();
-    
+
     const gradient = LinearGradient(
       colors: [Color(0xFF22D3EE), Color(0xFF7C3AED)],
       begin: Alignment.topCenter,
@@ -392,7 +855,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       _ChartData('Labos', _stats!['centre_analyse'], const Color(0xFF4D96FF)),
       _ChartData('Cliniques', _stats!['clinique'], const Color(0xFFFFD93D)),
     ];
-    
+
     double maxY = 10;
     for (var item in data) {
       if (item.value > maxY) maxY = item.value.toDouble();
@@ -409,11 +872,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 '${data[group.x.toInt()].label}\n',
-                GoogleFonts.plusJakartaSans(color: const Color(0xFF1E293B), fontWeight: FontWeight.bold),
+                GoogleFonts.plusJakartaSans(
+                  color: const Color(0xFF1E293B),
+                  fontWeight: FontWeight.bold,
+                ),
                 children: [
                   TextSpan(
                     text: (rod.toY).toInt().toString(),
-                    style: GoogleFonts.plusJakartaSans(color: const Color(0xFF7C3AED)),
+                    style: GoogleFonts.plusJakartaSans(
+                      color: const Color(0xFF7C3AED),
+                    ),
                   ),
                 ],
               );
@@ -431,7 +899,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     padding: const EdgeInsets.only(top: 12.0),
                     child: Text(
                       data[value.toInt()].label,
-                      style: GoogleFonts.plusJakartaSans(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.plusJakartaSans(
+                        color: const Color(0xFF64748B),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   );
                 }
@@ -440,18 +912,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               reservedSize: 40,
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
           horizontalInterval: 5,
-          getDrawingHorizontalLine: (value) => FlLine(
-            color: const Color(0xFFE2E8F0),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: const Color(0xFFE2E8F0), strokeWidth: 1),
         ),
         borderData: FlBorderData(show: false),
         barGroups: data.asMap().entries.map((e) {
@@ -461,12 +937,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               BarChartRodData(
                 toY: e.value.value.toDouble(),
                 gradient: gradient,
-                width: 24, 
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                width: 24,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: maxY,
-                  color: const Color(0xFFF1F5F9), // Light grey background for bars
+                  color: const Color(
+                    0xFFF1F5F9,
+                  ), // Light grey background for bars
                 ),
               ),
             ],
@@ -478,7 +958,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildUsersList() {
     if (_users == null || _users!.isEmpty) {
-      return const Center(child: Text('Aucun utilisateur trouvé', style: TextStyle(color: Color(0xFF64748B))));
+      return const Center(
+        child: Text(
+          'Aucun utilisateur trouvé',
+          style: TextStyle(color: Color(0xFF64748B)),
+        ),
+      );
     }
 
     return Card(
@@ -495,43 +980,73 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         itemBuilder: (context, index) {
           final user = _users![index];
           final role = user['role'] ?? 'Autre';
-          
+
           Color badgeColor;
           switch (role) {
-            case 'medecin': badgeColor = const Color(0xFF00BFA6); break;
-            case 'centre_analyse': badgeColor = const Color(0xFF4D96FF); break;
-            case 'pharmacie': badgeColor = const Color(0xFFFF6B6B); break;
-            case 'clinique': badgeColor = const Color(0xFFFFD93D); break;
-            case 'admin': badgeColor = const Color(0xFF7C3AED); break;
-            default: badgeColor = Colors.grey;
+            case 'medecin':
+              badgeColor = const Color(0xFF00BFA6);
+              break;
+            case 'centre_analyse':
+              badgeColor = const Color(0xFF4D96FF);
+              break;
+            case 'pharmacie':
+              badgeColor = const Color(0xFFFF6B6B);
+              break;
+            case 'clinique':
+              badgeColor = const Color(0xFFFFD93D);
+              break;
+            case 'admin':
+              badgeColor = const Color(0xFF7C3AED);
+              break;
+            default:
+              badgeColor = Colors.grey;
           }
 
           return ListTile(
-             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-             leading: CircleAvatar(
-               backgroundColor: badgeColor.withOpacity(0.1),
-               child: Text(
-                 (user['email'] as String)[0].toUpperCase(),
-                 style: TextStyle(color: badgeColor, fontWeight: FontWeight.bold),
-               ),
-             ),
-             title: Text(user['email'], style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600)),
-             subtitle: Text('Rôle: ${role.toString().toUpperCase()}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-             trailing: Container(
-               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-               decoration: BoxDecoration(
-                 color: user['isProfileCompleted'] ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                 borderRadius: BorderRadius.circular(20),
-               ),
-               child: Text(
-                 user['isProfileCompleted'] ? 'Actif' : 'En attente',
-                 style: TextStyle(
-                   color: user['isProfileCompleted'] ? Colors.green : Colors.orange,
-                   fontSize: 12,
-                   fontWeight: FontWeight.bold,
-                 ),
-               ),
-             ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: badgeColor.withOpacity(0.1),
+              child: Text(
+                (user['email'] as String)[0].toUpperCase(),
+                style: TextStyle(
+                  color: badgeColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            title: Text(
+              user['email'],
+              style: const TextStyle(
+                color: Color(0xFF1E293B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              'Rôle: ${role.toString().toUpperCase()}',
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: user['isProfileCompleted']
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                user['isProfileCompleted'] ? 'Actif' : 'En attente',
+                style: TextStyle(
+                  color: user['isProfileCompleted']
+                      ? Colors.green
+                      : Colors.orange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -546,7 +1061,13 @@ class _StatCard extends StatelessWidget {
   final Color color;
   final bool isTotal;
 
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color, this.isTotal = false});
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.isTotal = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -582,13 +1103,21 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.plusJakartaSans(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: GoogleFonts.plusJakartaSans(color: const Color(0xFF1E293B), fontSize: 24, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFF1E293B),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -616,16 +1145,23 @@ class _InviteUserFormState extends State<_InviteUserForm> {
 
   Future<void> _submit() async {
     if (_emailController.text.isEmpty) return;
-    
-    setState(() { _isLoading = true; _message = null; });
-    
-    final error = await _adminService.inviteUser(_emailController.text, _selectedRole);
-    
+
+    setState(() {
+      _isLoading = true;
+      _message = null;
+    });
+
+    final error = await _adminService.inviteUser(
+      _emailController.text,
+      _selectedRole,
+    );
+
     if (mounted) {
       setState(() {
         _isLoading = false;
         if (error == null) {
-          _message = 'Invitation envoyée avec succès à ${_emailController.text}';
+          _message =
+              'Invitation envoyée avec succès à ${_emailController.text}';
           _isError = false;
           _emailController.clear();
         } else {
@@ -645,17 +1181,24 @@ class _InviteUserFormState extends State<_InviteUserForm> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
-           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sélection du rôle', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            'Sélection du rôle',
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF1E293B),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 20),
           Wrap(
             spacing: 10,
@@ -668,7 +1211,14 @@ class _InviteUserFormState extends State<_InviteUserForm> {
             ],
           ),
           const SizedBox(height: 40),
-          Text('Destinataire', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            'Destinataire',
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF1E293B),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 20),
           TextField(
             controller: _emailController,
@@ -678,8 +1228,14 @@ class _InviteUserFormState extends State<_InviteUserForm> {
               labelStyle: const TextStyle(color: Color(0xFF64748B)),
               filled: true,
               fillColor: const Color(0xFFF1F5F9), // Light grey input
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF7C3AED))),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF7C3AED)),
+              ),
               prefixIcon: const Icon(Icons.email, color: Color(0xFF64748B)),
             ),
           ),
@@ -689,15 +1245,35 @@ class _InviteUserFormState extends State<_InviteUserForm> {
               padding: const EdgeInsets.all(12),
               width: double.infinity,
               decoration: BoxDecoration(
-                color: _isError ? const Color(0xFFEF4444).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
+                color: _isError
+                    ? const Color(0xFFEF4444).withOpacity(0.1)
+                    : const Color(0xFF10B981).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _isError ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+                border: Border.all(
+                  color: _isError
+                      ? const Color(0xFFEF4444)
+                      : const Color(0xFF10B981),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(_isError ? Icons.error_outline : Icons.check_circle_outline, color: _isError ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+                  Icon(
+                    _isError ? Icons.error_outline : Icons.check_circle_outline,
+                    color: _isError
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF10B981),
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(_message!, style: TextStyle(color: _isError ? const Color(0xFFEF4444) : const Color(0xFF10B981)))),
+                  Expanded(
+                    child: Text(
+                      _message!,
+                      style: TextStyle(
+                        color: _isError
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF10B981),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -708,12 +1284,25 @@ class _InviteUserFormState extends State<_InviteUserForm> {
             height: 50,
             child: ElevatedButton.icon(
               onPressed: _isLoading ? null : _submit,
-              icon: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send),
-              label: Text(_isLoading ? 'Envoi en cours...' : 'Envoyer l\'invitation'),
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send),
+              label: Text(
+                _isLoading ? 'Envoi en cours...' : 'Envoyer l\'invitation',
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF7C3AED),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 4,
               ),
             ),
@@ -733,16 +1322,38 @@ class _InviteUserFormState extends State<_InviteUserForm> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : const Color(0xFFF1F5F9), // Light grey inactive
-          border: Border.all(color: isSelected ? activeColor : const Color(0xFFE2E8F0)),
+          color: isSelected
+              ? activeColor
+              : const Color(0xFFF1F5F9), // Light grey inactive
+          border: Border.all(
+            color: isSelected ? activeColor : const Color(0xFFE2E8F0),
+          ),
           borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected ? [BoxShadow(color: activeColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? Colors.white : const Color(0xFF64748B), size: 28),
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : const Color(0xFF64748B),
+              size: 28,
+            ),
             const SizedBox(height: 8),
-            Text(label, style: GoogleFonts.plusJakartaSans(color: isSelected ? Colors.white : const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

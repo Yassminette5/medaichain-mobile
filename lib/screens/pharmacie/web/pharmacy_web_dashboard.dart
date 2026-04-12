@@ -11,6 +11,7 @@ import 'pharmacy_web_profile.dart';
 import 'pharmacy_web_prescription_details.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_statistics.dart';
+import 'pharmacy_web_medication_statistics.dart';
 
 /// Web-optimized Pharmacy Dashboard
 class PharmacyWebDashboard extends StatefulWidget {
@@ -56,7 +57,9 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
       // Find the newest medication request notification.
       Map<String, dynamic>? candidate;
       for (final n in unread) {
-        final data = (n['data'] is Map) ? (n['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
+        final data = (n['data'] is Map)
+            ? (n['data'] as Map).cast<String, dynamic>()
+            : <String, dynamic>{};
         if (data['type']?.toString() != 'pharmacy_request_created') continue;
         final id = (n['id'] ?? n['_id'] ?? '').toString();
         if (id.isEmpty) continue;
@@ -67,9 +70,13 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
 
       if (candidate == null) return;
 
-      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '').toString();
-      final data = (candidate['data'] is Map) ? (candidate['data'] as Map).cast<String, dynamic>() : <String, dynamic>{};
-      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '').toString();
+      final notificationId = (candidate['id'] ?? candidate['_id'] ?? '')
+          .toString();
+      final data = (candidate['data'] is Map)
+          ? (candidate['data'] as Map).cast<String, dynamic>()
+          : <String, dynamic>{};
+      final requestId = (data['requestId'] ?? candidate['relatedId'] ?? '')
+          .toString();
       if (requestId.isEmpty) return;
 
       _handledIncomingNotificationIds.add(notificationId);
@@ -102,21 +109,30 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                     const SizedBox(height: 12),
                     if (request != null) ...[
                       Text('Patient: ${request.patient.name}'),
-                      if (request.patient.phoneNumber != null && request.patient.phoneNumber!.isNotEmpty)
+                      if (request.patient.phoneNumber != null &&
+                          request.patient.phoneNumber!.isNotEmpty)
                         Text('Téléphone: ${request.patient.phoneNumber}'),
                       const SizedBox(height: 12),
-                      const Text('Médicaments:', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const Text(
+                        'Médicaments:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 6),
                       ...request.medications.map((m) {
-                        final dosage = m.dosage.isNotEmpty ? ' — ${m.dosage}' : '';
+                        final dosage = m.dosage.isNotEmpty
+                            ? ' — ${m.dosage}'
+                            : '';
                         final qty = '${m.quantity} ${m.unit}'.trim();
                         return Text('- ${m.name}$dosage ($qty)');
                       }),
                       const SizedBox(height: 12),
-                      if (request.requestsDelivery) const Text('Livraison: demandée'),
+                      if (request.requestsDelivery)
+                        const Text('Livraison: demandée'),
                       if (request.isUrgent) const Text('Urgence: oui'),
                     ] else ...[
-                      const Text('Détails indisponibles (échec du chargement).'),
+                      const Text(
+                        'Détails indisponibles (échec du chargement).',
+                      ),
                     ],
                   ],
                 ),
@@ -149,9 +165,9 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
-      
+
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
-      
+
       setState(() {
         _dashboard = dashboard;
         _isLoading = false;
@@ -274,6 +290,18 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                     );
                   },
                 ),
+                _buildSidebarItem(
+                  icon: Icons.medication_rounded,
+                  label: 'Statistiques Médicaments',
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PharmacyWebMedicationStatistics(),
+                      ),
+                    );
+                  },
+                ),
                 const Divider(height: 32),
                 _buildSidebarItem(
                   icon: Icons.person_rounded,
@@ -311,7 +339,9 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: isSelected ? null : onTap,
@@ -322,7 +352,11 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
               children: [
                 Icon(
                   icon,
-                  color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textSecondary),
+                  color: isLogout
+                      ? Colors.red
+                      : (isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary),
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -331,7 +365,11 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isLogout ? Colors.red : (isSelected ? AppColors.primary : AppColors.textPrimary),
+                    color: isLogout
+                        ? Colors.red
+                        : (isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary),
                   ),
                 ),
               ],
@@ -374,7 +412,7 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     if (confirmed == true && mounted) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -461,15 +499,21 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
 
   Widget _buildStatsGrid(bool isLargeScreen) {
     final totalRequests = _dashboard?.medicationRequests.length ?? 0;
-    final pendingRequests = _dashboard?.medicationRequests
-        .where((r) => r.status == RequestStatus.enAttente)
-        .length ?? 0;
-    final validatedRequests = _dashboard?.medicationRequests
-        .where((r) => r.status == RequestStatus.valide)
-        .length ?? 0;
-    final completedRequests = _dashboard?.medicationRequests
-        .where((r) => r.status == RequestStatus.termine)
-        .length ?? 0;
+    final pendingRequests =
+        _dashboard?.medicationRequests
+            .where((r) => r.status == RequestStatus.enAttente)
+            .length ??
+        0;
+    final validatedRequests =
+        _dashboard?.medicationRequests
+            .where((r) => r.status == RequestStatus.valide)
+            .length ??
+        0;
+    final completedRequests =
+        _dashboard?.medicationRequests
+            .where((r) => r.status == RequestStatus.termine)
+            .length ??
+        0;
 
     final cards = [
       _buildStatCard(
@@ -499,11 +543,7 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     ];
 
     if (isLargeScreen) {
-      return Wrap(
-        spacing: 20,
-        runSpacing: 20,
-        children: cards,
-      );
+      return Wrap(spacing: 20, runSpacing: 20, children: cards);
     } else {
       return Column(
         children: [
@@ -584,9 +624,11 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
   }
 
   Widget _buildPrescriptionsSection(bool isLargeScreen) {
-    final filteredRequests = _dashboard?.medicationRequests
-        .where((r) => r.status == _selectedFilter)
-        .toList() ?? [];
+    final filteredRequests =
+        _dashboard?.medicationRequests
+            .where((r) => r.status == _selectedFilter)
+            .toList() ??
+        [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,7 +689,7 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     required Color color,
   }) {
     final isSelected = _selectedFilter == status;
-    
+
     return Material(
       color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
       borderRadius: BorderRadius.circular(12),
@@ -663,7 +705,9 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? color : AppColors.textSecondary.withValues(alpha: 0.2),
+              color: isSelected
+                  ? color
+                  : AppColors.textSecondary.withValues(alpha: 0.2),
             ),
           ),
           child: Text(
@@ -709,7 +753,10 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     );
   }
 
-  Widget _buildPrescriptionsList(List<MedicationRequest> requests, bool isLargeScreen) {
+  Widget _buildPrescriptionsList(
+    List<MedicationRequest> requests,
+    bool isLargeScreen,
+  ) {
     return Column(
       children: [
         for (int i = 0; i < requests.length; i++) ...[
@@ -722,7 +769,7 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
 
   Widget _buildPrescriptionCard(MedicationRequest request, bool isLargeScreen) {
     Color statusColor;
-    
+
     switch (request.status) {
       case RequestStatus.urgent:
         statusColor = Colors.red;
@@ -817,7 +864,11 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.priority_high, color: Colors.red, size: 16),
+                                Icon(
+                                  Icons.priority_high,
+                                  color: Colors.red,
+                                  size: 16,
+                                ),
                                 SizedBox(width: 4),
                                 Text(
                                   'URGENT',
@@ -853,7 +904,10 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
               ),
               const SizedBox(width: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -880,5 +934,3 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     );
   }
 }
-
-
