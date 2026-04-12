@@ -79,6 +79,38 @@ class ApiService {
     }
   }
 
+  // ========== FCM TOKEN (ME) ==========
+  static Future<void> updateFCMToken(String fcmToken) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Non connecté');
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/me/fcm-token'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'fcmToken': fcmToken}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return updateFCMToken(fcmToken);
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Erreur de mise à jour du token FCM');
+    } catch (_) {
+      throw Exception('Erreur de mise à jour du token FCM');
+    }
+  }
+
   // ========== COMPLÉTER INVITATION ==========
   static Future<AuthResponse> completeInvite({
     required String token,
@@ -724,7 +756,7 @@ class ApiService {
 
   // ========== NOTIFICATIONS ==========
 
-  static Future<List<Map<String, dynamic>>> getNotifications() async {
+  static Future<List<Map<String, dynamic>>> getNotifications({int? limit}) async {
     final token = await getAccessToken();
 
     final response = await http.get(
@@ -736,11 +768,24 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
+      final decoded = jsonDecode(response.body);
+      final List<dynamic> data;
+      if (decoded is List) {
+        data = decoded;
+      } else if (decoded is Map && decoded['data'] is List) {
+        data = decoded['data'] as List;
+      } else {
+        data = const [];
+      }
+
+      final all = data.cast<Map<String, dynamic>>();
+      if (limit != null && limit > 0 && all.length > limit) {
+        return all.take(limit).toList();
+      }
+      return all;
     } else if (response.statusCode == 401) {
       await refreshToken();
-      return getNotifications();
+      return getNotifications(limit: limit);
     } else {
       throw Exception('Erreur de chargement des notifications');
     }
@@ -2803,6 +2848,137 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Impossible de charger les détails de la clinique.');
+    }
+  }
+
+  // ========== ORDONNANCES (PHARMACIE) ==========
+  static MediaType _guessImageContentType(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith('.png')) return MediaType('image', 'png');
+    if (lower.endsWith('.gif')) return MediaType('image', 'gif');
+    if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+    return MediaType('image', 'jpeg');
+  }
+
+  static Future<String> uploadPrescriptionImage(
+    List<int> bytes,
+    String filename,
+  ) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Non connecté');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/pharmacy/upload/prescription'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'prescription',
+        bytes,
+        filename: filename,
+        contentType: _guessImageContentType(filename),
+      ),
+    );
+
+    final streamed = await request.send();
+    final body = await streamed.stream.bytesToString();
+
+    if (streamed.statusCode == 200 || streamed.statusCode == 201) {
+      final data = jsonDecode(body);
+      if (data is Map && data['url'] != null) {
+        return data['url'].toString();
+      }
+      throw Exception('Réponse inattendue lors de l\'upload');
+    }
+
+    if (streamed.statusCode == 401) {
+      await refreshToken();
+      return uploadPrescriptionImage(bytes, filename);
+    }
+
+    try {
+      final error = jsonDecode(body);
+      throw Exception(error['message'] ?? 'Erreur lors de l\'upload');
+    } catch (_) {
+      throw Exception('Erreur lors de l\'upload (${streamed.statusCode})');
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendMedicationRequest({
+    required String pharmacyId,
+    required String patientId,
+    required String patientName,
+    required String patientPhone,
+    required List<Map<String, dynamic>> medications,
+    String? prescriptionImageUrl,
+    String? doctorName,
+    bool isUrgent = false,
+    bool requestsDelivery = false,
+  }) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Non connecté');
+    }
+
+    final payload = <String, dynamic>{
+      'pharmacyId': pharmacyId,
+      'patient': {
+        'id': patientId,
+        'name': patientName,
+        'phoneNumber': patientPhone,
+      },
+      'medications': medications,
+      'isUrgent': isUrgent,
+      'requestsDelivery': requestsDelivery,
+    };
+    if (prescriptionImageUrl != null) {
+      payload['prescriptionImageUrl'] = prescriptionImageUrl;
+    }
+    if (doctorName != null) {
+      payload['doctorName'] = doctorName;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/pharmacy/medication-request'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return Map<String, dynamic>.from(data as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return sendMedicationRequest(
+        pharmacyId: pharmacyId,
+        patientId: patientId,
+        patientName: patientName,
+        patientPhone: patientPhone,
+        medications: medications,
+        prescriptionImageUrl: prescriptionImageUrl,
+        doctorName: doctorName,
+        isUrgent: isUrgent,
+        requestsDelivery: requestsDelivery,
+      );
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(
+        error['message'] ?? 'Erreur lors de l\'envoi de la demande',
+      );
+    } catch (_) {
+      throw Exception(
+        'Erreur lors de l\'envoi de la demande (${response.statusCode})',
+      );
     }
   }
 
