@@ -298,6 +298,15 @@ class ApiService {
     }
   }
 
+  /// En-têtes optionnels pour [Image.network] (fichiers sur l’API avec JWT).
+  static Future<Map<String, String>> authImageHeaders() async {
+    final token = await getAccessToken();
+    return {
+      'Authorization': 'Bearer $token',
+      'Accept': 'image/*,*/*;q=0.8',
+    };
+  }
+
   // ========== PROFIL UTILISATEUR ==========
   static Future<User> getProfile() async {
     final token = await getAccessToken();
@@ -392,7 +401,62 @@ class ApiService {
     }
   }
 
-
+  /// Mise à jour partielle du profil patient (PUT /profiles/patient — champs optionnels côté API).
+  static Future<User> patchPatientProfileFields({
+    List<String>? allergies,
+    int? age,
+    int? height,
+    int? weight,
+    String? gender,
+    String? fullName,
+  }) async {
+    final token = await getAccessToken();
+    final body = <String, dynamic>{};
+    if (allergies != null) body['allergies'] = allergies;
+    if (age != null) body['age'] = age;
+    if (height != null) body['height'] = height;
+    if (weight != null) body['weight'] = weight;
+    if (gender != null && gender.trim().isNotEmpty) {
+      body['gender'] = gender.trim().toLowerCase();
+    }
+    if (fullName != null && fullName.trim().isNotEmpty) body['fullName'] = fullName.trim();
+    if (body.isEmpty) {
+      return getProfile();
+    }
+    final response = await http.put(
+      Uri.parse('$baseUrl/profiles/patient'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final updatedUser = User.fromJson(data is Map<String, dynamic> ? data : Map<String, dynamic>.from(data as Map));
+      final remember = await getRememberMe();
+      await _saveUser(updatedUser, persist: remember);
+      return updatedUser;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return patchPatientProfileFields(
+        allergies: allergies,
+        age: age,
+        height: height,
+        weight: weight,
+        gender: gender,
+        fullName: fullName,
+      );
+    }
+    try {
+      final err = jsonDecode(response.body);
+      throw Exception(err['message']?.toString() ?? 'Erreur de mise à jour du profil');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Erreur de mise à jour du profil');
+    }
+  }
 
   // ========== ANCIENNE MÉTHODE (deprecated) ==========
   static Future<void> updatePatientProfile({
@@ -2265,6 +2329,153 @@ class ApiService {
     if (response.statusCode == 401) {
       await refreshToken();
       return saveOcrResult(fileName: fileName, result: result);
+    }
+    return false;
+  }
+
+  /// Upload d’un fichier (image/PDF) — POST /patient/ocr/upload (Tesseract + Gemini, fichier dans uploads/).
+  static Future<Map<String, dynamic>> uploadPatientOcrFile({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final token = await getAccessToken();
+    String contentType = 'application/octet-stream';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) contentType = 'application/pdf';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
+    if (lower.endsWith('.png')) contentType = 'image/png';
+    if (lower.endsWith('.webp')) contentType = 'image/webp';
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/patient/ocr/upload'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['data'] is Map) {
+        return Map<String, dynamic>.from(decoded['data'] as Map);
+      }
+      throw Exception('Réponse serveur invalide après upload');
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadPatientOcrFile(fileBytes: fileBytes, fileName: fileName);
+    }
+    String msg = 'Erreur upload document (${response.statusCode})';
+    try {
+      final err = jsonDecode(response.body);
+      msg = (err['message'] ?? err['error'] ?? msg).toString();
+    } catch (_) {}
+    throw Exception(msg);
+  }
+
+  /// Upload sans OCR — POST /patient/ocr/upload-raw (ordonnances, PDF stockés tels quels).
+  static Future<Map<String, dynamic>> uploadPatientOcrFileRaw({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final token = await getAccessToken();
+    String contentType = 'application/octet-stream';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) contentType = 'application/pdf';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
+    if (lower.endsWith('.png')) contentType = 'image/png';
+    if (lower.endsWith('.webp')) contentType = 'image/webp';
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/patient/ocr/upload-raw'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['data'] is Map) {
+        return Map<String, dynamic>.from(decoded['data'] as Map);
+      }
+      throw Exception('Réponse serveur invalide après upload');
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadPatientOcrFileRaw(fileBytes: fileBytes, fileName: fileName);
+    }
+    String msg = 'Erreur upload document (${response.statusCode})';
+    try {
+      final err = jsonDecode(response.body);
+      msg = (err['message'] ?? err['error'] ?? msg).toString();
+    } catch (_) {}
+    throw Exception(msg);
+  }
+
+  /// Enregistre le document analysé après [uploadPatientOcrFile] — POST /patient/ocr/save.
+  static Future<bool> savePatientOcrAfterUpload({
+    required Map<String, dynamic> uploadData,
+    String? documentCategory,
+    String? titleOverride,
+  }) async {
+    final filename = uploadData['filename']?.toString();
+    if (filename == null || filename.isEmpty) return false;
+
+    final token = await getAccessToken();
+    final body = <String, dynamic>{
+      'filename': filename,
+      'title': titleOverride ??
+          uploadData['title']?.toString() ??
+          'Document médical',
+      'description': uploadData['description']?.toString() ?? '',
+      'details': uploadData['details'] is Map
+          ? uploadData['details']
+          : (uploadData['details'] ?? {}),
+      'sourceType': 'patient',
+    };
+    if (documentCategory != null && documentCategory.isNotEmpty) {
+      body['documentCategory'] = documentCategory;
+    }
+    final mime = uploadData['mimeType']?.toString();
+    if (mime != null && mime.isNotEmpty) {
+      body['mimeType'] = mime;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/patient/ocr/save'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return savePatientOcrAfterUpload(
+        uploadData: uploadData,
+        documentCategory: documentCategory,
+        titleOverride: titleOverride,
+      );
     }
     return false;
   }

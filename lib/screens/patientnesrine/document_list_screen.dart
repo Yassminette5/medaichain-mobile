@@ -1,6 +1,10 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +13,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'ocr_document_detail_screen.dart';
 import 'package:share_plus/share_plus.dart';
+
+enum _DossierTab { analyses, ordonnances, informations }
 
 class DocumentListScreen extends StatefulWidget {
   final String title;
@@ -28,13 +34,89 @@ class DocumentListScreen extends StatefulWidget {
 
 class _DocumentListScreenState extends State<DocumentListScreen> {
   bool _loading = true;
+  bool _uploading = false;
   String? _error;
   List<Map<String, dynamic>> _docs = const [];
+  _DossierTab _tab = _DossierTab.analyses;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  DateTime _docSortDate(Map<String, dynamic> doc) {
+    for (final key in ['analysisDate', 'createdAt', 'updatedAt']) {
+      final v = doc[key];
+      if (v != null) {
+        try {
+          return DateTime.parse(v.toString());
+        } catch (_) {}
+      }
+    }
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  /// URL pour ouvrir le fichier (résultat labo ou scan patient dans /uploads/).
+  String? _documentFileUrl(Map<String, dynamic> doc) {
+    final rf = (doc['resultFile'] ?? '').toString();
+    if (rf.isNotEmpty) {
+      final fileName = rf.split('/').last;
+      return '${ApiService.baseUrl}/lab/uploads/results/$fileName'.replaceAll('//lab', '/lab');
+    }
+    final imageName = (doc['image_name'] ?? '').toString();
+    if (imageName.isNotEmpty) {
+      return '${ApiService.baseUrl}/uploads/$imageName';
+    }
+    return null;
+  }
+
+  String _documentFileLabel(Map<String, dynamic> doc) {
+    final rf = (doc['resultFile'] ?? '').toString();
+    if (rf.isNotEmpty) return rf.split('/').last;
+    return (doc['image_name'] ?? '').toString();
+  }
+
+  bool _isLabDocument(Map<String, dynamic> doc) =>
+      (doc['_docSource'] ?? '') == 'lab' || (doc['resultFile'] ?? '').toString().isNotEmpty;
+
+  bool _docHasOpenableFile(Map<String, dynamic> doc) {
+    final u = _documentFileUrl(doc);
+    return u != null && u.isNotEmpty;
+  }
+
+  bool _isPrescriptionDoc(Map<String, dynamic> doc) {
+    final cat = (doc['documentCategory'] ?? '').toString().toLowerCase();
+    if (cat == 'prescription') return true;
+    final title = (doc['title'] ?? '').toString().toLowerCase();
+    if (title.startsWith('ordonnance')) return true;
+    final details = doc['details'];
+    if (details is Map) {
+      final k = details['document_type'] ?? details['documentType'] ?? details['kind'];
+      if (k?.toString().toLowerCase() == 'prescription') return true;
+    }
+    final result = doc['result'];
+    if (result is Map) {
+      final dt = result['documentType'] ?? result['document_type'];
+      if (dt?.toString().toLowerCase() == 'prescription') return true;
+    }
+    return false;
+  }
+
+  /// Uniquement les documents réellement consultables (évite les entrées vides / fantômes).
+  List<Map<String, dynamic>> get _docsWithFiles =>
+      _docs.where(_docHasOpenableFile).map((e) => Map<String, dynamic>.from(e)).toList();
+
+  List<Map<String, dynamic>> get _analysisDocs {
+    final list = _docsWithFiles.where((d) => !_isPrescriptionDoc(d)).toList();
+    list.sort((a, b) => _docSortDate(b).compareTo(_docSortDate(a)));
+    return list;
+  }
+
+  List<Map<String, dynamic>> get _prescriptionDocs {
+    final list = _docsWithFiles.where(_isPrescriptionDoc).toList();
+    list.sort((a, b) => _docSortDate(b).compareTo(_docSortDate(a)));
+    return list;
   }
 
   Future<void> _load() async {
@@ -45,16 +127,36 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     try {
       final auth = mounted ? Provider.of<AuthProvider>(context, listen: false) : null;
       final patientId = auth?.user?.id;
-      List<Map<String, dynamic>> list = const [];
+
+      final List<Map<String, dynamic>> lab = [];
+      final List<Map<String, dynamic>> ocr = [];
+
       if (patientId != null && patientId.isNotEmpty) {
-        final raw = await ApiService.getPatientAnalysisResults(patientId);
-        list = raw.map<Map<String, dynamic>>((e) => (e as Map).cast<String, dynamic>()).toList();
-      } else {
-        list = await ApiService.getOcrDocuments();
+        try {
+          final raw = await ApiService.getPatientAnalysisResults(patientId);
+          for (final e in raw) {
+            final m = Map<String, dynamic>.from(e as Map);
+            m['_docSource'] = 'lab';
+            lab.add(m);
+          }
+        } catch (_) {}
       }
+
+      try {
+        final rawOcr = await ApiService.getOcrDocuments();
+        for (final e in rawOcr) {
+          final m = Map<String, dynamic>.from(e);
+          m['_docSource'] = 'ocr';
+          ocr.add(m);
+        }
+      } catch (_) {}
+
+      final merged = <Map<String, dynamic>>[...lab, ...ocr];
+      merged.sort((a, b) => _docSortDate(b).compareTo(_docSortDate(a)));
+
       if (mounted) {
         setState(() {
-          _docs = list;
+          _docs = merged;
           _loading = false;
         });
       }
@@ -69,6 +171,543 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     }
   }
 
+  Future<void> _showAddDocumentMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Ajouter au dossier',
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.science_rounded, color: AppColors.primary),
+              title: Text('Analyse / bulletin', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              subtitle: Text(
+                'PDF ou image — analyse OCR (Tesseract) pour extraire le texte',
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadPatientDoc(isPrescription: false);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.medication_rounded, color: AppColors.prescription),
+              title: Text('Ordonnance', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              subtitle: Text(
+                'Image ou PDF : enregistrés tels quels dans votre dossier. Aucune lecture / OCR.',
+                style: GoogleFonts.poppins(fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadPatientDoc(isPrescription: true);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadPatientDoc({required bool isPrescription}) async {
+    if (_uploading) return;
+    try {
+      final picked = await FilePicker.platform.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+      );
+      if (picked == null || picked.files.isEmpty) return;
+      final file = picked.files.first;
+      final Uint8List? bytes = file.bytes;
+      if (bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Impossible de lire le fichier. Réessayez.'), backgroundColor: AppColors.error),
+          );
+        }
+        return;
+      }
+
+      setState(() => _uploading = true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isPrescription
+                  ? 'Enregistrement de votre fichier (image/PDF), sans analyse…'
+                  : 'Envoi et analyse du document…',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      late final Map<String, dynamic> uploadData;
+      late final String titleOverride;
+
+      if (isPrescription) {
+        uploadData = await ApiService.uploadPatientOcrFileRaw(fileBytes: bytes, fileName: file.name);
+        titleOverride = 'Ordonnance · ${file.name}';
+        final okPresc = await ApiService.savePatientOcrAfterUpload(
+          uploadData: {
+            ...uploadData,
+            'title': 'Ordonnance',
+            'description': 'Ordonnance enregistrée depuis votre appareil',
+            'details': <String, dynamic>{
+              'kind': 'prescription',
+              'originalName': uploadData['originalName'] ?? file.name,
+            },
+          },
+          documentCategory: 'prescription',
+          titleOverride: titleOverride,
+        );
+        if (!mounted) return;
+        setState(() => _uploading = false);
+        if (okPresc) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ordonnance ajoutée au dossier'), backgroundColor: AppColors.success),
+          );
+          await _load();
+          if (mounted) await _maybePromptProfileGaps();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Échec de l\'enregistrement'), backgroundColor: AppColors.error),
+          );
+        }
+        return;
+      }
+
+      uploadData = await ApiService.uploadPatientOcrFile(fileBytes: bytes, fileName: file.name);
+      titleOverride = 'Analyse · ${uploadData['title'] ?? file.name}';
+      final ok = await ApiService.savePatientOcrAfterUpload(
+        uploadData: uploadData,
+        documentCategory: 'lab_analysis',
+        titleOverride: titleOverride,
+      );
+
+      if (!mounted) return;
+      setState(() => _uploading = false);
+
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document ajouté à votre dossier'), backgroundColor: AppColors.success),
+        );
+        await _load();
+        if (mounted) await _maybePromptProfileGaps();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Échec de l\'enregistrement du document'), backgroundColor: AppColors.error),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _maybePromptProfileGaps() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final u = auth.user;
+    if (u == null || u.role != UserRole.patient) return;
+
+    final missingAllergies = u.allergies == null || u.allergies!.isEmpty;
+    final missingDemographics = u.age == null ||
+        u.height == null ||
+        u.weight == null ||
+        u.gender == null ||
+        u.gender!.trim().isEmpty;
+
+    if (!missingAllergies && !missingDemographics) return;
+
+    final allergiesCtrl = TextEditingController();
+    final ageCtrl = TextEditingController(text: u.age?.toString() ?? '');
+    final heightCtrl = TextEditingController(text: u.height?.toString() ?? '');
+    final weightCtrl = TextEditingController(text: u.weight?.toString() ?? '');
+    String? genderVal = (u.gender != null && u.gender!.isNotEmpty) ? u.gender!.toLowerCase() : null;
+
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Compléter votre profil ?', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Vous pouvez envoyer ces informations au serveur pour les retrouver lors des prochains soins.',
+                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              if (missingAllergies) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: allergiesCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Allergies (séparées par des virgules)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+              if (missingDemographics) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ageCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Âge', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: heightCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Taille (cm)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: weightCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Poids (kg)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: genderVal,
+                  decoration: const InputDecoration(labelText: 'Genre', border: OutlineInputBorder()),
+                  items: const [
+                    DropdownMenuItem(value: 'male', child: Text('Homme')),
+                    DropdownMenuItem(value: 'female', child: Text('Femme')),
+                  ],
+                  onChanged: (v) => genderVal = v,
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Plus tard')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+
+    if (go != true || !mounted) return;
+
+    try {
+      List<String>? allergiesList;
+      if (missingAllergies && allergiesCtrl.text.trim().isNotEmpty) {
+        allergiesList = allergiesCtrl.text
+            .split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+      }
+
+      int? age;
+      int? height;
+      int? weight;
+      if (missingDemographics) {
+        age = int.tryParse(ageCtrl.text.trim());
+        height = int.tryParse(heightCtrl.text.trim());
+        weight = int.tryParse(weightCtrl.text.trim());
+      }
+
+      if (allergiesList == null && age == null && height == null && weight == null && genderVal == null) {
+        return;
+      }
+
+      final updated = await ApiService.patchPatientProfileFields(
+        allergies: allergiesList,
+        age: age,
+        height: height,
+        weight: weight,
+        gender: genderVal,
+      );
+      auth.setUser(updated);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil mis à jour'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildHeaderTabPill({
+    required _DossierTab tab,
+    required String label,
+    required IconData icon,
+    required int? count,
+    required Color activeColor,
+  }) {
+    final selected = _tab == tab;
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _tab = tab),
+            borderRadius: BorderRadius.circular(14),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+              decoration: BoxDecoration(
+                color: selected ? Colors.white : Colors.white.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: selected ? 0.42 : 0.28)),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 20, color: selected ? activeColor : Colors.white),
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? activeColor : Colors.white,
+                      ),
+                    ),
+                  ),
+                  if (count != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '$count',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: selected ? activeColor.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.95),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool _fileNameLooksLikeImage(String name) {
+    final l = name.toLowerCase();
+    return l.endsWith('.jpg') ||
+        l.endsWith('.jpeg') ||
+        l.endsWith('.png') ||
+        l.endsWith('.webp');
+  }
+
+  Widget _buildCardLeadingVisual(
+    String? openUrl,
+    String fileName,
+    bool isPrescription,
+    Color accent,
+    bool looksPdf,
+  ) {
+    final showThumb = openUrl != null && openUrl.isNotEmpty && _fileNameLooksLikeImage(fileName);
+    if (showThumb) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: FutureBuilder<Map<String, String>>(
+          future: ApiService.authImageHeaders(),
+          builder: (context, snapshot) {
+            return Image.network(
+              openUrl,
+              width: 52,
+              height: 52,
+              fit: BoxFit.cover,
+              headers: snapshot.data,
+              gaplessPlayback: true,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 52,
+                  height: 52,
+                  alignment: Alignment.center,
+                  color: accent.withValues(alpha: 0.1),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: accent),
+                  ),
+                );
+              },
+              errorBuilder: (_, __, ___) => _buildCardIconPlaceholder(isPrescription, accent, looksPdf),
+            );
+          },
+        ),
+      );
+    }
+    return _buildCardIconPlaceholder(isPrescription, accent, looksPdf);
+  }
+
+  Widget _buildCardIconPlaceholder(bool isPrescription, Color accent, bool looksPdf) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: 0.22),
+            accent.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Icon(
+          isPrescription
+              ? Icons.medication_rounded
+              : (looksPdf ? Icons.picture_as_pdf : Icons.image),
+          color: accent,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabScrollContent() {
+    switch (_tab) {
+      case _DossierTab.informations:
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            Text(
+              'Informations personnelles',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Profil utilisé pour les rendez-vous et le dossier médical.',
+              style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.35),
+            ),
+            const SizedBox(height: 16),
+            _buildPersonalInfoSection(),
+            const SizedBox(height: 24),
+            Text(
+              'Documents',
+              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Utilisez les onglets Analyses et Ordonn. pour consulter vos fichiers.',
+              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
+            ),
+          ],
+        );
+      case _DossierTab.analyses:
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 28),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mes analyses',
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Laboratoire et documents analysés (OCR).',
+                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            if (_analysisDocs.isEmpty)
+              _buildEmptyHint('Aucune analyse. Appuyez sur + puis « Analyse / bulletin ».')
+            else
+              ..._analysisDocs.map((d) => _buildDocumentCard(context, d, isPrescription: false)),
+          ],
+        );
+      case _DossierTab.ordonnances:
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 28),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mes ordonnances',
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fichiers enregistrés tels quels (photo ou PDF), sans analyse automatique.',
+                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+            if (_prescriptionDocs.isEmpty)
+              _buildEmptyHint('Aucune ordonnance. Appuyez sur + puis « Ordonnance ».')
+            else
+              ..._prescriptionDocs.map((d) => _buildDocumentCard(context, d, isPrescription: true)),
+          ],
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +717,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
           children: [
             // Premium Header
             Container(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               decoration: BoxDecoration(
                 gradient: widget.gradient,
                 borderRadius: const BorderRadius.only(
@@ -112,21 +751,23 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                           child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(widget.icon, color: Colors.white, size: 28),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
+                      Icon(widget.icon, color: Colors.white, size: 26),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 22,
+                            fontSize: 20,
                           ),
                         ),
                       ),
                       GestureDetector(
-                        onTap: _load,
+                        onTap: _loading || _uploading ? () {} : _load,
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -137,71 +778,60 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                               width: 1,
                             ),
                           ),
-                          child: const Icon(Icons.add, color: Colors.white, size: 20),
+                          child: Icon(
+                            Icons.sync_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _uploading ? () {} : _showAddDocumentMenu,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: _uploading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.add, color: Colors.white, size: 20),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Stats Row
+                  const SizedBox(height: 14),
                   Row(
                     children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.description, color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                "${_docs.length} Documents",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      _buildHeaderTabPill(
+                        tab: _DossierTab.analyses,
+                        label: 'Analyses',
+                        icon: Icons.science_rounded,
+                        count: _analysisDocs.length,
+                        activeColor: AppColors.primary,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.cloud_done, color: Colors.white, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Synchro",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      _buildHeaderTabPill(
+                        tab: _DossierTab.ordonnances,
+                        label: 'Ordonn.',
+                        icon: Icons.medication_rounded,
+                        count: _prescriptionDocs.length,
+                        activeColor: AppColors.prescription,
+                      ),
+                      _buildHeaderTabPill(
+                        tab: _DossierTab.informations,
+                        label: 'Infos',
+                        icon: Icons.person_rounded,
+                        count: null,
+                        activeColor: const Color(0xFF5C6BC0),
                       ),
                     ],
                   ),
@@ -209,31 +839,24 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
               ),
             ),
 
-            // Document List (dynamique depuis backend, via état local)
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
                       ? Center(
-                          child: Text(
-                            'Erreur: $_error',
-                            style: GoogleFonts.poppins(color: AppColors.error),
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              'Erreur: $_error',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(color: AppColors.error),
+                            ),
                           ),
                         )
-                      : _docs.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Aucun document',
-                                style: GoogleFonts.poppins(color: AppColors.textSecondary),
-                              ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(20),
-                              itemCount: _docs.length,
-                              itemBuilder: (context, index) {
-                                return _buildDocumentCard(context, _docs[index]);
-                              },
-                            ),
+                      : RefreshIndicator(
+                          onRefresh: _load,
+                          child: _buildTabScrollContent(),
+                        ),
             ),
           ],
         ),
@@ -241,15 +864,117 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     );
   }
 
-  Widget _buildDocumentCard(BuildContext context, Map<String, dynamic> doc) {
+  Widget _buildPersonalInfoSection() {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        final u = auth.user;
+        if (u == null) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Connectez-vous pour afficher vos informations personnelles.',
+              style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+            ),
+          );
+        }
+        if (u.role != UserRole.patient) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Les informations détaillées du dossier patient sont disponibles avec un compte patient.',
+              style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary, height: 1.35),
+            ),
+          );
+        }
+        final name = (u.fullName != null && u.fullName!.trim().isNotEmpty) ? u.fullName! : u.email;
+        final g = u.gender?.toLowerCase();
+        final genderFr = (g == 'male' || g == 'homme')
+            ? 'Homme'
+            : (g == 'female' || g == 'femme')
+                ? 'Femme'
+                : (u.gender ?? '—');
+        final allergiesStr = (u.allergies != null && u.allergies!.isNotEmpty) ? u.allergies!.join(', ') : 'Aucune déclarée';
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.person_rounded, color: AppColors.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Mes informations',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(name, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 15)),
+              const SizedBox(height: 6),
+              Text(
+                'Âge : ${u.age ?? '—'} · Genre : $genderFr · Taille : ${u.height ?? '—'} cm · Poids : ${u.weight ?? '—'} kg',
+                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Allergies : $allergiesStr',
+                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyHint(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Text(
+        text,
+        style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+      ),
+    );
+  }
+
+  Widget _buildDocumentCard(BuildContext context, Map<String, dynamic> doc, {required bool isPrescription}) {
     // Nom labo et métadonnées (compat lab results + OCR)
     final dynamic lab = doc['labId'];
     final String labName = lab is Map
         ? (lab['centreName']?.toString() ?? lab['name']?.toString() ?? 'Laboratoire')
         : (lab?.toString() ?? '');
-    final String analysisType = (doc['analysisType'] ?? '').toString();
-    final String resultFile = (doc['resultFile'] ?? '').toString();
-    final String fileName = resultFile.isNotEmpty ? resultFile.split('/').last : '';
+    final String fileName = _documentFileLabel(doc);
+    final String? openUrl = _documentFileUrl(doc);
 
     final String name = (labName.isNotEmpty
             ? labName
@@ -263,12 +988,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
         date = DateFormat('dd MMM yyyy', 'fr').format(DateTime.parse(rawDate));
       }
     } catch (_) {}
-    final String type = (doc['type'] ?? (doc['isPdf'] == true ? 'PDF' : 'PDF')).toString().toUpperCase();
+    final bool looksPdf =
+        fileName.toLowerCase().endsWith('.pdf') || (doc['isPdf'] == true) || (doc['type']?.toString().toUpperCase() == 'PDF');
+    final String type = looksPdf ? 'PDF' : (doc['type'] ?? 'IMG').toString().toUpperCase();
     final String sizeStr = (doc['size'] ?? doc['sizeMB'] ?? '').toString();
     final String status = (doc['status'] ?? 'Verified').toString();
     final bool isVerified = status.toLowerCase().contains('ver') || status.toLowerCase() == 'verified';
     final bool isActive = status.toLowerCase() == 'active';
-    final Color accentColor = AppColors.primary;
+    final Color accentColor = isPrescription ? AppColors.prescription : AppColors.primary;
 
     return GestureDetector(
       onTap: () {
@@ -318,27 +1045,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
-                    // Document Icon with gradient background
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            accentColor.withOpacity(0.2),
-                            accentColor.withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          type == "PDF" ? Icons.picture_as_pdf : Icons.image,
-                          color: accentColor,
-                          size: 22,
-                        ),
-                      ),
-                    ),
+                    _buildCardLeadingVisual(openUrl, fileName, isPrescription, accentColor, looksPdf),
                     const SizedBox(width: 12),
 
                     // Document Info
@@ -361,49 +1068,72 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // Status Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isVerified
-                                      ? const Color(0xFF4ECDC4).withOpacity(0.15)
-                                      : isActive
-                                      ? const Color(0xFFFF9B71).withOpacity(0.15)
-                                      : const Color(0xFFFFB88C).withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isVerified
-                                          ? Icons.verified
-                                          : isActive
-                                          ? Icons.access_time
-                                          : Icons.pending,
-                                      size: 12,
-                                      color: isVerified
-                                          ? const Color(0xFF4ECDC4)
-                                          : isActive
-                                          ? const Color(0xFFFF9B71)
-                                          : const Color(0xFFFFB88C),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      status,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                              if (isPrescription)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.prescription.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.receipt_long_rounded, size: 12, color: AppColors.prescription),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Fichier',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.prescription,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isVerified
+                                        ? const Color(0xFF4ECDC4).withOpacity(0.15)
+                                        : isActive
+                                            ? const Color(0xFFFF9B71).withOpacity(0.15)
+                                            : const Color(0xFFFFB88C).withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        isVerified
+                                            ? Icons.verified
+                                            : isActive
+                                                ? Icons.access_time
+                                                : Icons.pending,
+                                        size: 12,
                                         color: isVerified
                                             ? const Color(0xFF4ECDC4)
                                             : isActive
-                                            ? const Color(0xFFFF9B71)
-                                            : const Color(0xFFFFB88C),
+                                                ? const Color(0xFFFF9B71)
+                                                : const Color(0xFFFFB88C),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        status,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isVerified
+                                              ? const Color(0xFF4ECDC4)
+                                              : isActive
+                                                  ? const Color(0xFFFF9B71)
+                                                  : const Color(0xFFFFB88C),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 6),
@@ -460,10 +1190,9 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                     // Action Buttons
                     Column(
                       children: [
-                        if (type != 'PDF')
+                        if (!isPrescription && type != 'PDF')
                           GestureDetector(
                             onTap: () {
-                              // Ouvre l'écran d'analyse (l'utilisateur choisira l'image à envoyer)
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const OcrAnalyzeScreen()),
@@ -482,15 +1211,12 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                               ),
                             ),
                           ),
-                        if (type != 'PDF') const SizedBox(height: 8),
+                        if (!isPrescription && type != 'PDF') const SizedBox(height: 8),
                         // Voir document (ouvre le PDF)
                         GestureDetector(
                           onTap: () async {
-                            if (fileName.isEmpty) return;
-                            final url = '${ApiService.baseUrl}/lab/uploads/results/$fileName'
-                                .replaceAll('//lab', '/lab'); // éviter les doubles '/'
-                            final uri = Uri.parse(url);
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            if (openUrl == null || openUrl.isEmpty) return;
+                            await launchUrl(Uri.parse(openUrl), mode: LaunchMode.externalApplication);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
@@ -499,7 +1225,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              Icons.picture_as_pdf_rounded,
+                              looksPdf ? Icons.picture_as_pdf_rounded : Icons.visibility_rounded,
                               color: accentColor,
                               size: 18,
                             ),
@@ -508,7 +1234,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                         const SizedBox(height: 8),
                         GestureDetector(
                           onTap: () {
-                            _showDocumentOptions(context, doc);
+                            _showDocumentOptions(doc);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
@@ -535,24 +1261,22 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     );
   }
 
-  void _showDocumentOptions(BuildContext context, Map<String, dynamic> doc) {
-    final String resultFile = (doc['resultFile'] ?? '').toString();
-    final String fileName = resultFile.isNotEmpty ? resultFile.split('/').last : '';
-    final String url = fileName.isEmpty
-        ? ''
-        : '${ApiService.baseUrl}/lab/uploads/results/$fileName'.replaceAll('//lab', '/lab');
+  void _showDocumentOptions(Map<String, dynamic> doc) {
+    final rootContext = context;
+    final String? url = _documentFileUrl(doc);
     final String? docId = (doc['_id'] ?? doc['id'])?.toString();
+    final bool allowDelete = !_isLabDocument(doc);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FractionallySizedBox(
+      builder: (sheetContext) => FractionallySizedBox(
         heightFactor: 0.9,
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom + 16),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewPadding.bottom + 16),
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -579,9 +1303,10 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                     "Partager",
                     AppColors.primary,
                     onTap: () async {
-                      Navigator.pop(context);
-                      if (url.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      Navigator.pop(sheetContext);
+                      if (url == null || url.isEmpty) {
+                        if (!rootContext.mounted) return;
+                        ScaffoldMessenger.of(rootContext).showSnackBar(
                           SnackBar(content: Text("Lien indisponible"), backgroundColor: AppColors.error),
                         );
                         return;
@@ -594,56 +1319,59 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                     "Download",
                     const Color(0xFF4ECDC4),
                     onTap: () async {
-                      Navigator.pop(context);
-                      if (url.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      Navigator.pop(sheetContext);
+                      if (url == null || url.isEmpty) {
+                        if (!rootContext.mounted) return;
+                        ScaffoldMessenger.of(rootContext).showSnackBar(
                           SnackBar(content: Text("Lien indisponible"), backgroundColor: AppColors.error),
                         );
                         return;
                       }
-                      final uri = Uri.parse(url);
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                     },
                   ),
-                  _buildOptionTile(
-                    Icons.delete_outline,
-                    "Delete",
-                    const Color(0xFFFF6B9D),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final ok = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Supprimer'),
-                              content: const Text('Confirmer la suppression de ce document ?'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-                                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Supprimer')),
-                              ],
-                            ),
-                          ) ??
-                          false;
-                      if (!ok) return;
-                      if (docId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("ID document manquant"), backgroundColor: AppColors.error),
-                        );
-                        return;
-                      }
-                      final success = await ApiService.deleteOcrDocuments([docId]);
-                      if (!mounted) return;
-                      if (success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Document supprimé"), backgroundColor: AppColors.success),
-                        );
-                        _load();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Échec de la suppression"), backgroundColor: AppColors.error),
-                        );
-                      }
-                    },
-                  ),
+                  if (allowDelete)
+                    _buildOptionTile(
+                      Icons.delete_outline,
+                      "Delete",
+                      const Color(0xFFFF6B9D),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final ok = await showDialog<bool>(
+                              context: rootContext,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Supprimer'),
+                                content: const Text('Confirmer la suppression de ce document ?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+                                  TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Supprimer')),
+                                ],
+                              ),
+                            ) ??
+                            false;
+                        if (!ok) return;
+                        if (docId == null) {
+                          if (!rootContext.mounted) return;
+                          ScaffoldMessenger.of(rootContext).showSnackBar(
+                            SnackBar(content: Text("ID document manquant"), backgroundColor: AppColors.error),
+                          );
+                          return;
+                        }
+                        final success = await ApiService.deleteOcrDocuments([docId]);
+                        if (!mounted) return;
+                        if (!rootContext.mounted) return;
+                        if (success) {
+                          ScaffoldMessenger.of(rootContext).showSnackBar(
+                            SnackBar(content: Text("Document supprimé"), backgroundColor: AppColors.success),
+                          );
+                          _load();
+                        } else {
+                          ScaffoldMessenger.of(rootContext).showSnackBar(
+                            SnackBar(content: Text("Échec de la suppression"), backgroundColor: AppColors.error),
+                          );
+                        }
+                      },
+                    ),
                   const SizedBox(height: 12),
                 ],
               ),
