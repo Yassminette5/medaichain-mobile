@@ -804,7 +804,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dossier médical",
+            "Mon dossier",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -818,7 +818,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                 context,
                 MaterialPageRoute(
                   builder: (_) => const DocumentListScreen(
-                    title: 'Dossier médical',
+                    title: 'Mon dossier',
                     icon: Icons.folder_shared_rounded,
                     gradient: LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
                   ),

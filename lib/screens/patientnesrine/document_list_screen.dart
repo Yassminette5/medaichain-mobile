@@ -468,68 +468,73 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     }
   }
 
-  Widget _buildHeaderTabPill({
+  /// Style type segmented control (fond lavande, onglet actif violet plein).
+  static const Color _segAccent = Color(0xFF5D5FEF);
+  static const Color _segTrack = Color(0xFFF3F3FF);
+  static const Color _segBorder = Color(0xFFE4E4F5);
+
+  Widget _buildDossierSegmentedControl() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _segTrack,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _segBorder, width: 1),
+      ),
+      child: Row(
+        children: [
+          _buildSegmentSlot(
+            tab: _DossierTab.analyses,
+            label: 'Analyses',
+          ),
+          _buildSegmentSlot(
+            tab: _DossierTab.ordonnances,
+            label: 'Ordonnances',
+          ),
+          _buildSegmentSlot(
+            tab: _DossierTab.informations,
+            label: 'Infos perso',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentSlot({
     required _DossierTab tab,
     required String label,
-    required IconData icon,
-    required int? count,
-    required Color activeColor,
   }) {
     final selected = _tab == tab;
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => setState(() => _tab = tab),
-            borderRadius: BorderRadius.circular(14),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-              decoration: BoxDecoration(
-                color: selected ? Colors.white : Colors.white.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: selected ? 0.42 : 0.28)),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 20, color: selected ? activeColor : Colors.white),
-                  const SizedBox(height: 3),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? activeColor : Colors.white,
-                      ),
-                    ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _tab = tab),
+          borderRadius: BorderRadius.circular(18),
+          splashColor: _segAccent.withValues(alpha: 0.12),
+          highlightColor: _segAccent.withValues(alpha: 0.06),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            decoration: BoxDecoration(
+              color: selected ? _segAccent : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                    color: selected ? Colors.white : _segAccent,
                   ),
-                  if (count != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '$count',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? activeColor.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.95),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
@@ -644,7 +649,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Utilisez les onglets Analyses et Ordonn. pour consulter vos fichiers.',
+              'Utilisez les onglets Analyses et Ordonnances pour consulter vos fichiers.',
               style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.35),
             ),
           ],
@@ -715,126 +720,95 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Premium Header
+            // Même fond que le reste de l’écran (pas de bandeau blanc)
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-              decoration: BoxDecoration(
-                gradient: widget.gradient,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.gradient.colors.first.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
+              color: AppColors.background,
               child: Column(
                 children: [
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
+                      Material(
+                        color: AppColors.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(color: AppColors.border.withValues(alpha: 0.9)),
+                        ),
+                        child: InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(10),
+                          child: const SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.textDark),
                           ),
-                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      Icon(widget.icon, color: Colors.white, size: 26),
-                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            color: AppColors.textDark,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: _loading || _uploading ? () {} : _load,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
+                      Tooltip(
+                        message: 'Actualiser',
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _loading || _uploading ? null : _load,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _segAccent.withValues(alpha: 0.35)),
+                              ),
+                              child: Icon(
+                                Icons.sync_rounded,
+                                size: 17,
+                                color: _loading ? AppColors.textLight : _segAccent,
+                              ),
                             ),
-                          ),
-                          child: Icon(
-                            Icons.sync_rounded,
-                            color: Colors.white,
-                            size: 20,
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _uploading ? () {} : _showAddDocumentMenu,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
+                      Tooltip(
+                        message: 'Ajouter un document',
+                        child: Material(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(20),
+                          elevation: 0,
+                          child: InkWell(
+                            onTap: _uploading ? null : _showAddDocumentMenu,
+                            borderRadius: BorderRadius.circular(20),
+                            child: SizedBox(
+                              width: 36,
+                              height: 36,
+                              child: _uploading
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Icon(Icons.add_rounded, color: Colors.white, size: 22),
                             ),
                           ),
-                          child: _uploading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Icon(Icons.add, color: Colors.white, size: 20),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      _buildHeaderTabPill(
-                        tab: _DossierTab.analyses,
-                        label: 'Analyses',
-                        icon: Icons.science_rounded,
-                        count: _analysisDocs.length,
-                        activeColor: AppColors.primary,
-                      ),
-                      _buildHeaderTabPill(
-                        tab: _DossierTab.ordonnances,
-                        label: 'Ordonn.',
-                        icon: Icons.medication_rounded,
-                        count: _prescriptionDocs.length,
-                        activeColor: AppColors.prescription,
-                      ),
-                      _buildHeaderTabPill(
-                        tab: _DossierTab.informations,
-                        label: 'Infos',
-                        icon: Icons.person_rounded,
-                        count: null,
-                        activeColor: const Color(0xFF5C6BC0),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 12),
+                  _buildDossierSegmentedControl(),
                 ],
               ),
             ),
