@@ -13,7 +13,6 @@ import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_statistics.dart';
 import 'pharmacy_web_profile.dart';
-import 'pharmacy_web_medication_statistics.dart';
 
 class PharmacyWebStock extends StatefulWidget {
   const PharmacyWebStock({super.key});
@@ -363,18 +362,6 @@ class _PharmacyWebStockState extends State<PharmacyWebStock> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const PharmacyWebStatistics(),
-                      ),
-                    );
-                  },
-                ),
-                _buildSidebarItem(
-                  icon: Icons.medication_rounded,
-                  label: 'Statistiques Médicaments',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PharmacyWebMedicationStatistics(),
                       ),
                     );
                   },

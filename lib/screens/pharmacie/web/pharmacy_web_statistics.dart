@@ -11,7 +11,6 @@ import '../../auth/login_web_screen.dart';
 import 'pharmacy_web_dashboard.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_profile.dart';
-import 'pharmacy_web_medication_statistics.dart';
 
 class PharmacyWebStatistics extends StatefulWidget {
   const PharmacyWebStatistics({super.key});
@@ -342,18 +341,6 @@ class _PharmacyWebStatisticsState extends State<PharmacyWebStatistics> {
                   label: 'Statistiques',
                   isSelected: true,
                   onTap: () {},
-                ),
-                _buildSidebarItem(
-                  icon: Icons.medication_rounded,
-                  label: 'Statistiques Médicaments',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PharmacyWebMedicationStatistics(),
-                      ),
-                    );
-                  },
                 ),
                 const Divider(height: 32),
                 _buildSidebarItem(

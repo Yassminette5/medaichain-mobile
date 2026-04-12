@@ -11,7 +11,6 @@ import 'pharmacy_web_profile.dart';
 import 'pharmacy_web_prescription_details.dart';
 import 'pharmacy_web_stock.dart';
 import 'pharmacy_web_statistics.dart';
-import 'pharmacy_web_medication_statistics.dart';
 
 /// Web-optimized Pharmacy Dashboard
 class PharmacyWebDashboard extends StatefulWidget {
@@ -286,18 +285,6 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const PharmacyWebStatistics(),
-                      ),
-                    );
-                  },
-                ),
-                _buildSidebarItem(
-                  icon: Icons.medication_rounded,
-                  label: 'Statistiques Médicaments',
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PharmacyWebMedicationStatistics(),
                       ),
                     );
                   },
