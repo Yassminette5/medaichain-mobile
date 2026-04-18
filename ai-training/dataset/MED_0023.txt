@@ -1,0 +1,19 @@
+{
+  "diagnosis": "Hyperglycémie et/ou HbA1c élevée. Diabète de type 2 suspecté ou mal équilibré. Paramètres anormaux : Glycémie à jeun: 2.66 g/L (élevé, norme: 0.7-1.1); Insuline: 51 µUI/mL (élevé, norme: 2.6-24.9).",
+  "advice": "Régime hypoglucidique strict. Supprimer les sucres rapides et les sodas. Exercice physique quotidien. Surveillance glycémique régulière.",
+  "prescription_suggestions": [
+    {
+      "name": "Metformine",
+      "dosage": "850 mg",
+      "frequency": "1 comprimé matin et soir",
+      "duration": "6 mois"
+    },
+    {
+      "name": "Gliclazide",
+      "dosage": "30 mg",
+      "frequency": "1 comprimé le matin",
+      "duration": "3 mois"
+    }
+  ],
+  "emergency_level": "moyen"
+}

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 /// MEDAIChain App Theme Configuration
-/// Modern healthcare theme with Material 3 design - Purple/Lavender style
+/// Modern healthcare theme with Material 3 design - Medical Blue + Healing Teal
 class AppTheme {
   AppTheme._();
 
@@ -12,11 +12,11 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
+        seedColor: const Color(0xFF1565C0),
         brightness: Brightness.light,
-        primary: AppColors.primary,
+        primary: const Color(0xFF1565C0),
         onPrimary: AppColors.textOnPrimary,
-        secondary: AppColors.secondary,
+        secondary: const Color(0xFF00897B),
         onSecondary: AppColors.textOnPrimary,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
@@ -24,13 +24,15 @@ class AppTheme {
         onError: AppColors.textOnPrimary,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      
-      // App Bar Theme
+
+      // App Bar Theme - clean white with blue text
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: true,
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: AppColors.cardShadow,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -41,7 +43,7 @@ class AppTheme {
         ),
       ),
 
-      // Text Theme
+      // Text Theme - Inter throughout
       textTheme: TextTheme(
         displayLarge: GoogleFonts.inter(
           fontSize: 32,
@@ -115,7 +117,7 @@ class AppTheme {
         ),
       ),
 
-      // Card Theme - Large border radius, soft shadow
+      // Card Theme - Large border radius 28, blue-tinted shadow
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.cardBackground,
@@ -125,12 +127,13 @@ class AppTheme {
         ),
       ),
 
-      // Elevated Button Theme - Very rounded
+      // Elevated Button Theme - Medical Blue, very rounded
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
           elevation: 0,
+          shadowColor: AppColors.glowShadow,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -142,7 +145,7 @@ class AppTheme {
         ),
       ),
 
-      // Outlined Button Theme - Very rounded
+      // Outlined Button Theme - Blue border, very rounded
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
@@ -169,7 +172,7 @@ class AppTheme {
         ),
       ),
 
-      // Input Decoration Theme - Large border radius
+      // Input Decoration Theme - Light blue border, focus = medical blue
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
@@ -206,7 +209,7 @@ class AppTheme {
         suffixIconColor: AppColors.textSecondary,
       ),
 
-      // Bottom Navigation Bar Theme
+      // Bottom Navigation Bar Theme - selected = blue, unselected = light grey
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
@@ -223,7 +226,7 @@ class AppTheme {
         elevation: 0,
       ),
 
-      // Floating Action Button Theme
+      // Floating Action Button Theme - Medical Blue
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
@@ -238,9 +241,9 @@ class AppTheme {
         space: 1,
       ),
 
-      // Chip Theme - Very rounded
+      // Chip Theme - Light blue background
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.primaryLight.withValues(alpha: 0.2),
+        backgroundColor: AppColors.blockchainLight,
         labelStyle: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -256,6 +259,182 @@ class AppTheme {
       iconTheme: const IconThemeData(
         color: AppColors.textSecondary,
         size: 24,
+      ),
+
+      // Navigation Bar Theme (Material 3)
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surface,
+        indicatorColor: AppColors.blockchainLight,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.primary, size: 24);
+          }
+          return const IconThemeData(color: AppColors.textLight, size: 24);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            );
+          }
+          return GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.normal,
+            color: AppColors.textLight,
+          );
+        }),
+      ),
+
+      // Switch Theme
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return AppColors.textLight;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.blockchainLight;
+          }
+          return AppColors.borderLight;
+        }),
+      ),
+
+      // Checkbox Theme
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStateProperty.all(AppColors.textOnPrimary),
+        side: const BorderSide(color: AppColors.border, width: 1.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+
+      // Radio Theme
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return AppColors.textLight;
+        }),
+      ),
+
+      // Progress Indicator Theme
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary,
+        linearTrackColor: AppColors.blockchainLight,
+        circularTrackColor: AppColors.blockchainLight,
+      ),
+
+      // Snack Bar Theme
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.darkBackground,
+        contentTextStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: AppColors.textOnPrimary,
+        ),
+        actionTextColor: AppColors.primaryLight,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+
+      // Dialog Theme
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        contentTextStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: AppColors.textSecondary,
+        ),
+      ),
+
+      // Bottom Sheet Theme
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+
+      // Tab Bar Theme
+      tabBarTheme: TabBarThemeData(
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textLight,
+        indicatorColor: AppColors.primary,
+        labelStyle: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
+        dividerColor: AppColors.divider,
+      ),
+
+      // Tooltip Theme
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.darkBackground,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: GoogleFonts.inter(
+          fontSize: 12,
+          color: AppColors.textOnPrimary,
+        ),
+      ),
+
+      // Slider Theme
+      sliderTheme: SliderThemeData(
+        activeTrackColor: AppColors.primary,
+        inactiveTrackColor: AppColors.blockchainLight,
+        thumbColor: AppColors.primary,
+        overlayColor: AppColors.primary.withValues(alpha: 0.12),
+        valueIndicatorColor: AppColors.primary,
+        valueIndicatorTextStyle: GoogleFonts.inter(
+          fontSize: 12,
+          color: AppColors.textOnPrimary,
+        ),
+      ),
+
+      // List Tile Theme
+      listTileTheme: ListTileThemeData(
+        tileColor: AppColors.surface,
+        iconColor: AppColors.textSecondary,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+        subtitleTextStyle: GoogleFonts.inter(
+          fontSize: 12,
+          color: AppColors.textSecondary,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }

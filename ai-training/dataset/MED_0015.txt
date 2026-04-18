@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Fonction rénale normale. Créatinine et urée dans les valeurs normales.",
+  "advice": "Boire au moins 1.5L d'eau par jour. Limiter le sel. Éviter les AINS au long cours.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

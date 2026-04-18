@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Hypoglycémie détectée. Glycémie à jeun inférieure aux normes. Risque de malaise hypoglycémique. Paramètres anormaux : Glycémie à jeun: 0.57 g/L (bas, norme: 0.7-1.1); HbA1c: 3.19 % (bas, norme: 4-5.6); Insuline: 0.52 µUI/mL (bas, norme: 2.6-24.9).",
+  "advice": "Fractionner les repas (5 à 6 petits repas/jour). Toujours avoir du sucre rapide sur soi. Éviter les jeûnes prolongés.",
+  "prescription_suggestions": [
+    {
+      "name": "Glucose oral",
+      "dosage": "15 g",
+      "frequency": "En cas de malaise",
+      "duration": "À vie"
+    }
+  ],
+  "emergency_level": "moyen"
+}

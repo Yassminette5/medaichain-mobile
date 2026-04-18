@@ -1,0 +1,204 @@
+# =============================================================================
+# MEDAIChain - Entraînement du Modèle IA Médical sur Google Colab
+# =============================================================================
+# Ce notebook est conçu pour Google Colab avec un GPU T4 (gratuit).
+# Il fine-tune un modèle Llava multimodal pour analyser des rapports médicaux.
+#
+# INSTRUCTIONS :
+# 1. Ouvrez Google Colab : https://colab.research.google.com
+# 2. Menu : Exécution > Modifier le type d'exécution > GPU (T4)
+# 3. Uploadez le fichier 'medical_dataset.jsonl' dans le panneau de fichiers
+# 4. Copiez chaque cellule et exécutez-les dans l'ordre
+# =============================================================================
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 1 : Installation (NE PAS RELANCER après le redémarrage)           ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+!pip install unsloth
+!pip install --no-deps xformers trl peft accelerate bitsandbytes
+
+print("=" * 60)
+print("⚠️  IMPORTANT : REDÉMARREZ LA SESSION MAINTENANT ⚠️")
+print("=" * 60)
+print()
+print("1. Menu : Exécution > Redémarrer la session")
+print("2. Après le redémarrage, NE RELANCEZ PAS cette cellule")
+print("3. Passez directement à la CELLULE 2")
+print()
+print("=" * 60)
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 2 : Chargement du modèle (après redémarrage uniquement)           ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+from unsloth import FastVisionModel
+import torch
+import json
+import os
+
+print("⌛ Chargement du modèle Llava multimodal (4-bit quantisé)...")
+print("   Cela peut prendre 2-3 minutes...\n")
+
+model, tokenizer = FastVisionModel.from_pretrained(
+    model_name="unsloth/llava-v1.5-7b-bnb-4bit",
+    load_in_4bit=True,
+)
+
+print("✅ Modèle chargé avec succès !")
+print(f"   Mémoire GPU utilisée : {torch.cuda.memory_allocated() / 1e9:.1f} GB")
+
+# Configurer LoRA pour le fine-tuning
+model = FastVisionModel.get_peft_model(
+    model,
+    r=16,
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                     "gate_proj", "up_proj", "down_proj"],
+    lora_alpha=16,
+    lora_dropout=0,
+    bias="none",
+)
+
+print("✅ LoRA configuré (rank=16)")
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 3 : Chargement et vérification du dataset                        ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+from datasets import load_dataset
+
+DATASET_FILE = "medical_dataset.jsonl"
+
+if not os.path.exists(DATASET_FILE):
+    # Essayer dans le dossier /content/ (racine Colab)
+    DATASET_FILE = "/content/medical_dataset.jsonl"
+
+if not os.path.exists(DATASET_FILE):
+    print("❌ ERREUR : Fichier 'medical_dataset.jsonl' introuvable !")
+    print()
+    print("📤 Pour l'uploader :")
+    print("   1. Cliquez sur l'icône 📁 dans le panneau de gauche")
+    print("   2. Cliquez sur l'icône ⬆️ (upload)")
+    print("   3. Sélectionnez 'medical_dataset.jsonl' depuis votre PC")
+    print("   4. Relancez cette cellule")
+else:
+    dataset = load_dataset("json", data_files=DATASET_FILE, split="train")
+
+    print(f"✅ Dataset chargé : {len(dataset)} exemples")
+    print()
+
+    # Afficher un aperçu
+    sample = dataset[0]
+    conversations = sample.get("conversations", [])
+    if conversations:
+        print("📋 Aperçu du 1er exemple :")
+        print(f"   Question : {conversations[0]['value'][:80]}...")
+        response = json.loads(conversations[1]["value"])
+        print(f"   Diagnostic : {response.get('diagnosis', 'N/A')[:80]}...")
+        print(f"   Urgence : {response.get('emergency_level', 'N/A')}")
+        print(f"   Nb prescriptions : {len(response.get('prescription_suggestions', []))}")
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 4 : Entraînement                                                 ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+from transformers import TrainingArguments
+from trl import SFTTrainer
+
+print("🚀 Démarrage de l'entraînement...\n")
+print("   Paramètres :")
+print("   - Batch size : 2")
+print("   - Gradient accumulation : 4")
+print("   - Max steps : 100")
+print("   - Learning rate : 2e-4")
+print()
+
+trainer = SFTTrainer(
+    model=model,
+    tokenizer=tokenizer,
+    train_dataset=dataset,
+    dataset_text_field="conversations",
+    max_seq_length=2048,
+    args=TrainingArguments(
+        per_device_train_batch_size=2,
+        gradient_accumulation_steps=4,
+        max_steps=100,                # Augmentez à 200-500 pour de meilleurs résultats
+        learning_rate=2e-4,
+        fp16=True,
+        logging_steps=5,
+        output_dir="outputs",
+        save_steps=25,
+        warmup_steps=5,
+        weight_decay=0.01,
+        lr_scheduler_type="linear",
+        optim="adamw_8bit",
+        seed=42,
+    ),
+)
+
+# Lancer l'entraînement
+results = trainer.train()
+
+print()
+print("=" * 60)
+print("✅ ENTRAÎNEMENT TERMINÉ !")
+print(f"   Loss finale : {results.training_loss:.4f}")
+print(f"   Durée : {results.metrics['train_runtime']:.0f} secondes")
+print("=" * 60)
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 5 : Export en GGUF pour Ollama                                    ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+print("⌛ Exportation du modèle en format GGUF pour Ollama...")
+print("   (Ceci peut prendre 5-10 minutes, soyez patient)\n")
+
+OUTPUT_FOLDER = "medaichain_model_gguf"
+
+model.save_pretrained_gguf(
+    OUTPUT_FOLDER,
+    tokenizer,
+    quantization_method="q4_k_m"  # Bon compromis qualité/taille
+)
+
+print()
+print("=" * 60)
+print("✅ MODÈLE EXPORTÉ EN GGUF !")
+print(f"   📁 Dossier : {OUTPUT_FOLDER}/")
+print()
+
+# Lister les fichiers générés
+for f in os.listdir(OUTPUT_FOLDER):
+    size = os.path.getsize(os.path.join(OUTPUT_FOLDER, f))
+    print(f"   📄 {f} ({size / 1e6:.1f} MB)")
+
+print()
+print("📥 PROCHAINES ÉTAPES :")
+print("   1. Téléchargez le dossier 'medaichain_model_gguf' sur votre PC")
+print("   2. Copiez le fichier Modelfile dans ce dossier")
+print("   3. Exécutez : ollama create medaichain-medical -f Modelfile")
+print("   4. Testez : ollama run medaichain-medical")
+print("=" * 60)
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  CELLULE 6 (Optionnel) : Téléchargement direct depuis Colab                ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+# Compresser le dossier pour un téléchargement plus facile
+import shutil
+shutil.make_archive("medaichain_model_gguf", 'zip', ".", OUTPUT_FOLDER)
+
+# Télécharger (fonctionne uniquement dans Colab)
+try:
+    from google.colab import files
+    files.download("medaichain_model_gguf.zip")
+    print("📥 Téléchargement lancé !")
+except:
+    print("💡 Si le téléchargement auto ne marche pas :")
+    print("   Clic droit sur le fichier .zip > Télécharger")

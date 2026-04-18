@@ -1,0 +1,25 @@
+{
+  "diagnosis": "Anémie détectée avec des valeurs basses de globules rouges et/ou d'hémoglobine. Possible carence en fer ou en vitamine B12. Paramètres anormaux : Globules Rouges (GR): 3.71 T/L (bas, norme: 4-5.5); Hémoglobine (Hb): 7.01 g/dL (bas, norme: 12-17.5); Hématocrite (Ht): 20.44 % (bas, norme: 36-50); Globules Blancs (GB): 1.79 G/L (bas, norme: 4-10); Plaquettes: 56 G/L (bas, norme: 150-400); VGM: 78 fL (bas, norme: 80-100).",
+  "advice": "Augmenter la consommation d'aliments riches en fer (viande rouge, lentilles, épinards). Éviter le thé et le café pendant les repas. Repos recommandé en cas de fatigue importante.",
+  "prescription_suggestions": [
+    {
+      "name": "Fer (Tardyferon)",
+      "dosage": "80 mg",
+      "frequency": "1 comprimé par jour",
+      "duration": "3 mois"
+    },
+    {
+      "name": "Vitamine B12",
+      "dosage": "1000 µg",
+      "frequency": "1 injection/semaine",
+      "duration": "1 mois"
+    },
+    {
+      "name": "Acide Folique",
+      "dosage": "5 mg",
+      "frequency": "1 comprimé par jour",
+      "duration": "3 mois"
+    }
+  ],
+  "emergency_level": "moyen"
+}

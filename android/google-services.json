@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "776552618546",
+    "project_id": "medaichain-19e32",
+    "storage_bucket": "medaichain-19e32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776552618546:android:74afa5bf94aac0d80e3a2b",
+        "android_client_info": {
+          "package_name": "com.example.madaichain"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpSrkoH1xWHaN-7-A5RKe4sp-Sqnz6Pf8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -9,6 +9,7 @@ import '../../services/api_service.dart';
 import '../centre_analyse/centers_list_screen.dart';
 import '../centre_analyse/center_detail_screen.dart';
 import '../clinique/mobile/clinic_detail_screen.dart';
+import '../pharmacy/pharmacies_list_screen.dart';
 
 enum _HealthDrawerFilter { pharmacies, analysisCenters, clinics }
 
@@ -29,6 +30,10 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
   String? _centersError;
   List<Map<String, dynamic>> _centers = [];
 
+  bool _isLoadingPharmacies = false;
+  String? _pharmaciesError;
+  List<Map<String, dynamic>> _pharmacies = [];
+
   bool _isLoadingClinics = false;
   String? _clinicsError;
   List<Map<String, dynamic>> _clinics = [];
@@ -44,6 +49,48 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
       context,
       MaterialPageRoute(builder: (_) => const CentersListScreen()),
     );
+  }
+
+  void _openPharmaciesList(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PharmaciesListScreen()),
+    );
+  }
+
+  Future<void> _loadPharmaciesIfNeeded() async {
+    if (_isLoadingPharmacies) return;
+    if (_pharmacies.isNotEmpty && _pharmaciesError == null) return;
+
+    setState(() {
+      _isLoadingPharmacies = true;
+      _pharmaciesError = null;
+    });
+
+    try {
+      final raw = await ApiService.getPharmacies();
+
+      final normalized = raw.map((pharmacy) {
+        return <String, dynamic>{
+          'id': (pharmacy['pharmacyId'] ?? pharmacy['_id'] ?? pharmacy['id'] ?? '').toString(),
+          'name': (pharmacy['name'] ?? pharmacy['pharmacyName'] ?? 'Pharmacy').toString(),
+          'address': (pharmacy['address'] ?? '').toString(),
+          'offersDelivery': pharmacy['offersDelivery'] == true || pharmacy['hasDelivery'] == true,
+        };
+      }).where((p) => (p['id'] as String).isNotEmpty).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _pharmacies = normalized;
+        _isLoadingPharmacies = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _pharmaciesError = e.toString().replaceFirst('Exception: ', '');
+        _isLoadingPharmacies = false;
+      });
+    }
   }
 
   Future<void> _loadClinicsIfNeeded() async {
@@ -278,6 +325,7 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                             isSelected: _selectedFilter == _HealthDrawerFilter.pharmacies,
                             onTap: () {
                               setState(() => _selectedFilter = _HealthDrawerFilter.pharmacies);
+                              _loadPharmaciesIfNeeded();
                             },
                           ),
                         ),
@@ -419,9 +467,10 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                               _openCentersList(context);
                               return;
                             }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Liste des pharmacies: bientôt disponible')),
-                            );
+                            if (_selectedFilter == _HealthDrawerFilter.pharmacies) {
+                              _openPharmaciesList(context);
+                              return;
+                            }
                           },
                           child: Text(
                             "See All",
@@ -494,23 +543,64 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                         ],
                       ],
                     ] else if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
-                      _buildPlaceCard(
-                        icon: Icons.local_pharmacy,
-                        name: "MediCare Pharmacy",
-                        distance: "1.2 km",
-                        status: "Open 24/7",
-                        statusColor: Colors.green,
-                        gradient: const LinearGradient(colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)]),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildPlaceCard(
-                        icon: Icons.local_pharmacy,
-                        name: "HealthPlus Drugstore",
-                        distance: "0.8 km",
-                        status: "Open",
-                        statusColor: Colors.green,
-                        gradient: AppColors.primaryGradient,
-                      ),
+                      if (_isLoadingPharmacies)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_pharmaciesError != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Erreur: $_pharmaciesError',
+                                style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _loadPharmaciesIfNeeded,
+                                  child: const Text('Réessayer'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_pharmacies.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            "Aucune pharmacie trouvée",
+                            style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                          ),
+                        )
+                      else ...[
+                        for (final p in _pharmacies.take(5)) ...[
+                          _buildPlaceCard(
+                            icon: Icons.local_pharmacy,
+                            name: (p['name'] as String),
+                            distance: (p['address'] as String).isEmpty
+                                ? 'Localisation inconnue'
+                                : (p['address'] as String),
+                            status: (p['offersDelivery'] == true)
+                                ? 'Livraison disponible'
+                                : 'Sans livraison',
+                            statusColor: (p['offersDelivery'] == true)
+                                ? Colors.green
+                                : Colors.orange,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
+                            ),
+                            onTap: () {
+                              _openPharmaciesList(context);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
                     ] else ...[
                       if (_isLoadingCenters)
                         const Padding(

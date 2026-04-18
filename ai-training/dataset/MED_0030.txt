@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Polyglobulie ou leucocytose détectée. Valeurs élevées des éléments sanguins pouvant indiquer une infection, une inflammation ou un trouble hématologique. Paramètres anormaux : Globules Rouges (GR): 6.17 T/L (élevé, norme: 4-5.5); Hémoglobine (Hb): 18.65 g/dL (élevé, norme: 12-17.5); Hématocrite (Ht): 52.25 % (élevé, norme: 36-50); Plaquettes: 655 G/L (élevé, norme: 150-400).",
+  "advice": "Hydratation abondante (2L d'eau/jour minimum). Consulter un hématologue si les valeurs persistent. Éviter les efforts physiques intenses.",
+  "prescription_suggestions": [
+    {
+      "name": "Aspégic",
+      "dosage": "100 mg",
+      "frequency": "1 sachet par jour",
+      "duration": "15 jours"
+    }
+  ],
+  "emergency_level": "moyen"
+}

@@ -7,6 +7,7 @@ import '../../models/pharmacy_statistics.dart';
 import '../../services/pharmacy_service.dart';
 import '../../providers/auth_provider.dart';
 import 'web/pharmacy_web_statistics.dart';
+import '../../widgets/pharmacie/mobile/pharmacy_mobile_notifications_bell.dart';
 
 /// Pharmacy Statistics Screen - Automatically uses web version on web platform
 class PharmacyStatisticsScreen extends StatelessWidget {
@@ -89,6 +90,14 @@ class _PharmacyStatisticsMobileState extends State<_PharmacyStatisticsMobile> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        actions: [
+          const PharmacyMobileNotificationsBell(),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+            onPressed: _loadStatistics,
+            tooltip: 'Actualiser',
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

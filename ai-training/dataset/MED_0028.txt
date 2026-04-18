@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Bilan thyroïdien normal. Fonction thyroïdienne correcte.",
+  "advice": "Aucune mesure particulière. Consommation modérée d'iode. Contrôle dans 1 an si symptômes.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

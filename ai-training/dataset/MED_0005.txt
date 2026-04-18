@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Aucun syndrome inflammatoire détecté. CRP et VS normales.",
+  "advice": "Mode de vie sain. Anti-inflammatoires naturels (curcuma, oméga-3) en prévention.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

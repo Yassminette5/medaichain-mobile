@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Hypothyroïdie détectée avec TSH élevée et T4/T3 basses. Ralentissement du métabolisme possible. Paramètres anormaux : T4 Libre: 10.36 pmol/L (bas, norme: 12-22); T3 Libre: 3 pmol/L (bas, norme: 3.1-6.8).",
+  "advice": "Prendre le traitement thyroïdien le matin à jeun, 30 min avant le petit-déjeuner. Éviter le soja et le chou en excès.",
+  "prescription_suggestions": [
+    {
+      "name": "Lévothyroxine (Levothyrox)",
+      "dosage": "50 µg",
+      "frequency": "1 comprimé le matin à jeun",
+      "duration": "À réévaluer dans 6 semaines"
+    }
+  ],
+  "emergency_level": "moyen"
+}

@@ -1,0 +1,6 @@
+{
+  "diagnosis": "Glycémie à jeun et HbA1c dans les normes. Pas de diabète détecté.",
+  "advice": "Maintenir un poids santé. Limiter les sucres ajoutés. Activité physique régulière.",
+  "prescription_suggestions": [],
+  "emergency_level": "faible"
+}

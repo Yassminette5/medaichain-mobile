@@ -1,0 +1,13 @@
+{
+  "diagnosis": "Fonction rénale potentiellement altérée avec DFG diminué. Possible insuffisance rénale débutante. Paramètres anormaux : Acide Urique: 23 mg/L (bas, norme: 25-70).",
+  "advice": "Hydratation régulière (1.5 à 2L/jour). Réduire le sel et les protéines animales. Éviter les anti-inflammatoires (AINS).",
+  "prescription_suggestions": [
+    {
+      "name": "Bicarbonate de Sodium",
+      "dosage": "500 mg",
+      "frequency": "2 gélules par jour",
+      "duration": "1 mois"
+    }
+  ],
+  "emergency_level": "moyen"
+}

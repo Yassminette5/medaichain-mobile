@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         Positioned(top: -120, right: -80, child: _buildOrb(320, AppColors.primary.withValues(alpha: 0.25))),
         Positioned(bottom: 150, left: -100, child: _buildOrb(250, AppColors.secondary.withValues(alpha: 0.15))),
         Positioned(top: 350, right: -40, child: _buildOrb(180, AppColors.ai.withValues(alpha: 0.12))),
-        Positioned(bottom: -50, right: 50, child: _buildOrb(120, AppColors.prescription.withValues(alpha: 0.1))),
+        Positioned(bottom: -50, right: 50, child: _buildOrb(120, AppColors.secondary.withValues(alpha: 0.12))),
       ],
     );
   }
@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         const SizedBox(height: 6),
         Text('Bienvenue', style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w300)),
         const SizedBox(height: 2),
-        Text('Connectez-vous pour accéder à vos patients', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4))),
+        Text('Connectez-vous pour accéder à vos services de santé', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4))),
       ],
     );
   }
@@ -410,12 +410,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         final user = authProvider.user;
         final userRole = user?.role ?? UserRole.patient;
         final userEmail = user?.email ?? '';
-        
+
         Widget dashboard;
-        
+
         // Rediriger vers le bon dashboard selon le rôle
         // Vérifier si c'est un admin par l'email (admin@medaichain.com)
-        if (userEmail.toLowerCase() == 'admin@medaichain.com' || 
+        if (userEmail.toLowerCase() == 'admin@medaichain.com' ||
             userEmail.toLowerCase().contains('admin')) {
           dashboard = const AdminDashboardScreen();
         } else if (userRole == UserRole.centreAnalyse) {
@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           // Patient
           dashboard = const MainScreen();
         }
-        
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => dashboard),
@@ -456,7 +456,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -466,7 +466,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Entrez votre email pour recevoir un lien de réinitialisation', 
+            Text('Entrez votre email pour recevoir un lien de réinitialisation',
                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
             const SizedBox(height: 16),
             TextField(
@@ -497,12 +497,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 );
                 return;
               }
-              
+
               Navigator.pop(dialogContext);
-              
+
               // Appel API avec le bon contexte
               final success = await authProvider.forgotPassword(email);
-              
+
               if (mounted) {
                 if (success) {
                   Navigator.push(
