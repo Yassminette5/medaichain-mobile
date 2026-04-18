@@ -1519,14 +1519,8 @@ class ApiService {
   }
 
   // Version pour centres d'analyse (patient) — POST /lab-appointments
-<<<<<<< HEAD
   // Retourne l'objet RDV créé (incluant désormais `status`: accepted|pending|rejected)
   static Future<Map<String, dynamic>> createLabAppointment(Map<String, dynamic> appointmentData) async {
-=======
-  static Future<void> createLabAppointment(
-    Map<String, dynamic> appointmentData,
-  ) async {
->>>>>>> origin/preprod3
     final token = await getAccessToken();
 
     final response = await http.post(
@@ -1560,7 +1554,6 @@ class ApiService {
     } else {
       // Essayer d'extraire un message d'erreur utile (souvent validation => 400)
       try {
-<<<<<<< HEAD
         final decoded = jsonDecode(response.body);
         if (decoded is Map) {
           final errorData = Map<String, dynamic>.from(decoded);
@@ -1572,15 +1565,6 @@ class ApiService {
           throw Exception(errorMessage.toString());
         }
         throw Exception(decoded.toString());
-=======
-        final errorData = jsonDecode(response.body);
-        final errorMessage =
-            errorData['message'] ??
-            errorData['error'] ??
-            errorData['statusMessage'] ??
-            'Erreur de création du rendez-vous';
-        throw Exception(errorMessage);
->>>>>>> origin/preprod3
       } catch (e) {
         // Si le backend renvoie du texte/HTML, garder un extrait pour debug
         final body = response.body.toString();
@@ -1589,8 +1573,9 @@ class ApiService {
         if (e is Exception && e.toString().contains('Erreur')) {
           rethrow;
         }
-<<<<<<< HEAD
-        throw Exception('Erreur de création du rendez-vous (${response.statusCode})${snippet.trim().isNotEmpty ? ': $snippet' : ''}');
+        throw Exception(
+          'Erreur de création du rendez-vous: ${response.statusCode}',
+        );
       }
     }
   }
@@ -1680,11 +1665,6 @@ class ApiService {
       } catch (e) {
         if (e is Exception && e.toString().contains('Erreur')) rethrow;
         throw Exception('Erreur de chargement du rendez-vous: ${response.statusCode}');
-=======
-        throw Exception(
-          'Erreur de création du rendez-vous: ${response.statusCode}',
-        );
->>>>>>> origin/preprod3
       }
     }
   }
@@ -2724,7 +2704,6 @@ class ApiService {
     }
   }
 
-<<<<<<< HEAD
   // ========== ML OCR (proxy backend → Flask) ==========
   /// Envoie une image ou un PDF vers /ml/ocr-analyze et retourne la réponse JSON du modèle.
   /// Le champ multipart attendu est 'file'.
@@ -2841,8 +2820,130 @@ class ApiService {
       Uri.parse('$baseUrl/patient/ocr/upload'),
     );
     request.headers['Authorization'] = 'Bearer $token';
-=======
-  // ========== ANALYSES PATIENT (UPLOAD PDF) ==========
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['data'] is Map) {
+        return Map<String, dynamic>.from(decoded['data'] as Map);
+      }
+      throw Exception('Réponse serveur invalide après upload');
+    }
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadPatientOcrFile(fileBytes: fileBytes, fileName: fileName);
+    }
+    String msg = 'Erreur upload document (${response.statusCode})';
+    try {
+      final err = jsonDecode(response.body);
+      msg = (err['message'] ?? err['error'] ?? msg).toString();
+    } catch (_) {}
+    throw Exception(msg);
+  }
+
+  /// Récupérer les documents OCR du patient connecté
+  static Future<List<dynamic>> getOcrDocuments() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/ocr/documents'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getOcrDocuments();
+    }
+    return [];
+  }
+
+  /// Upload brut d'un fichier OCR (sans analyse immédiate Tesseract)
+  static Future<Map<String, dynamic>> uploadPatientOcrFileRaw({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    final token = await getAccessToken();
+    String contentType = 'application/octet-stream';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.pdf')) {
+      contentType = 'application/pdf';
+    } else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      contentType = 'image/jpeg';
+    } else if (lower.endsWith('.png')) {
+      contentType = 'image/png';
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/patient/ocr/upload-raw'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: MediaType.parse(contentType),
+      ),
+    );
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadPatientOcrFileRaw(fileBytes: fileBytes, fileName: fileName);
+    }
+    throw Exception('Erreur upload raw: ${response.statusCode}');
+  }
+
+  /// Sauvegarder un document OCR après upload
+  static Future<bool> savePatientOcrAfterUpload({
+    required Map<String, dynamic> uploadData,
+    required String documentCategory,
+    String? titleOverride,
+  }) async {
+    final token = await getAccessToken();
+    final url = '$baseUrl/patient/ocr/save-after-upload';
+    final body = {
+      'uploadData': uploadData,
+      'documentCategory': documentCategory,
+      'titleOverride': titleOverride,
+    };
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return savePatientOcrAfterUpload(
+        uploadData: uploadData,
+        documentCategory: documentCategory,
+        titleOverride: titleOverride,
+      );
+    }
+    return false;
+  }
 
   static Future<Map<String, dynamic>> uploadPatientAnalysis({
     required String title,
@@ -2885,118 +2986,11 @@ class ApiService {
       mimeType = 'image/png';
     }
 
->>>>>>> origin/preprod3
     request.files.add(
       http.MultipartFile.fromBytes(
         'file',
         fileBytes,
         filename: fileName,
-<<<<<<< HEAD
-        contentType: MediaType.parse(contentType),
-      ),
-    );
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map && decoded['data'] is Map) {
-        return Map<String, dynamic>.from(decoded['data'] as Map);
-      }
-      throw Exception('Réponse serveur invalide après upload');
-    }
-    if (response.statusCode == 401) {
-      await refreshToken();
-      return uploadPatientOcrFile(fileBytes: fileBytes, fileName: fileName);
-    }
-    String msg = 'Erreur upload document (${response.statusCode})';
-    try {
-      final err = jsonDecode(response.body);
-      msg = (err['message'] ?? err['error'] ?? msg).toString();
-    } catch (_) {}
-    throw Exception(msg);
-  }
-
-  /// Upload sans OCR — POST /patient/ocr/upload-raw (ordonnances, PDF stockés tels quels).
-  static Future<Map<String, dynamic>> uploadPatientOcrFileRaw({
-    required List<int> fileBytes,
-    required String fileName,
-  }) async {
-    final token = await getAccessToken();
-    String contentType = 'application/octet-stream';
-    final lower = fileName.toLowerCase();
-    if (lower.endsWith('.pdf')) contentType = 'application/pdf';
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
-    if (lower.endsWith('.png')) contentType = 'image/png';
-    if (lower.endsWith('.webp')) contentType = 'image/webp';
-
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/patient/ocr/upload-raw'),
-    );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        fileBytes,
-        filename: fileName,
-        contentType: MediaType.parse(contentType),
-      ),
-    );
-
-    final streamed = await request.send();
-    final response = await http.Response.fromStream(streamed);
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map && decoded['data'] is Map) {
-        return Map<String, dynamic>.from(decoded['data'] as Map);
-      }
-      throw Exception('Réponse serveur invalide après upload');
-    }
-    if (response.statusCode == 401) {
-      await refreshToken();
-      return uploadPatientOcrFileRaw(fileBytes: fileBytes, fileName: fileName);
-    }
-    String msg = 'Erreur upload document (${response.statusCode})';
-    try {
-      final err = jsonDecode(response.body);
-      msg = (err['message'] ?? err['error'] ?? msg).toString();
-    } catch (_) {}
-    throw Exception(msg);
-  }
-
-  /// Enregistre le document analysé après [uploadPatientOcrFile] — POST /patient/ocr/save.
-  static Future<bool> savePatientOcrAfterUpload({
-    required Map<String, dynamic> uploadData,
-    String? documentCategory,
-    String? titleOverride,
-  }) async {
-    final filename = uploadData['filename']?.toString();
-    if (filename == null || filename.isEmpty) return false;
-
-    final token = await getAccessToken();
-    final body = <String, dynamic>{
-      'filename': filename,
-      'title': titleOverride ??
-          uploadData['title']?.toString() ??
-          'Document médical',
-      'description': uploadData['description']?.toString() ?? '',
-      'details': uploadData['details'] is Map
-          ? uploadData['details']
-          : (uploadData['details'] ?? {}),
-      'sourceType': 'patient',
-    };
-    if (documentCategory != null && documentCategory.isNotEmpty) {
-      body['documentCategory'] = documentCategory;
-    }
-    final mime = uploadData['mimeType']?.toString();
-    if (mime != null && mime.isNotEmpty) {
-      body['mimeType'] = mime;
-    }
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/patient/ocr/save'),
-=======
         contentType: MediaType.parse(mimeType),
       ),
     );
@@ -3031,72 +3025,10 @@ class ApiService {
     final token = await getAccessToken();
     final response = await http.get(
       Uri.parse('$baseUrl/patient/analyses'),
->>>>>>> origin/preprod3
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-<<<<<<< HEAD
-      body: jsonEncode(body),
-    );
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    }
-    if (response.statusCode == 401) {
-      await refreshToken();
-      return savePatientOcrAfterUpload(
-        uploadData: uploadData,
-        documentCategory: documentCategory,
-        titleOverride: titleOverride,
-      );
-    }
-    return false;
-  }
-
-  // ========== OCR Documents (stockés côté backend) ==========
-  /// Liste des documents OCR du patient connecté.
-  static Future<List<Map<String, dynamic>>> getOcrDocuments() async {
-    final token = await getAccessToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/patient/ocr/documents'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data is List) return List<Map<String, dynamic>>.from(data);
-      if (data is Map && data['data'] is List) {
-        return List<Map<String, dynamic>>.from(data['data']);
-      }
-      if (data is Map && data['results'] is List) {
-        return List<Map<String, dynamic>>.from(data['results']);
-      }
-      return [];
-    } else if (response.statusCode == 401) {
-      await refreshToken();
-      return getOcrDocuments();
-    } else {
-      throw Exception('Erreur chargement documents OCR');
-    }
-  }
-
-  /// Détail d’un document OCR par ID
-  static Future<Map<String, dynamic>> getOcrDocumentById(String id) async {
-    final token = await getAccessToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/patient/ocr/documents/$id'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data is Map<String, dynamic>) return data;
-      return {'data': data};
-    } else if (response.statusCode == 401) {
-      await refreshToken();
-      return getOcrDocumentById(id);
-    } else {
-      throw Exception('Erreur chargement document OCR');
-    }
-=======
     );
 
     if (response.statusCode == 200) {
@@ -3124,7 +3056,6 @@ class ApiService {
       return deletePatientAnalysis(id);
     }
     throw Exception('Erreur de suppression de l\'analyse');
->>>>>>> origin/preprod3
   }
 
   // ========== ACCEPTER/REFUSER RENDEZ-VOUS ==========

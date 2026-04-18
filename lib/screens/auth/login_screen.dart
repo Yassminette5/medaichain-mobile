@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 controller: _emailController,
                 label: 'Email',
                 icon: Icons.alternate_email,
-                hint: 'docteur@hopital.com',
+                hint: 'votre@email.com',
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),

@@ -4,6 +4,7 @@ import '../patientnesrine/homeScreen.dart';
 import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/records_screen.dart';
 import '../../core/theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

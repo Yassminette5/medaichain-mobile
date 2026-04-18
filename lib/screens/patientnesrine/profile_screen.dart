@@ -870,7 +870,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
             ),
           ),
           const SizedBox(height: 16),
-<<<<<<< HEAD
+          // Action: Accéder au dossier (HEAD)
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -891,39 +891,16 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: AppColors.small,
                 border: Border.all(color: AppColors.border),
-=======
-
-          // Bouton Ajouter une analyse
-          GestureDetector(
-            onTap: _navigateToUpload,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppColors.colored(AppColors.primary),
->>>>>>> origin/preprod3
               ),
               child: Row(
                 children: [
                   Container(
-<<<<<<< HEAD
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.folder_shared_rounded, color: Colors.white),
-=======
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 22),
->>>>>>> origin/preprod3
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -931,290 +908,22 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-<<<<<<< HEAD
-                          'Accéder à vos documents (analyses, ordonnances, examens)',
+                          'Mon dossier médical',
                           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
                         Text(
-                          "Ouvrir le dossier",
-                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary),
-=======
-                          "Ajouter une analyse PDF",
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Centre d'analyse ou personnel",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.85),
-                          ),
->>>>>>> origin/preprod3
+                          "Analyses, ordonnances, examens",
+                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
                         ),
                       ],
                     ),
                   ),
-<<<<<<< HEAD
                   const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
-=======
-                  Icon(Icons.arrow_forward_rounded, color: Colors.white.withOpacity(0.8)),
->>>>>>> origin/preprod3
                 ],
               ),
             ),
           ),
-<<<<<<< HEAD
-=======
-          const SizedBox(height: 16),
-
-          if (_loading)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppColors.small,
-              ),
-              child: const Center(
-                child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2)),
-              ),
-            )
-          else if (totalCount == 0)
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppColors.small,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Icons.science_rounded, color: AppColors.primary, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      "Aucun résultat d'analyse pour le moment.\nAppuyez ci-dessus pour en ajouter.",
-                      style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textGrey),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Analyses uploadées par le patient
-                if (_patientAnalyses.isNotEmpty) ...[
-                  _buildSubHeader('Mes analyses uploadées', Icons.upload_file_rounded, AppColors.primary),
-                  const SizedBox(height: 10),
-                  for (int i = 0; i < _patientAnalyses.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 10),
-                    _buildPatientAnalysisItem(_patientAnalyses[i]),
-                  ],
-                ],
-                if (_patientAnalyses.isNotEmpty && _labResults.isNotEmpty)
-                  const SizedBox(height: 20),
-                // Résultats du centre d'analyse
-                if (_labResults.isNotEmpty) ...[
-                  _buildSubHeader('Résultats du centre d\'analyse', Icons.biotech_rounded, AppColors.secondary),
-                  const SizedBox(height: 10),
-                  for (int i = 0; i < _labResults.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 10),
-                    _buildLabResultItem(_labResults[i]),
-                  ],
-                ],
-              ],
-            ),
->>>>>>> origin/preprod3
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubHeader(String title, IconData icon, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: color),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPatientAnalysisItem(dynamic a) {
-    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
-    final id = m['_id']?.toString() ?? '';
-    final title = m['title']?.toString() ?? 'Analyse';
-    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? '';
-    final typeStr = type.toString().replaceAll('_', ' ');
-    final source = m['source']?.toString() ?? '';
-    final centreName = m['centreName']?.toString() ?? '';
-    final date = m['analysisDate'];
-    String dateStr = '—';
-    if (date != null) {
-      try { dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString())); } catch (_) {}
-    }
-
-    final resultFile = m['resultFile']?.toString() ?? '';
-    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
-    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/uploads/patient-analyses/$filename' : null;
-
-    final isFromCentre = source == 'centre_analyse';
-    final color = isFromCentre ? AppColors.secondary : AppColors.primary;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.small,
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isFromCentre ? Icons.business_rounded : Icons.person_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-                if (typeStr.isNotEmpty)
-                  Text(typeStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-                if (centreName.isNotEmpty)
-                  Text(centreName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-                Row(
-                  children: [
-                    Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        isFromCentre ? 'Centre' : 'Personnel',
-                        style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: color),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (pdfUrl != null && pdfUrl.isNotEmpty)
-            IconButton(
-              onPressed: () => _openPdf(pdfUrl),
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 24),
-              tooltip: 'Ouvrir le PDF',
-              style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.08)),
-            ),
-          if (id.isNotEmpty)
-            IconButton(
-              onPressed: () => _deletePatientAnalysis(id),
-              icon: Icon(Icons.delete_outline_rounded, color: AppColors.error.withOpacity(0.7), size: 22),
-              tooltip: 'Supprimer',
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLabResultItem(dynamic a) {
-    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
-    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
-    final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
-    final date = m['analysisDate'];
-    String dateStr = '—';
-    if (date != null) {
-      try { dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString())); } catch (_) {}
-    }
-    final lab = m['labId'];
-    String labName = '';
-    if (lab is Map<String, dynamic>) {
-      labName = lab['centreName'] ?? lab['name'] ?? '';
-    }
-    final resultFile = m['resultFile']?.toString() ?? '';
-    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
-    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.small,
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [AppColors.secondary, AppColors.secondary.withOpacity(0.7)]),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.biotech_rounded, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  typeStr.isNotEmpty ? typeStr : 'Résultat',
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
-                ),
-                if (labName.isNotEmpty)
-                  Text(labName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-                Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-              ],
-            ),
-          ),
-          if (pdfUrl != null && pdfUrl.isNotEmpty)
-            IconButton(
-              onPressed: () => _openPdf(pdfUrl),
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 24),
-              tooltip: 'Ouvrir le PDF',
-              style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.08)),
-            )
-          else
-            Icon(Icons.description_outlined, color: AppColors.textGrey, size: 24),
+          const SizedBox(height: 12),
         ],
       ),
     );

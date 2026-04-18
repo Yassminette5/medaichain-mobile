@@ -467,13 +467,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               size: 20,
             ),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                color: isDestructive
-                    ? const Color(0xFFEF4444)
-                    : (isActive ? activeColor : inactiveColor),
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  color: isDestructive
+                      ? const Color(0xFFEF4444)
+                      : (isActive ? activeColor : inactiveColor),
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -779,63 +783,58 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildStatsGrid() {
     if (_stats == null) return const SizedBox();
 
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            title: 'Médecins',
-            value: '${_stats!['medecin']}',
-            icon: Icons.medical_services,
-            color: const Color(0xFF00BFA6),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Patients',
-            value: '${_stats!['patient']}',
-            icon: Icons.person,
-            color: const Color(0xFF64748B),
-          ),
-        ), // Grey icon for patient
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Pharmacies',
-            value: '${_stats!['pharmacie']}',
-            icon: Icons.local_pharmacy,
-            color: const Color(0xFFFF6B6B),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Laboratoires',
-            value: '${_stats!['centre_analyse']}',
-            icon: Icons.science,
-            color: const Color(0xFF4D96FF),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Cliniques',
-            value: '${_stats!['clinique']}',
-            icon: Icons.apartment,
-            color: const Color(0xFFFFD93D),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Total',
-            value: '${_stats!['total']}',
-            icon: Icons.groups,
-            color: const Color(0xFF1565C0),
-            isTotal: true,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 1400 ? 6 : (constraints.maxWidth > 900 ? 3 : 2);
+        
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 2.2,
+          children: [
+            _StatCard(
+              title: 'Médecins',
+              value: '${_stats!['medecin']}',
+              icon: Icons.medical_services,
+              color: const Color(0xFF00BFA6),
+            ),
+            _StatCard(
+              title: 'Patients',
+              value: '${_stats!['patient']}',
+              icon: Icons.person,
+              color: const Color(0xFF64748B),
+            ),
+            _StatCard(
+              title: 'Pharmacies',
+              value: '${_stats!['pharmacie']}',
+              icon: Icons.local_pharmacy,
+              color: const Color(0xFFFF6B6B),
+            ),
+            _StatCard(
+              title: 'Laboratoires',
+              value: '${_stats!['centre_analyse']}',
+              icon: Icons.science,
+              color: const Color(0xFF4D96FF),
+            ),
+            _StatCard(
+              title: 'Cliniques',
+              value: '${_stats!['clinique']}',
+              icon: Icons.apartment,
+              color: const Color(0xFFFFD93D),
+            ),
+            _StatCard(
+              title: 'Total',
+              value: '${_stats!['total']}',
+              icon: Icons.groups,
+              color: const Color(0xFF1565C0),
+              isTotal: true,
+            ),
+          ],
+        );
+      },
     );
   }
 

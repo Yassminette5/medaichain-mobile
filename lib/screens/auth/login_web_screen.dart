@@ -76,9 +76,16 @@ class _LoginWebScreenState extends State<LoginWebScreen>
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F7FF),
-        body: isNarrow
-            ? _buildMobileLayout()
-            : _buildDesktopLayout(),
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
+            ),
+            child: isNarrow
+                ? _buildMobileLayout()
+                : _buildDesktopLayout(),
+          ),
+        ),
       ),
     );
   }
@@ -86,20 +93,23 @@ class _LoginWebScreenState extends State<LoginWebScreen>
   // ── DESKTOP LAYOUT ─────────────────────────────────────────────────────────
 
   Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // ── Left Panel — Illustration ────────────────────────────────────────
-        Expanded(
-          flex: 5,
-          child: _buildLeftPanel(),
-        ),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Left Panel — Illustration ────────────────────────────────────────
+          Expanded(
+            flex: 5,
+            child: _buildLeftPanel(),
+          ),
 
-        // ── Right Panel — Form ───────────────────────────────────────────────
-        Expanded(
-          flex: 4,
-          child: _buildRightPanel(),
-        ),
-      ],
+          // ── Right Panel — Form ───────────────────────────────────────────────
+          Expanded(
+            flex: 4,
+            child: _buildRightPanel(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -153,116 +163,124 @@ class _LoginWebScreenState extends State<LoginWebScreen>
           // Animated background circles
           ..._buildDecoCircles(),
 
-          // Main content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 48),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Logo row
-                Row(
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 48),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - 96),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.medical_services_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
+                    // Top: Logo
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.medical_services_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'MEDAIChain',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'MEDAIChain',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+
+                    // Middle: Illustration + Text
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        Center(child: _buildMedicalIllustration()),
+                        const SizedBox(height: 48),
+                        Text(
+                          'Votre plateforme\nde santé numérique',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            height: 1.25,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Gérez consultations, ordonnances et dossiers patients\nen toute sécurité grâce à la blockchain.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 15,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          children: [
+                            _buildFeatureChip(Icons.shield_rounded,       'Sécurité Blockchain'),
+                            _buildFeatureChip(Icons.psychology_rounded,   'IA Médicale'),
+                            _buildFeatureChip(Icons.calendar_month_rounded,'Rendez-vous'),
+                            _buildFeatureChip(Icons.science_rounded,      'Analyses Lab'),
+                            _buildFeatureChip(Icons.videocam_rounded,     'Téléconsultation'),
+                            _buildFeatureChip(Icons.local_pharmacy_rounded,'Pharmacie'),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Bottom: Tagline
+                    Padding(
+                      padding: const EdgeInsets.only(top: 40),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 2,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Santé connectée, soins optimisés',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-
-                const Spacer(),
-
-                // Central illustration
-                Center(child: _buildMedicalIllustration()),
-
-                const SizedBox(height: 48),
-
-                // Headline
-                Text(
-                  'Votre plateforme\nde santé numérique',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    height: 1.25,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Gérez consultations, ordonnances et dossiers patients\nen toute sécurité grâce à la blockchain.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 15,
-                    height: 1.6,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Feature chips
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 10,
-                  children: [
-                    _buildFeatureChip(Icons.shield_rounded,       'Sécurité Blockchain'),
-                    _buildFeatureChip(Icons.psychology_rounded,   'IA Médicale'),
-                    _buildFeatureChip(Icons.calendar_month_rounded,'Rendez-vous'),
-                    _buildFeatureChip(Icons.science_rounded,      'Analyses Lab'),
-                    _buildFeatureChip(Icons.videocam_rounded,     'Téléconsultation'),
-                    _buildFeatureChip(Icons.local_pharmacy_rounded,'Pharmacie'),
-                  ],
-                ),
-
-                const Spacer(),
-
-                // Bottom tagline
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Santé connectée, soins optimisés',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
+              ),
             ),
           ),
         ],
@@ -609,7 +627,7 @@ class _LoginWebScreenState extends State<LoginWebScreen>
               fontSize: 15,
             ),
             decoration: InputDecoration(
-              hintText: 'medecin@hopital.com',
+              hintText: 'votre@email.com',
               hintStyle: TextStyle(
                 color: AppColors.textLight,
                 fontSize: 14,
