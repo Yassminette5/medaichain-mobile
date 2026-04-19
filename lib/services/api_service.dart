@@ -3695,7 +3695,7 @@ class ApiService {
 
     final response = await http
         .post(
-          Uri.parse('$baseUrl/doctor-ai/analyze'),
+          Uri.parse('$baseUrl/doctor-ai/analyze-patient-analysis'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -3813,7 +3813,7 @@ class ApiService {
     final token = await getAccessToken();
     final response = await http
         .post(
-          Uri.parse('$baseUrl/doctor-ai/analyze-patient-analysis/$id'),
+          Uri.parse('$baseUrl/doctor-ai/analyze/$id'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',

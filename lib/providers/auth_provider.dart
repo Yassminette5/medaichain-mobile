@@ -72,7 +72,6 @@ class AuthProvider with ChangeNotifier {
       // Subscription status sync
       if (_user != null) {
         await SubscriptionService().initialize(userId: _user!.id);
-        await SubscriptionService().initialize(userId: _user!.id);
 
         // Initialize notifications if user is logged in
         try {
