@@ -10,8 +10,8 @@ android {
     // Plugins (ex: mobile_scanner) exigent compileSdk 36
     compileSdk = 36
 
-    // Plugins Android exigent NDK 27.0.12077973
-    ndkVersion = "27.0.12077973"
+    // Plugins Android exigent NDK 28.2.13676358
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -29,7 +29,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // mobile_scanner exige minSdk 23
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

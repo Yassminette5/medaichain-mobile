@@ -1,0 +1,303 @@
+﻿
+  final_build_log.txt:2
+572:[        ] 
+Transforming netty-tran
+sport-4.1.110.Final.jar
+ (io.netty:netty-transp
+ort:4.1.110.Final) 
+with ExternalDependency
+InstrumentingArtifactTr
+ansform
+  final_build_log.txt:2
+573:[        ] Using 
+default execution 
+profile
+> final_build_log.txt:2
+574:[        ] 
+Warning: The plugin flu
+tter_plugin_android_lif
+ecycle requires 
+Android SDK version 36 
+or higher.
+  final_build_log.txt:2
+575:[        ] For 
+more information about 
+build configuration, 
+see https://flutter.dev
+/to/review-gradle-confi
+g.
+  final_build_log.txt:2
+576:[+1851 ms] > 
+Configure project 
+:mobile_scanner
+  final_build_log.txt:2
+577:[        ] 
+Evaluating project 
+':mobile_scanner' 
+using build file 'C:\Us
+ers\larou\AppData\Local
+\Pub\Cache\hosted\pub.d
+ev\mobile_scanner-7.1.4
+\android\build.gradle'.
+  final_build_log.txt:2
+578:[        ] 
+Transforming 
+gradle-8.13.0.jar (com.
+android.tools.build:gra
+dle:8.13.0) with Instru
+mentationAnalysisTransf
+orm
+  final_build_log.txt:2
+579:[        ] 
+Transforming kotlin-gra
+dle-plugin-model-2.1.0.
+jar (org.jetbrains.kotl
+in:kotlin-gradle-plugin
+-model:2.1.0) with Inst
+rumentationAnalysisTran
+sform
+  final_build_log.txt:3
+142:[        ] Using 
+default execution 
+profile
+  final_build_log.txt:3
+143:[        ] Using 
+Kotlin Gradle Plugin 
+gradle85 variant
+> final_build_log.txt:3
+144:[        ] 
+Warning: The plugin 
+mobile_scanner 
+requires Android SDK 
+version 36 or higher.
+  final_build_log.txt:3
+145:[        ] For 
+more information about 
+build configuration, 
+see https://flutter.dev
+/to/review-gradle-confi
+g.
+  final_build_log.txt:3
+146:[ +766 ms] > 
+Configure project 
+:path_provider_android
+  final_build_log.txt:3
+147:[        ] 
+Evaluating project ':pa
+th_provider_android' 
+using build file 'C:\Us
+ers\larou\AppData\Local
+\Pub\Cache\hosted\pub.d
+ev\path_provider_androi
+d-2.2.19\android\build.
+gradle'.
+  final_build_log.txt:3
+148:[        ] 
+Transforming 
+gradle-8.12.1.jar (com.
+android.tools.build:gra
+dle:8.12.1) with Instru
+mentationAnalysisTransf
+orm
+  final_build_log.txt:3
+149:[        ] 
+Transforming gradle-set
+tings-api-8.12.1.jar (c
+om.android.tools.build:
+gradle-settings-api:8.1
+2.1) with Instrumentati
+onAnalysisTransform
+  final_build_log.txt:3
+647:[        ] 
+Transforming netty-comm
+on-4.1.110.Final.jar (i
+o.netty:netty-common:4.
+1.110.Final) with Exter
+nalDependencyInstrument
+ingArtifactTransform
+  final_build_log.txt:3
+648:[        ] Using 
+default execution 
+profile
+> final_build_log.txt:3
+649:[        ] 
+Warning: The plugin 
+path_provider_android 
+requires Android SDK 
+version 36 or higher.
+  final_build_log.txt:3
+650:[        ] For 
+more information about 
+build configuration, 
+see https://flutter.dev
+/to/review-gradle-confi
+g.
+  final_build_log.txt:3
+651:[+1356 ms] > 
+Configure project 
+:pdfrx
+  final_build_log.txt:3
+652:[        ] 
+Evaluating project 
+':pdfrx' using build 
+file 'C:\Users\larou\Ap
+pData\Local\Pub\Cache\h
+osted\pub.dev\pdfrx-1.3
+.5\android\build.gradle
+'.
+  final_build_log.txt:3
+653:[        ] 
+Transforming 
+gradle-8.1.0.jar (com.a
+ndroid.tools.build:grad
+le:8.1.0) with Instrume
+ntationAnalysisTransfor
+m
+  final_build_log.txt:3
+654:[        ] 
+Transforming gradle-set
+tings-api-8.1.0.jar (co
+m.android.tools.build:g
+radle-settings-api:8.1.
+0) with Instrumentation
+AnalysisTransform
+  final_build_log.txt:5
+415:[        ] Using 
+default execution 
+profile
+  final_build_log.txt:5
+416:[        ] Using 
+Kotlin Gradle Plugin 
+gradle85 variant
+> final_build_log.txt:5
+417:[        ] 
+Warning: The plugin sha
+red_preferences_android
+ requires Android SDK 
+version 36 or higher.
+  final_build_log.txt:5
+418:[        ] For 
+more information about 
+build configuration, 
+see https://flutter.dev
+/to/review-gradle-confi
+g.
+  final_build_log.txt:5
+419:[ +112 ms] > 
+Configure project 
+:url_launcher_android
+  final_build_log.txt:5
+420:[        ] 
+Evaluating project ':ur
+l_launcher_android' 
+using build file 'C:\Us
+ers\larou\AppData\Local
+\Pub\Cache\hosted\pub.d
+ev\url_launcher_android
+-6.3.20\android\build.g
+radle'.
+  final_build_log.txt:5
+421:[        ] 
+Transforming 
+gradle-8.12.1.jar (com.
+android.tools.build:gra
+dle:8.12.1) with Instru
+mentationAnalysisTransf
+orm
+  final_build_log.txt:5
+422:[        ] 
+Transforming gradle-set
+tings-api-8.12.1.jar (c
+om.android.tools.build:
+gradle-settings-api:8.1
+2.1) with Instrumentati
+onAnalysisTransform
+  final_build_log.txt:5
+920:[        ] 
+Transforming netty-comm
+on-4.1.110.Final.jar (i
+o.netty:netty-common:4.
+1.110.Final) with Exter
+nalDependencyInstrument
+ingArtifactTransform
+  final_build_log.txt:5
+921:[        ] Using 
+default execution 
+profile
+> final_build_log.txt:5
+922:[        ] 
+Warning: The plugin 
+url_launcher_android 
+requires Android SDK 
+version 36 or higher.
+  final_build_log.txt:5
+923:[        ] For 
+more information about 
+build configuration, 
+see https://flutter.dev
+/to/review-gradle-confi
+g.
+  final_build_log.txt:5
+924:[   +1 ms] All 
+projects evaluated.
+  final_build_log.txt:5
+925:flutter : [   +4 
+ms] 
+  final_build_log.txt:5
+926:Your project is 
+  final_build_log.txt:5
+927:configured to 
+compile 
+  final_build_log.txt:6
+817:[        ]    > An 
+  final_build_log.txt:6
+818:issue was found 
+when 
+> final_build_log.txt:6
+819:checking AAR 
+metadata:
+  final_build_log.txt:6
+820:[        ]        
+1.  
+  final_build_log.txt:6
+821:Dependency 
+':flutter_lo
+  final_build_log.txt:6
+822:cal_notifications' 
+> final_build_log.txt:6
+823:requires core 
+library 
+  final_build_log.txt:6
+824:desugaring to be 
+  final_build_log.txt:6
+825:enabled
+  final_build_log.txt:6
+826:[        ]         
+   
+  final_build_log.txt:6
+827:for :app.
+  final_build_log.txt:6
+828:[        ]         
+   
+  final_build_log.txt:7
+776:Dependency 
+':flutter_lo
+  final_build_log.txt:7
+777:cal_notifications' 
+> final_build_log.txt:7
+778:requires core 
+library 
+  final_build_log.txt:7
+779:desugaring to be 
+  final_build_log.txt:7
+780:enabled
+  final_build_log.txt:7
+781:[        ]       
+for 
+  final_build_log.txt:7
+782::app.
+  final_build_log.txt:7
+783:[        ]       
+See ht
+
+

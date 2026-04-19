@@ -5,12 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
 import 'screens/clinique/web/dashboard_main_screen.dart';
-
-// Patient Imports
 import 'core/theme/app_theme.dart' as patient_theme;
 import 'providers/auth_provider.dart';
 import 'providers/medicines_provider.dart';

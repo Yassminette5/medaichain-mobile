@@ -5,6 +5,9 @@ import '../patientnesrine/homeScreen.dart';
 import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/records_screen.dart';
 import '../../core/theme/app_colors.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/ai_assistant_chat.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,20 +18,27 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final Set<int> _loadedIndices = {0}; // Track which tabs have been visited
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const RecordsScreen(),
-    const HealthDrawerScreen(),
-    const ProfileScreen(),
-  ];
+  // Lazy loading wrapper for screens
+  Widget _buildLazyScreen(int index, Widget screen) {
+    if (_loadedIndices.contains(index)) {
+      return screen;
+    }
+    return const SizedBox.shrink(); // Don't build heavy screens until visited
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          _buildLazyScreen(0, const HomeScreen()),
+          _buildLazyScreen(1, const RecordsScreen()),
+          _buildLazyScreen(2, const HealthDrawerScreen()),
+          _buildLazyScreen(3, const ProfileScreen()),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -45,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
           onTap: (index) {
             setState(() {
               _currentIndex = index;
+              _loadedIndices.add(index);
             });
           },
           type: BottomNavigationBarType.fixed,

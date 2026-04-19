@@ -1,0 +1,222 @@
+﻿
+> full_gradle_log.txt:1
+:> Task :gradle:checkKo
+tlinGradlePluginConfigu
+rationErrors
+  full_gradle_log.txt:2
+:> Task 
+:gradle:compileKotlin 
+UP-TO-DATE
+  full_gradle_log.txt:3
+:> Task 
+:gradle:compileJava 
+NO-SOURCE
+  full_gradle_log.txt:4
+:> Task 
+:gradle:compileGroovy 
+NO-SOURCE
+  full_gradle_log.txt:2
+6:> Task :app:preBuild 
+UP-TO-DATE
+  full_gradle_log.txt:2
+7:> Task 
+:app:preDebugBuild 
+UP-TO-DATE
+  full_gradle_log.txt:2
+8:> Task :app:mergeDebu
+gNativeDebugMetadata 
+NO-SOURCE
+> full_gradle_log.txt:2
+9:> Task :app:checkKotl
+inGradlePluginConfigura
+tionErrors SKIPPED
+  full_gradle_log.txt:3
+0:> Task :app:compileFl
+utterBuildDebug 
+UP-TO-DATE
+  full_gradle_log.txt:3
+1:> Task :app:packJniLi
+bsflutterBuildDebug 
+UP-TO-DATE
+  full_gradle_log.txt:3
+2:> Task 
+:file_picker:preBuild 
+UP-TO-DATE
+  full_gradle_log.txt:8
+0:> Task :path_provider
+_android:compileDebugSh
+aders NO-SOURCE
+  full_gradle_log.txt:8
+1:> Task :path_provider
+_android:generateDebugA
+ssets UP-TO-DATE
+  full_gradle_log.txt:8
+2:> Task :path_provider
+_android:packageDebugAs
+sets
+> full_gradle_log.txt:8
+3:> Task :app:checkDebu
+gAarMetadata FAILED
+  full_gradle_log.txt:8
+4:> Task :pdfrx:mergeDe
+bugShaders
+  full_gradle_log.txt:8
+5:./gradlew : 
+  full_gradle_log.txt:8
+6:Au caractère Ligne:1 
+: 
+  full_gradle_log.txt:9
+7:    + CategoryInfo   
+  
+  full_gradle_log.txt:9
+8:         : 
+NotSpecifi  
+  full_gradle_log.txt:9
+9:  ed: (:String) [],  
+  
+> full_gradle_log.txt:1
+00: RemoteException
+  full_gradle_log.txt:1
+01:    + 
+FullyQualifiedEr 
+  full_gradle_log.txt:1
+02:   rorId : 
+NativeComm  
+> full_gradle_log.txt:1
+03:  andError
+  full_gradle_log.txt:1
+04: 
+> full_gradle_log.txt:1
+05:FAILURE: Build 
+failed 
+> full_gradle_log.txt:1
+06:with an exception.
+  full_gradle_log.txt:1
+07:
+  full_gradle_log.txt:1
+08:* What went wrong:
+> full_gradle_log.txt:1
+09:Execution failed 
+for 
+  full_gradle_log.txt:1
+10:task 
+':app:checkDebugAa
+  full_gradle_log.txt:1
+11:rMetadata'.
+  full_gradle_log.txt:1
+12:> A failure 
+occurred 
+  full_gradle_log.txt:1
+40:> Get more help at 
+http
+  full_gradle_log.txt:1
+41:s://help.gradle.org.
+  full_gradle_log.txt:1
+42:
+> full_gradle_log.txt:1
+43:* Exception is:
+  full_gradle_log.txt:1
+44:org.gradle.api.tasks
+.Ta
+> full_gradle_log.txt:1
+45:skExecutionException
+: 
+> full_gradle_log.txt:1
+46:Execution failed 
+for 
+  full_gradle_log.txt:1
+47:task 
+':app:checkDebugAa
+  full_gradle_log.txt:1
+48:rMetadata'.
+  full_gradle_log.txt:1
+49:	at 
+org.gradle.api.inte
+  full_gradle_log.txt:1
+91:cuter.java:74)
+  full_gradle_log.txt:1
+92:	at 
+org.gradle.api.inte
+  full_gradle_log.txt:1
+93:rnal.tasks.execution
+.Ca
+> full_gradle_log.txt:1
+94:tchExceptionTaskExec
+ute
+  full_gradle_log.txt:1
+95:r.execute(CatchExcep
+tio
+  full_gradle_log.txt:1
+96:nTaskExecuter.java:3
+6)
+  full_gradle_log.txt:1
+97:	at 
+org.gradle.api.inte
+  full_gradle_log.txt:3
+16:Caused by: 
+org.gradle.w
+  full_gradle_log.txt:3
+17:orkers.internal.Defa
+ult
+  full_gradle_log.txt:3
+18:WorkerExecutor$WorkE
+xec
+> full_gradle_log.txt:3
+19:utionException: A 
+  full_gradle_log.txt:3
+20:failure occurred 
+while 
+  full_gradle_log.txt:3
+21:executing 
+com.android.b
+  full_gradle_log.txt:3
+22:uild.gradle.internal
+.ta
+  full_gradle_log.txt:8
+27:cuter.java:74)
+  full_gradle_log.txt:8
+28:	at 
+org.gradle.api.inte
+  full_gradle_log.txt:8
+29:rnal.tasks.execution
+.Ca
+> full_gradle_log.txt:8
+30:tchExceptionTaskExec
+ute
+  full_gradle_log.txt:8
+31:r.execute(CatchExcep
+tio
+  full_gradle_log.txt:8
+32:nTaskExecuter.java:3
+6)
+  full_gradle_log.txt:8
+33:	at 
+org.gradle.api.inte
+  full_gradle_log.txt:9
+51:ractManagedExecutor.
+jav
+  full_gradle_log.txt:9
+52:a:48)
+  full_gradle_log.txt:9
+53:Caused by: 
+java.lang.Ru
+> full_gradle_log.txt:9
+54:ntimeException: An 
+  full_gradle_log.txt:9
+55:issue was found 
+when 
+  full_gradle_log.txt:9
+56:checking AAR 
+metadata:
+  full_gradle_log.txt:9
+57:
+  full_gradle_log.txt:1
+107:	... 2 more
+  full_gradle_log.txt:1
+108:
+  full_gradle_log.txt:1
+109:
+> full_gradle_log.txt:1
+110:BUILD FAILED in 21s
+
+

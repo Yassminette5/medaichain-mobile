@@ -1,0 +1,45 @@
+﻿
+  issue was found when 
+  checking AAR 
+metadata:
+  
+    1.  Dependency 
+':flut
+  
+ter_local_notifications
+> ' requires core 
+  library desugaring 
+to 
+  be enabled
+        for :app.
+  
+        See 
+https://devel
+  
+oper.android.com/studio
+  
+/write/java8-support.ht
+  ml for more
+        details.
+  	at 
+com.android.build.g
+  
+radle.internal.tasks.Ch
+  
+eckAarMetadataWorkActio
+  
+n.execute(CheckAarMetad
+  ataTask.kt:288)
+  	at 
+org.gradle.workers.
+  
+internal.DefaultWorkerS
+  
+erver.execute(DefaultWo
+  rkerServer.java:63)
+  	at 
+org.gradle.workers.
+  
+internal.NoIsolationWor
+
+

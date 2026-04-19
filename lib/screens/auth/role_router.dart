@@ -14,16 +14,12 @@ class RoleRouter {
     switch (role) {
       case UserRole.medecin:
         return const DashboardScreen(); // Interface médecin
-      
       case UserRole.patient:
         return const MainScreen(); // Interface patient
-      
-      case UserRole.pharmacie:
+    case UserRole.pharmacie:
         return const PharmacieDashboardScreen();
-      
       case UserRole.centreAnalyse:
         return const HomeCentreAnalyse();
-      
       case UserRole.clinique:
         return kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
       case UserRole.admin:

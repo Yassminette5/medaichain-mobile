@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../patientnesrine/doctor.dart';
 import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/doctors_list_screen.dart';
+import '../../widgets/ai_assistant_chat.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -110,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               "Bonjour,", // French greeting
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.9), // Changed withValues to withOpacity
+                                color: Colors.white.withOpacity(0.9),
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -137,6 +138,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Row(
                       children: [
+                        IconButton(
+                          onPressed: () {
+                            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+                            );
+                          },
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: const Icon(Icons.auto_awesome_rounded, size: 20, color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         _buildNotificationButton(context),
                         const SizedBox(width: 10),
                       ],
@@ -144,6 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              _buildAiAssistantCard(context),
               const SizedBox(height: 24),
 
               // Enhanced Search Bar
@@ -402,14 +426,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.description_outlined, color: AppColors.prescription.withOpacity(0.8), size: 28),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  "Aucune ordonnance pour le moment",
-                                  style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
-                                ),
-                              ),
+                               Icon(Icons.description_outlined, color: AppColors.prescription.withOpacity(0.8), size: 28),
+                               const SizedBox(width: 12),
+                               Expanded(
+                                 child: Text(
+                                   "Aucune ordonnance pour le moment",
+                                   style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
+                                 ),
+                               ),
                             ],
                           ),
                         )
@@ -784,6 +808,73 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiAssistantCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: AppColors.aiGradient,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Besoin d\'aide ?',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
+                    ),
+                    Text(
+                      'Posez vos questions à l\'assistant IA.',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+            ],
+          ),
         ),
       ),
     );

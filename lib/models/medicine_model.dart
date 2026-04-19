@@ -9,6 +9,7 @@ class Medicine {
   final String? instructions;
   final String? cause;
   final String? capSize;
+  final String? description;
   final DateTime startDate;
   final bool isActive;
 
@@ -23,6 +24,7 @@ class Medicine {
     this.instructions,
     this.cause,
     this.capSize,
+    this.description,
     required this.startDate,
     required this.isActive,
   });
@@ -39,6 +41,7 @@ class Medicine {
       instructions: json['instructions'],
       cause: json['cause'],
       capSize: json['capSize'],
+      description: json['description'],
       startDate: DateTime.parse(json['startDate'] ?? DateTime.now().toIso8601String()),
       isActive: json['isActive'] ?? true,
     );
@@ -55,6 +58,7 @@ class Medicine {
       'instructions': instructions,
       'cause': cause,
       'capSize': capSize,
+      'description': description,
       'startDate': startDate.toIso8601String(),
       'isActive': isActive,
     };

@@ -10,7 +10,7 @@ import '../models/doctor_profile_model.dart';
 class ApiService {
   /// Override pour test sur téléphone réel : mets l'IP de ton PC (ex: 'http://192.168.1.10:3000').
   /// Sur émulateur, ne pas définir (baseUrl utilise 10.0.2.2).
-  static String? backendUrlOverride;
+  static String? backendUrlOverride = 'https://niki-unfancied-toshia.ngrok-free.dev';
 
   /// Base URL backend:
   /// - Si [backendUrlOverride] est défini (téléphone réel) : l'utiliser.
@@ -21,12 +21,45 @@ class ApiService {
     if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
       String url = backendUrlOverride!.trim();
       if (!url.startsWith('http')) url = 'http://$url';
-      if (!url.contains(':3000') && !url.contains(':')) url = '$url:3000';
+      
+      // If it's a domain name (like ngrok or a real domain), we might not want to append :3000
+      // if it already has a protocol and no other port specified.
+      // However, for local IP tests, we usually need :3000.
+      // Logic below: only append :3000 if there's no port AND it looks like an IP or localhost.
+      bool hasPort = url.split('/').last.contains(':');
+      if (!hasPort) {
+        // If it contains "ngrok" or "vercel" etc., it's likely a cloud tunnel that doesn't need a port
+        if (!url.contains('ngrok') && !url.contains('local') && !url.contains('10.0.2.2')) {
+           // Default to no port for generic cloud urls
+        } else if (url.contains('10.0.2.2') || url.contains('192.168')) {
+           url = '$url:3000';
+        }
+      }
       return url;
     }
     if (kIsWeb) return 'http://127.0.0.1:3000';
     if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
     return 'http://127.0.0.1:3000';
+  }
+
+  /// Base URL pour le serveur IA local (Flask sur port 5000)
+  static String get aiBaseUrl {
+    if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
+      String url = backendUrlOverride!.trim();
+      if (!url.startsWith('http')) url = 'http://$url';
+      
+      // Simple logic for ngrok domain
+      if (url.contains('ngrok')) return url;
+      
+      // For IP/localhost, ensure port 5000
+      if (url.contains(':')) {
+        url = url.substring(0, url.lastIndexOf(':'));
+      }
+      return '$url:5000';
+    }
+    if (kIsWeb) return 'http://127.0.0.1:5000';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5000';
+    return 'http://127.0.0.1:5000';
   }
 
   static const String _accessTokenKey = 'access_token';
@@ -515,6 +548,131 @@ class ApiService {
       return deleteMedicine(id);
     } else {
       throw Exception('Erreur de suppression du médicament');
+    }
+  }
+
+  static Future<String> getMedicationInfo(String name) async {
+    final token = await getAccessToken();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/medicines/info/$name'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['description'] ?? '';
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMedicationInfo(name);
+    } else {
+      throw Exception('Erreur de récupération des informations AI');
+    }
+  }
+
+  static Future<http.Response> getMedicationReport() async {
+    final token = await getAccessToken();
+    return await http.get(
+      Uri.parse('$baseUrl/medicines/report'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  // ========== DOCUMENTS MÉDICAUX ==========
+
+  static Future<List<dynamic>> getMedicalDocuments({String? category}) async {
+    final token = await getAccessToken();
+    final url = category != null && category.isNotEmpty
+        ? '$baseUrl/medical/documents?category=$category'
+        : '$baseUrl/medical/documents';
+        
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMedicalDocuments(category: category);
+    } else {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> uploadMedicalDocument({
+    required List<int> fileBytes,
+    required String fileName,
+    required String category,
+    required String title,
+  }) async {
+    final token = await getAccessToken();
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/medical/documents'));
+    
+    request.headers.addAll({
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields['category'] = category;
+    request.fields['title'] = title;
+    
+    // Inférence du content type pour le backend
+    String contentType = 'application/pdf';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
+    else if (lower.endsWith('.png')) contentType = 'image/png';
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      fileBytes,
+      filename: fileName,
+      contentType: MediaType.parse(contentType),
+    ));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadMedicalDocument(
+        fileBytes: fileBytes,
+        fileName: fileName,
+        category: category,
+        title: title,
+      );
+    } else {
+      throw Exception('Erreur d\'upload: ${response.body}');
+    }
+  }
+
+  static Future<void> deleteMedicalDocument(String id) async {
+    final token = await getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/medical/documents/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return deleteMedicalDocument(id);
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Erreur de suppression du document');
     }
   }
 
@@ -2425,4 +2583,158 @@ class ApiService {
     }
     return false;
   }
+
+  // ========== AI ASSISTANT ==========
+  static Future<String> chatWithAI({
+    required String message,
+    required String mode,
+    String? userId,
+    String? image,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/chat'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'message': message,
+        'mode': mode,
+        'image': image,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = jsonDecode(response.body);
+      // Flask server returns {"success": true, "response": {...}}
+      if (decoded is Map<String, dynamic> && decoded.containsKey('response')) {
+        // We return the inner response content as a JSON string so frontend formatters keep working
+        final innerResponse = decoded['response'];
+        return innerResponse is String ? innerResponse : jsonEncode(innerResponse);
+      }
+      return response.body;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Erreur lors de la communication avec l'assistant IA");
+    }
+  }
+
+  static Future<String> analyzeImage({required String image}) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/analyze-image'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'image': image,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('response')) {
+        final innerResponse = decoded['response'];
+        return innerResponse is String ? innerResponse : jsonEncode(innerResponse);
+      }
+      return response.body;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Erreur lors de l'analyse de l'image");
+    }
+  }
+
+  static Future<List<dynamic>> getAiConversations() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/ai/conversations'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> createAiConversation(String firstMessage) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/ai/conversations'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'firstMessage': firstMessage}),
+    );
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  static Future<List<dynamic>> getAiConversationMessages(String conversationId) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/ai/conversations/$conversationId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  static Future<void> addAiMessage({
+    required String conversationId,
+    required String role,
+    required String content,
+    required String type,
+  }) async {
+    final token = await getAccessToken();
+    await http.post(
+      Uri.parse('$baseUrl/ai/conversations/$conversationId/messages'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'role': role,
+        'content': content,
+        'type': type,
+      }),
+    );
+  }
+
+  static Future<void> deleteAiConversation(String conversationId) async {
+    final token = await getAccessToken();
+    await http.delete(
+      Uri.parse('$baseUrl/ai/conversations/$conversationId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  static Future<Map<String, dynamic>> getMySummaryUrl() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/profiles/me/summary-url'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMySummaryUrl();
+    } else {
+      throw Exception('Erreur de récupération de l\'URL QR');
+    }
+  }
 }
+

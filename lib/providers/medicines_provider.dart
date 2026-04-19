@@ -48,4 +48,26 @@ class MedicinesProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<String> getMedicationInfo(String name) async {
+    return ApiService.getMedicationInfo(name);
+  }
+
+  Future<void> downloadReport(BuildContext context) async {
+    try {
+      final response = await ApiService.getMedicationReport();
+      if (response.statusCode == 200) {
+        // En mobile, on pourrait utiliser open_file ou share_plus
+        // Ici on va juste montrer un message de succès pour l'instant
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report generated successfully!')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error downloading report: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error generating report')),
+      );
+    }
+  }
 }

@@ -1,0 +1,47 @@
+﻿
+  android\full_gradle_l
+og.txt:121:       1.  
+Dependency '
+  android\full_gradle_l
+og.txt:122::flutter_loc
+al_notifica
+> android\full_gradle_l
+og.txt:123:tions' 
+requires core 
+  android\full_gradle_l
+og.txt:124:library 
+desugaring to 
+  android\full_gradle_l
+og.txt:125:be enabled
+  android\full_gradle_l
+og.txt:126:           
+for :app.
+  android\full_gradle_l
+og.txt:127:     
+  android\full_gradle_l
+og.txt:128:           
+See https://
+  android\full_gradle_l
+og.txt:958:  1.  
+Dependency ':flut
+  android\full_gradle_l
+og.txt:959:ter_local_no
+tifications
+> android\full_gradle_l
+og.txt:960:' requires 
+core 
+  android\full_gradle_l
+og.txt:961:library 
+desugaring to 
+  android\full_gradle_l
+og.txt:962:be enabled
+  android\full_gradle_l
+og.txt:963:      for 
+:app.
+  android\full_gradle_l
+og.txt:964:
+  android\full_gradle_l
+og.txt:965:      See 
+https://devel
+
+

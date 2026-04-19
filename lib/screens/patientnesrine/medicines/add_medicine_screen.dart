@@ -14,10 +14,53 @@ class AddMedicineScreen extends StatefulWidget {
 
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
   String _selectedType = 'pill';
   List<String> _selectedSchedule = ['after_breakfast'];
   String _duration = '1 Month';
   String _frequency = 'Daily';
+  String _description = '';
+  bool _isLoadingInfo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameFocusNode.addListener(() {
+      if (!_nameFocusNode.hasFocus && _nameController.text.isNotEmpty) {
+        _fetchInfo();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _nameFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchInfo() async {
+    setState(() {
+      _isLoadingInfo = true;
+    });
+
+    try {
+      final info = await context.read<MedicinesProvider>().getMedicationInfo(_nameController.text);
+      if (mounted) {
+        setState(() {
+          _description = info;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching info: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingInfo = false;
+        });
+      }
+    }
+  }
 
   final List<Map<String, dynamic>> _types = [
     {"type": "pill", "image": "lib/assets/pill.png"},
@@ -41,13 +84,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           style: GoogleFonts.poppins(color: AppColors.textDark, fontWeight: FontWeight.w600, fontSize: 18),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.notifications_active, color: const Color(0xFF4ECDC4).withOpacity(0.8)),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -58,7 +94,37 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             _buildVisualHeader(),
             const SizedBox(height: 40),
             _buildFieldLabel("Medicine Name"),
-            _buildTextField(_nameController, "e.g., Paracetamol XL2"),
+            _buildTextField(_nameController, "e.g., Panadol", focusNode: _nameFocusNode),
+            if (_isLoadingInfo) 
+              const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: LinearProgressIndicator(color: AppColors.primary, backgroundColor: Colors.transparent),
+              ),
+            if (_description.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _description,
+                        style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textDark, fontStyle: FontStyle.italic),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 24),
             _buildTypeSelector(),
             const SizedBox(height: 24),
@@ -121,7 +187,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
+  Widget _buildTextField(TextEditingController controller, String hint, {FocusNode? focusNode}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
@@ -130,6 +196,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       ),
       child: TextField(
         controller: controller,
+        focusNode: focusNode,
         style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
@@ -322,6 +389,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       frequency: _frequency,
       cause: 'Général',
       capSize: '',
+      description: _description,
       startDate: DateTime.now(),
       isActive: true,
     );

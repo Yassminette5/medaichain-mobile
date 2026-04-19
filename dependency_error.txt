@@ -1,0 +1,294 @@
+﻿
+> android\full_gradle_l
+og.txt:121:       1.  
+Dependency '
+  android\full_gradle_l
+og.txt:122::flutter_loc
+al_notifica
+  android\full_gradle_l
+og.txt:123:tions' 
+requires core 
+  android\full_gradle_l
+og.txt:124:library 
+desugaring to 
+  android\full_gradle_l
+og.txt:125:be enabled
+  android\full_gradle_l
+og.txt:126:           
+for :app.
+  android\full_gradle_l
+og.txt:127:     
+  android\full_gradle_l
+og.txt:128:           
+See https://
+  android\full_gradle_l
+og.txt:129:developer.an
+droid.com/s
+  android\full_gradle_l
+og.txt:130:tudio/write/
+java8-suppo
+  android\full_gradle_l
+og.txt:131:rt.html for 
+more
+  android\full_gradle_l
+og.txt:132:           
+details.
+  android\full_gradle_l
+og.txt:133:
+  android\full_gradle_l
+og.txt:134:* Try:
+  android\full_gradle_l
+og.txt:135:> Run with 
+--info or 
+  android\full_gradle_l
+og.txt:136:--debug 
+option to get 
+  android\full_gradle_l
+og.txt:137:more log 
+output.
+  android\full_gradle_l
+og.txt:138:> Run with 
+--scan to 
+  android\full_gradle_l
+og.txt:139:get full 
+insights.
+  android\full_gradle_l
+og.txt:140:> Get more 
+help at http
+  android\full_gradle_l
+og.txt:141:s://help.gra
+dle.org.
+  android\full_gradle_l
+og.txt:142:
+  android\full_gradle_l
+og.txt:143:* Exception 
+is:
+  android\full_gradle_l
+og.txt:144:org.gradle.a
+pi.tasks.Ta
+  android\full_gradle_l
+og.txt:145:skExecutionE
+xception: 
+  android\full_gradle_l
+og.txt:146:Execution 
+failed for 
+  android\full_gradle_l
+og.txt:147:task 
+':app:checkDebugAa
+  android\full_gradle_l
+og.txt:148:rMetadata'.
+  android\full_gradle_l
+og.txt:149:	at 
+org.gradle.api.inte
+  android\full_gradle_l
+og.txt:150:rnal.tasks.e
+xecution.Ex
+  android\full_gradle_l
+og.txt:151:ecuteActions
+TaskExecute
+  android\full_gradle_l
+og.txt:152:r.lambda$exe
+cuteIfValid
+  android\full_gradle_l
+og.txt:153:$1(ExecuteAc
+tionsTaskEx
+  android\full_gradle_l
+og.txt:154:ecuter.java:
+130)
+  android\full_gradle_l
+og.txt:155:	at 
+org.gradle.internal
+  android\full_gradle_l
+og.txt:156:.Try$Failure
+.ifSuccessf
+  android\full_gradle_l
+og.txt:157:ulOrElse(Try
+.java:293)
+  android\full_gradle_l
+og.txt:158:	at 
+org.gradle.api.inte
+  android\full_gradle_l
+og.txt:159:rnal.tasks.e
+xecution.Ex
+  android\full_gradle_l
+og.txt:160:ecuteActions
+TaskExecute
+  android\full_gradle_l
+og.txt:161:r.executeIfV
+alid(Execut
+  android\full_gradle_l
+og.txt:162:eActionsTask
+Executer.ja
+  android\full_gradle_l
+og.txt:163:va:128)
+  android\full_gradle_l
+og.txt:164:	at 
+org.gradle.api.inte
+  android\full_gradle_l
+og.txt:165:rnal.tasks.e
+xecution.Ex
+  android\full_gradle_l
+og.txt:166:ecuteActions
+TaskExecute
+  android\full_gradle_l
+og.txt:167:r.execute(Ex
+ecuteAction
+  android\full_gradle_l
+og.txt:168:sTaskExecute
+r.java:116)
+  android\full_gradle_l
+og.txt:169:	at 
+org.gradle.api.inte
+  android\full_gradle_l
+og.txt:170:rnal.tasks.e
+xecution.Fi
+  android\full_gradle_l
+og.txt:171:nalizeProper
+tiesTaskExe
+> android\full_gradle_l
+og.txt:958:  1.  
+Dependency ':flut
+  android\full_gradle_l
+og.txt:959:ter_local_no
+tifications
+  android\full_gradle_l
+og.txt:960:' requires 
+core 
+  android\full_gradle_l
+og.txt:961:library 
+desugaring to 
+  android\full_gradle_l
+og.txt:962:be enabled
+  android\full_gradle_l
+og.txt:963:      for 
+:app.
+  android\full_gradle_l
+og.txt:964:
+  android\full_gradle_l
+og.txt:965:      See 
+https://devel
+  android\full_gradle_l
+og.txt:966:oper.android
+.com/studio
+  android\full_gradle_l
+og.txt:967:/write/java8
+-support.ht
+  android\full_gradle_l
+og.txt:968:ml for more
+  android\full_gradle_l
+og.txt:969:      
+details.
+  android\full_gradle_l
+og.txt:970:	at 
+com.android.build.g
+  android\full_gradle_l
+og.txt:971:radle.intern
+al.tasks.Ch
+  android\full_gradle_l
+og.txt:972:eckAarMetada
+taWorkActio
+  android\full_gradle_l
+og.txt:973:n.execute(Ch
+eckAarMetad
+  android\full_gradle_l
+og.txt:974:ataTask.kt:2
+88)
+  android\full_gradle_l
+og.txt:975:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:976:internal.Def
+aultWorkerS
+  android\full_gradle_l
+og.txt:977:erver.execut
+e(DefaultWo
+  android\full_gradle_l
+og.txt:978:rkerServer.j
+ava:63)
+  android\full_gradle_l
+og.txt:979:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:980:internal.NoI
+solationWor
+  android\full_gradle_l
+og.txt:981:kerFactory$1
+$1.create(N
+  android\full_gradle_l
+og.txt:982:oIsolationWo
+rkerFactory
+  android\full_gradle_l
+og.txt:983:.java:66)
+  android\full_gradle_l
+og.txt:984:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:985:internal.NoI
+solationWor
+  android\full_gradle_l
+og.txt:986:kerFactory$1
+$1.create(N
+  android\full_gradle_l
+og.txt:987:oIsolationWo
+rkerFactory
+  android\full_gradle_l
+og.txt:988:.java:62)
+  android\full_gradle_l
+og.txt:989:	at 
+org.gradle.internal
+  android\full_gradle_l
+og.txt:990:.classloader
+.ClassLoade
+  android\full_gradle_l
+og.txt:991:rUtils.execu
+teInClasslo
+  android\full_gradle_l
+og.txt:992:ader(ClassLo
+aderUtils.j
+  android\full_gradle_l
+og.txt:993:ava:100)
+  android\full_gradle_l
+og.txt:994:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:995:internal.NoI
+solationWor
+  android\full_gradle_l
+og.txt:996:kerFactory$1
+.lambda$exe
+  android\full_gradle_l
+og.txt:997:cute$0(NoIso
+lationWorke
+  android\full_gradle_l
+og.txt:998:rFactory.jav
+a:62)
+  android\full_gradle_l
+og.txt:999:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:1000:internal.Ab
+stractWorker
+  android\full_gradle_l
+og.txt:1001:$1.call(Abs
+tractWorker.
+  android\full_gradle_l
+og.txt:1002:java:44)
+  android\full_gradle_l
+og.txt:1003:	at 
+org.gradle.workers.
+  android\full_gradle_l
+og.txt:1004:internal.Ab
+stractWorker
+  android\full_gradle_l
+og.txt:1005:$1.call(Abs
+tractWorker.
+  android\full_gradle_l
+og.txt:1006:java:41)
+  android\full_gradle_l
+og.txt:1007:	at 
+org.gradle.internal
+  android\full_gradle_l
+og.txt:1008:.operations
+.DefaultBuil
+
+

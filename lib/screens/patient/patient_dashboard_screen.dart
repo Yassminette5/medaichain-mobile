@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/medical_card.dart';
+import '../../widgets/ai_assistant_chat.dart';
 import '../auth/login_screen.dart';
 
 /// Tableau de Bord Patient - Espace Santé Personnel
@@ -29,6 +30,34 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
           _PatientHealthView(),
           _PatientProfileView(),
         ],
+      ),
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+          );
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: AppColors.aiGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withValues(alpha: 0.4),
+                blurRadius: 15,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 30),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -106,7 +135,9 @@ class _PatientHomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(userName),
+              _buildHeader(userName, context),
+              const SizedBox(height: 20),
+              _buildAiAssistantCard(context),
               const SizedBox(height: 24),
               _buildHealthSummary(),
               const SizedBox(height: 24),
@@ -122,7 +153,64 @@ class _PatientHomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String userName) {
+  Widget _buildAiAssistantCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppColors.aiGradient,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Besoin d\'aide ?',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    'Parlez à notre assistant IA dès maintenant.',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(String userName, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -155,6 +243,27 @@ class _PatientHomeView extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            onPressed: () {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+              );
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, size: 20, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(

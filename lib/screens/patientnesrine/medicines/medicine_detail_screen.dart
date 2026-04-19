@@ -63,6 +63,59 @@ class MedicineDetailScreen extends StatelessWidget {
               children: medicine.schedule.map((time) => _buildScheduleBadge(time)).toList(),
             ),
             const SizedBox(height: 32),
+            if (medicine.description != null && medicine.description!.isNotEmpty) ...[
+              Text(
+                "Medical Insights",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary.withOpacity(0.08), Colors.white],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          "AI-Generated Description",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      medicine.description!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: AppColors.textDark.withOpacity(0.8),
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
             _buildDetailGrid(),
             const SizedBox(height: 48),
             _buildEditButton(),
