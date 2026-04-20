@@ -21,6 +21,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   String _frequency = 'Daily';
   String _description = '';
   bool _isLoadingInfo = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -45,10 +46,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     });
 
     try {
-      final info = await context.read<MedicinesProvider>().getMedicationInfo(_nameController.text);
+      final data = await context.read<MedicinesProvider>().getMedicationInfo(_nameController.text);
       if (mounted) {
+        String displayInfo = '';
+        if (data['type'] == 'paragraph') {
+          displayInfo = data['message'] ?? '';
+        } else if (data['type'] == 'medicine') {
+          final inst = data['instructions'] ?? {};
+          displayInfo = inst['used_for'] ?? inst['generic_name'] ?? '';
+        }
+        
         setState(() {
-          _description = info;
+          _description = displayInfo;
         });
       }
     } catch (e) {
@@ -368,16 +377,25 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
         ),
-        child: Text(
-          "Add Reminder",
-          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        child: _isSubmitting
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+            )
+          : Text(
+              "Add Reminder",
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
       ),
     );
   }
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty) return;
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
 
     final medicine = Medicine(
       id: '',
@@ -394,9 +412,35 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       isActive: true,
     );
 
-    final success = await context.read<MedicinesProvider>().addMedicine(medicine);
-    if (success && mounted) {
-      Navigator.pop(context);
+    try {
+      final success = await context.read<MedicinesProvider>().addMedicine(medicine);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Succès ! Rappel ajouté.'),
+            backgroundColor: Color(0xFF4ECDC4),
+          ),
+        );
+        Navigator.pop(context);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'ajout. Réessaie.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 }

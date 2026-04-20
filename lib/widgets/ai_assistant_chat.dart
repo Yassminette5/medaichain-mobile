@@ -50,13 +50,6 @@ class _AiAssistantChatState extends State<AiAssistantChat>
   String? _imageBase64;
   final ImagePicker _picker = ImagePicker();
 
-  // Quick starters
-  static const List<Map<String, String>> _quickStarters = [
-    {'label': '🤒  Mal à la tête', 'text': "J'ai mal à la tête depuis ce matin."},
-    {'label': '🌡️  Fièvre',        'text': "Est-ce grave d'avoir 38° de fièvre ?"},
-    {'label': '💊  Médicament',    'text': 'À quoi sert le Paracétamol ?'},
-    {'label': '📅  Rendez-vous',   'text': 'Pourquoi voir un cardiologue ?'},
-  ];
 
   // Voice
   final stt.SpeechToText _speech = stt.SpeechToText();
@@ -80,7 +73,44 @@ class _AiAssistantChatState extends State<AiAssistantChat>
     )..repeat(reverse: true);
     _loopAnim = CurvedAnimation(parent: _loopCtrl, curve: Curves.easeInOut);
     _initVoice();
-    // Premium status sync removed
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    // If no conversationId is set, check if we have an active one or just start fresh
+    if (_currentConversationId != null) {
+      setState(() => _isLoading = true);
+      try {
+        final messages = await ApiService.getAiConversationMessages(_currentConversationId!);
+        setState(() {
+          _messages.clear();
+          for (var m in messages) {
+            final role = m['role'];
+            final content = m['content'];
+            final isUser = (role == 'user');
+            
+            if (!isUser) {
+              try {
+                // Try parsing JSON response types
+                final clean = content.trim().startsWith('```')
+                    ? content.trim().split('\n').sublist(1, content.trim().split('\n').length - 1).join('\n').trim()
+                    : content.trim();
+                _messages.add({'data': jsonDecode(clean), 'isUser': false});
+              } catch (_) {
+                _messages.add({'text': content, 'isUser': false});
+              }
+            } else {
+              _messages.add({'text': content, 'isUser': true});
+            }
+          }
+        });
+      } catch (e) {
+        debugPrint('History load error: $e');
+      } finally {
+        setState(() => _isLoading = false);
+        _scrollToBottom();
+      }
+    }
   }
 
   Future<void> _initVoice() async {
@@ -185,13 +215,11 @@ class _AiAssistantChatState extends State<AiAssistantChat>
         );
       }
 
-      final reply = (text.trim().isEmpty && b64 != null)
-          ? await ApiService.analyzeImage(image: b64)
+      // CALL NGROK for generation
+      final reply = (text.trim().isEmpty && imgPath != null)
+          ? await ApiService.analyzeImage(filePath: imgPath)
           : await ApiService.chatWithAI(
               message: effectiveText,
-              mode: _currentMode,
-              userId: widget.userId,
-              image: b64,
             );
 
       if (mounted) {
@@ -206,8 +234,9 @@ class _AiAssistantChatState extends State<AiAssistantChat>
           }
           _isLoading = false;
         });
+        _scrollToBottom();
 
-
+        // SAVE RESPONSE TO NESTJS
         if (_currentConversationId != null) {
           String type = 'sentence';
           try {
@@ -247,7 +276,6 @@ class _AiAssistantChatState extends State<AiAssistantChat>
           _buildHeader(),
           Expanded(child: _buildMessageList()),
           if (_isLoading) RepaintBoundary(child: _buildTypingIndicator()),
-          _buildQuickStarters(),
           _buildImagePreview(),
           _buildInputBar(),
           _buildDisclaimer(),
@@ -401,9 +429,14 @@ class _AiAssistantChatState extends State<AiAssistantChat>
 
     if (!isUser && data != null) {
       final type = data['type']?.toString();
-      if (type == 'sentence') return _buildSentenceBubble(data);
+      final isExpanded = msg['isExpanded'] ?? false;
+      final toggle = () => setState(() => msg['isExpanded'] = !isExpanded);
+
+      if (type == 'paragraph' || type == 'sentence') return _buildParagraphBubble(data, isExpanded, toggle);
       if (type == 'steps')    return _buildStepsBubble(data);
-      if (type == 'warning')  return _buildWarningCard(data);
+      if (type == 'causes')   return _buildCausesBubble(data);
+      if (type == 'warning')  return _buildWarningCard(data, isExpanded, toggle);
+      if (type == 'medicine') return _buildMedicineCard(data);
       if (type == 'cards' || data.containsKey('causes')) return _buildAiResponseCards(data);
     }
 
@@ -490,8 +523,8 @@ class _AiAssistantChatState extends State<AiAssistantChat>
     child: const Center(child: Text('✦', style: TextStyle(color: Colors.white, fontSize: 12))),
   );
 
-  // ─── Sentence bubble ─────────────────────────────────────────────
-  Widget _buildSentenceBubble(Map<String, dynamic> data) => Padding(
+  // ─── Paragraph bubble ───────────────────────────────────────────
+  Widget _buildParagraphBubble(Map<String, dynamic> data, bool isExpanded, VoidCallback onToggle) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,8 +545,28 @@ class _AiAssistantChatState extends State<AiAssistantChat>
                   boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 14, offset: const Offset(0, 4))],
                   border: Border.all(color: _kPurple.withOpacity(0.07)),
                 ),
-                child: Text(data['text'] ?? '',
-                    style: GoogleFonts.poppins(fontSize: 14, height: 1.55, color: AppColors.textPrimary)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data['message'] ?? data['text'] ?? '',
+                      style: GoogleFonts.poppins(fontSize: 14, height: 1.55, color: AppColors.textPrimary),
+                      maxLines: isExpanded ? null : 4,
+                      overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                    ),
+                    if ((data['message']?.toString() ?? data['text']?.toString() ?? '').length > 150)
+                      GestureDetector(
+                        onTap: onToggle,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            isExpanded ? 'Voir moins' : 'Voir plus...',
+                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: _kPurple),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -597,7 +650,7 @@ class _AiAssistantChatState extends State<AiAssistantChat>
   }
 
   // ─── Warning card ────────────────────────────────────────────────
-  Widget _buildWarningCard(Map<String, dynamic> data) => Padding(
+  Widget _buildWarningCard(Map<String, dynamic> data, bool isExpanded, VoidCallback onToggle) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Container(
       padding: const EdgeInsets.all(18),
@@ -628,8 +681,28 @@ class _AiAssistantChatState extends State<AiAssistantChat>
             )),
           ]),
           const SizedBox(height: 14),
-          Text(data['text'] ?? '',
-              style: GoogleFonts.poppins(fontSize: 13.5, height: 1.6, color: const Color(0xFF8B0000), fontWeight: FontWeight.w500)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                data['message'] ?? data['text'] ?? '',
+                style: GoogleFonts.poppins(fontSize: 13.5, height: 1.6, color: const Color(0xFF8B0000), fontWeight: FontWeight.w500),
+                maxLines: isExpanded ? null : 4,
+                overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              ),
+              if ((data['message']?.toString() ?? data['text']?.toString() ?? '').length > 130)
+                GestureDetector(
+                  onTap: onToggle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      isExpanded ? 'Voir moins' : 'Lire plus...',
+                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFB71C1C)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -649,6 +722,110 @@ class _AiAssistantChatState extends State<AiAssistantChat>
       ),
     ),
   );
+
+  // ─── Causes bubble ───────────────────────────────────────────────
+  Widget _buildCausesBubble(Map<String, dynamic> data) {
+    final causes = (data['causes'] as List?)?.cast<String>() ?? [];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.amber.withOpacity(0.3)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [Color(0xFFFBBF24), Color(0xFFD97706)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              child: Row(children: [
+                const Text('🔍', style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 10),
+                Expanded(child: Text(data['title'] ?? 'Causes possibles',
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14))),
+              ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: causes.map((cause) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('• ', style: TextStyle(fontSize: 18, color: Colors.amber, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(cause,
+                        style: GoogleFonts.poppins(fontSize: 13, height: 1.45, color: AppColors.textPrimary))),
+                  ]),
+                )).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Medicine card ───────────────────────────────────────────────
+  Widget _buildMedicineCard(Map<String, dynamic> data) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: _kPurple.withOpacity(0.15)),
+          boxShadow: [BoxShadow(color: _kPurple.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 8))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: _kAiGrad,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              child: Row(children: [
+                const Text('💊', style: TextStyle(fontSize: 22)),
+                const SizedBox(width: 12),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Conseil Médicament',
+                        style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w600)),
+                    Text(data['name'] ?? 'Médicament',
+                        style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                  ],
+                )),
+              ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Icon(Icons.info_outline_rounded, size: 16, color: _kPurple),
+                    const SizedBox(width: 8),
+                    Text('Instructions', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: _kPurple)),
+                  ]),
+                  const SizedBox(height: 8),
+                  Text(data['instructions'] ?? '',
+                      style: GoogleFonts.poppins(fontSize: 14, height: 1.5, color: AppColors.textPrimary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ─── AI response cards ───────────────────────────────────────────
   Widget _buildAiResponseCards(Map<String, dynamic> data) {
@@ -763,33 +940,6 @@ class _AiAssistantChatState extends State<AiAssistantChat>
     ]),
   );
 
-  // ─── Quick starters ──────────────────────────────────────────────
-  Widget _buildQuickStarters() {
-    if (_messages.isNotEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: _quickStarters.map((s) => GestureDetector(
-            onTap: () => _sendMessage(s['text']!),
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: BoxDecoration(
-                color: _kSurface, borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _kPurple.withOpacity(0.18)),
-                boxShadow: [BoxShadow(color: _kPurple.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, 3))],
-              ),
-              child: Text(s['label']!,
-                  style: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w600, color: _kViolet)),
-            ),
-          )).toList(),
-        ),
-      ),
-    );
-  }
 
   // ─── Image preview ───────────────────────────────────────────────
   Widget _buildImagePreview() {

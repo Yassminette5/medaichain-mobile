@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +21,7 @@ class PatientQrScreen extends StatefulWidget {
 
 class _PatientQrScreenState extends State<PatientQrScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  String? _qrUrl;
+  Uint8List? _qrBytes;
   bool _isLoading = true;
 
   @override
@@ -32,11 +33,14 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
   Future<void> _loadQrData() async {
     try {
       final res = await ApiService.getMySummaryUrl();
-      // On récupère l'URL complète avec le base URL de l'API
-      // Note: En développement avec ngrok, ApiService.baseUrl sera l'URL ngrok
+      // Use full URL for the QR data
       final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
+      final fullUrl = '$baseUrl${res['url']}';
+      
+      final bytes = await ApiService.getQRCodeBytes(fullUrl);
+      
       setState(() {
-        _qrUrl = '$baseUrl${res['url']}';
+        _qrBytes = bytes;
         _isLoading = false;
       });
     } catch (e) {
@@ -155,19 +159,12 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
                               ],
                             ),
                             const SizedBox(height: 32),
-                            if (_qrUrl != null)
-                              QrImageView(
-                                data: _qrUrl!,
-                                version: QrVersions.auto,
-                                size: 200.0,
-                                eyeStyle: const QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: AppColors.textDark,
-                                ),
-                                dataModuleStyle: const QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: AppColors.textDark,
-                                ),
+                            if (_qrBytes != null)
+                              Image.memory(
+                                _qrBytes!,
+                                width: 220,
+                                height: 220,
+                                fit: BoxFit.contain,
                               ),
                             const SizedBox(height: 32),
                             Text(

@@ -59,7 +59,6 @@ Future<void> main() async {
       rethrow;
     }
   }
-
   try {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(

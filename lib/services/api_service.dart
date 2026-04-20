@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
@@ -10,7 +11,7 @@ import '../models/doctor_profile_model.dart';
 class ApiService {
   /// Override pour test sur téléphone réel : mets l'IP de ton PC (ex: 'http://192.168.1.10:3000').
   /// Sur émulateur, ne pas définir (baseUrl utilise 10.0.2.2).
-  static String? backendUrlOverride = 'https://niki-unfancied-toshia.ngrok-free.dev';
+  static String? backendUrlOverride;
 
   /// Base URL backend:
   /// - Si [backendUrlOverride] est défini (téléphone réel) : l'utiliser.
@@ -41,27 +42,8 @@ class ApiService {
     if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:3000';
     return 'http://127.0.0.1:3000';
   }
-
   /// Base URL pour le serveur IA local (Flask sur port 5000)
-  static String get aiBaseUrl {
-    if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
-      String url = backendUrlOverride!.trim();
-      if (!url.startsWith('http')) url = 'http://$url';
-      
-      // Simple logic for ngrok domain
-      if (url.contains('ngrok')) return url;
-      
-      // For IP/localhost, ensure port 5000
-      if (url.contains(':')) {
-        url = url.substring(0, url.lastIndexOf(':'));
-      }
-      return '$url:5000';
-    }
-    if (kIsWeb) return 'http://127.0.0.1:5000';
-    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5000';
-    return 'http://127.0.0.1:5000';
-  }
-
+  static String get aiBaseUrl => 'https://5200-34-77-165-174.ngrok-free.app';
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
@@ -83,7 +65,6 @@ class ApiService {
       await prefs.remove(_userKey);
     }
   }
-
   static Future<bool> getRememberMe() async {
     final prefs = await SharedPreferences.getInstance();
     final v = prefs.getBool(_rememberMeKey);
@@ -155,7 +136,6 @@ class ApiService {
       throw Exception(error['message'] ?? 'Erreur lors de la finalisation de l\'invitation');
     }
   }
-
   // ========== INSCRIPTION ==========
   static Future<AuthResponse> register({
     required String email,
@@ -333,7 +313,6 @@ class ApiService {
       throw Exception('Erreur de récupération du profil');
     }
   }
-
   // ========== PROFIL MÉDECIN (détaillé) ==========
   static Future<DoctorProfile?> getDoctorProfile() async {
     final token = await getAccessToken();
@@ -2587,9 +2566,6 @@ class ApiService {
   // ========== AI ASSISTANT ==========
   static Future<String> chatWithAI({
     required String message,
-    required String mode,
-    String? userId,
-    String? image,
   }) async {
     final response = await http.post(
       Uri.parse('$aiBaseUrl/chat'),
@@ -2597,20 +2573,11 @@ class ApiService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        'message': message,
-        'mode': mode,
-        'image': image,
+        'question': message,
       }),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = jsonDecode(response.body);
-      // Flask server returns {"success": true, "response": {...}}
-      if (decoded is Map<String, dynamic> && decoded.containsKey('response')) {
-        // We return the inner response content as a JSON string so frontend formatters keep working
-        final innerResponse = decoded['response'];
-        return innerResponse is String ? innerResponse : jsonEncode(innerResponse);
-      }
       return response.body;
     } else {
       final error = jsonDecode(response.body);
@@ -2618,23 +2585,14 @@ class ApiService {
     }
   }
 
-  static Future<String> analyzeImage({required String image}) async {
-    final response = await http.post(
-      Uri.parse('$aiBaseUrl/analyze-image'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'image': image,
-      }),
-    );
+  static Future<String> analyzeImage({required String filePath}) async {
+    var request = http.MultipartRequest('POST', Uri.parse('$aiBaseUrl/analyze'));
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map<String, dynamic> && decoded.containsKey('response')) {
-        final innerResponse = decoded['response'];
-        return innerResponse is String ? innerResponse : jsonEncode(innerResponse);
-      }
       return response.body;
     } else {
       final error = jsonDecode(response.body);
@@ -2734,6 +2692,42 @@ class ApiService {
       return getMySummaryUrl();
     } else {
       throw Exception('Erreur de récupération de l\'URL QR');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMedicineInfo(String name) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/medicine'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur de récupération des infos du médicament');
+    }
+  }
+
+  static Future<Uint8List> getQRCodeBytes(String data) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/qrcode'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'data': data,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return response.bodyBytes;
+    } else {
+      throw Exception('Erreur de récupération du QR Code');
     }
   }
 }
