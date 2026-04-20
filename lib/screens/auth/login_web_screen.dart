@@ -12,6 +12,7 @@ import '../admin/admin_dashboard_screen.dart';
 import '../patientnesrine/main_screen.dart';
 import '../web/medecin_web_dashboard.dart';
 import '../clinique/web/dashboard_main_screen.dart';
+import '../centre_analyse/home_centre_analyse.dart';
 import '../../services/notification_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../clinique/mobile/home_admin_clinique_mobile.dart';
@@ -919,77 +920,54 @@ class _LoginWebScreenState extends State<LoginWebScreen>
   // ── LOGIN LOGIC ────────────────────────────────────────────────────────────
 
   void _handleLogin() async {
-    if (kIsWeb) {
-      debugPrint('🔔 Login button clicked on auth/login_web_screen.dart');
-      debugPrint('🔔 Web login click: requesting notification permission...');
-      try {
-        final reason =
-            await NotificationService().debugWebPushSetupAndRequestPermission();
-        if (reason != null && mounted) {
-          _showErrorSnackBar(reason);
-        }
-      } catch (e) {
-        debugPrint('⚠️ Web permission prompt from login screen failed: $e');
-      }
-    }
-
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      debugPrint('⚠️ Login aborted: empty email or password');
       _showErrorSnackBar('Veuillez remplir tous les champs');
       return;
     }
 
-    if (!mounted) return;
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    bool success = false;
+    final success = await authProvider.login(email: email, password: password, rememberMe: _rememberMe);
 
-    try {
-      success = await authProvider.login(email: email, password: password);
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    if (mounted) {
+      setState(() => _isLoading = false);
+      if (success) {
+        final user = authProvider.user;
+        final userRole = user?.role ?? UserRole.patient;
+        final userEmail = user?.email ?? '';
 
-    if (!mounted) return;
+        Widget dashboard;
 
-    if (success) {
-      final user = authProvider.user;
-      final userRole = user?.role ?? UserRole.patient;
-      final userEmail = user?.email ?? '';
+        // Rediriger vers le bon dashboard selon le rôle
+        // Vérifier si c'est un admin par l'email (admin@medaichain.com)
+        if (userEmail.toLowerCase() == 'admin@medaichain.com' ||
+            userEmail.toLowerCase().contains('admin')) {
+          dashboard = const AdminDashboardScreen();
+        } else if (userRole == UserRole.centreAnalyse) {
+          // Sur mobile, utiliser HomeCentreAnalyse, sur web c'est géré par login_web_screen
+          dashboard = kIsWeb ? const CenterDashboardWeb() : const HomeCentreAnalyse();
+        } else if (userRole == UserRole.pharmacie) {
+          dashboard = const PharmacieDashboardScreen();
+        } else if (userRole == UserRole.medecin) {
+          dashboard = const MedecinWebDashboard();
+        } else if (userRole == UserRole.clinique) {
+          dashboard = kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
+        } else {
+          // Patient
+          dashboard = const MainScreen();
+        }
 
-      Widget dashboard;
-
-      // Rediriger vers le bon dashboard selon le rôle
-      if (userEmail.toLowerCase() == 'admin@medaichain.com' ||
-          userEmail.toLowerCase().contains('admin')) {
-        dashboard = const AdminDashboardScreen();
-      } else if (userRole == UserRole.centreAnalyse) {
-        // Use web dashboard for center analysis on web platform
-        dashboard = const CenterDashboardWeb();
-      } else if (userRole == UserRole.pharmacie) {
-        dashboard = const PharmacieDashboardScreen();
-      } else if (userRole == UserRole.medecin) {
-        dashboard = const MedecinWebDashboard();
-      } else if (userRole == UserRole.clinique) {
-        // Dashboard clinique (mobile vs web)
-        dashboard =
-            kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => dashboard),
+        );
       } else {
-        dashboard = const MainScreen();
+        _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
       }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => dashboard),
-      );
-    } else {
-      _showErrorSnackBar(authProvider.error ?? 'Erreur de connexion');
     }
   }
 

@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/pharmacy_dashboard.dart';
 import '../../services/pharmacy_service.dart';
-import '../../widgets/pharmacie/mobile/pharmacy_mobile_notifications_bell.dart';
 import '../../providers/auth_provider.dart';
 
 class PrescriptionDetailsScreen extends StatefulWidget {
@@ -117,9 +116,6 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: const [
-          PharmacyMobileNotificationsBell(),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

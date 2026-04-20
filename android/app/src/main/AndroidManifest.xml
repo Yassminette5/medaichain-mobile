@@ -6,8 +6,10 @@
     <application
         android:label="madaichain"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
-        <meta-data
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true">
+
+    <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />
         <meta-data

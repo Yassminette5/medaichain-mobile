@@ -1,8 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
-import '../models/user_model.dart';
 
 
 /// Contenu des détails d'un rendez-vous (sans Scaffold) pour utilisation dans dialog
@@ -13,36 +10,6 @@ class AppointmentDetailContent extends StatelessWidget {
     super.key,
     required this.appointment,
   });
-
-  DateTime? _tryParseDate(dynamic value) {
-    if (value == null) return null;
-    if (value is DateTime) return value;
-    final s = value.toString().trim();
-    if (s.isEmpty) return null;
-    return DateTime.tryParse(s);
-  }
-
-  int? _computeAgeFromDob(DateTime? dob) {
-    if (dob == null) return null;
-    final now = DateTime.now();
-    int age = now.year - dob.year;
-    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
-      age--;
-    }
-    if (age < 0 || age > 130) return null;
-    return age;
-  }
-
-  String? _formatGender(dynamic value) {
-    if (value == null) return null;
-    final s = value.toString().trim();
-    if (s.isEmpty) return null;
-
-    final v = s.toLowerCase();
-    if (v == 'm' || v == 'male' || v == 'homme' || v == 'man') return 'Homme';
-    if (v == 'f' || v == 'female' || v == 'femme' || v == 'woman') return 'Femme';
-    return s; // fallback: garder tel quel
-  }
 
   String _getAnalysisTypeLabel(String? type) {
     switch (type?.toLowerCase()) {
@@ -58,44 +25,6 @@ class AppointmentDetailContent extends StatelessWidget {
         return 'Biologie';
       default:
         return type ?? 'Autre';
-    }
-  }
-
-  Color _getStatusColor(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'accepted':
-        return AppColors.success;
-      case 'rejected':
-        return AppColors.error;
-      case 'pending':
-        return AppColors.accentOrange;
-      default:
-        return AppColors.warning;
-    }
-  }
-
-  String _getStatusLabel(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'accepted':
-        return 'Acceptée';
-      case 'rejected':
-        return 'Refusée';
-      case 'pending':
-        return 'En attente';
-      default:
-        return status ?? 'Inconnu';
-    }
-  }
-
-  String _getStatusMessage(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'accepted':
-        return '✅ Demande acceptée automatiquement';
-      case 'rejected':
-        return '❌ Demande refusée';
-      case 'pending':
-      default:
-        return '🕐 En attente de confirmation';
     }
   }
 
@@ -123,111 +52,23 @@ class AppointmentDetailContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.read<AuthProvider>();
-    final currentUser = auth.user;
-
     // Extraire les informations du patient
-    final patientInfo = appointment['patientInfo'];
     final patientId = appointment['patientId'];
     String patientFirstName = 'Patient';
     String? patientEmail;
     String? patientPhone;
-    int? patientAge;
-    String? patientGender;
-    List<String> patientAllergies = const [];
     
-    // 1) Priorité: patientInfo (nouveau backend)
-    if (patientInfo != null && patientInfo is Map) {
-      final infoMap = Map<String, dynamic>.from(patientInfo);
-
-      final fullName = infoMap['fullName']?.toString().trim();
-      if (fullName != null && fullName.isNotEmpty) {
-        patientFirstName = fullName;
-      } else {
-        final firstName = infoMap['firstName']?.toString() ?? '';
-        final lastName = infoMap['lastName']?.toString() ?? '';
-        final combined = '${firstName.trim()} ${lastName.trim()}'.trim();
-        if (combined.isNotEmpty) patientFirstName = combined;
-      }
-
-      patientEmail = infoMap['email']?.toString();
-      patientPhone = infoMap['phone']?.toString();
-      patientGender = _formatGender(infoMap['gender'] ?? infoMap['sex']);
-
-      final rawAge = infoMap['age'];
-      if (rawAge is num) {
-        patientAge = rawAge.toInt();
-      } else {
-        final dob = _tryParseDate(infoMap['dateOfBirth'] ?? infoMap['dob'] ?? infoMap['birthDate']);
-        patientAge = _computeAgeFromDob(dob);
-      }
-
-      final rawAllergies = infoMap['allergies'];
-      if (rawAllergies is List) {
-        patientAllergies = rawAllergies.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
-      }
-    }
-
-    // 2) Fallback: patientId (compatibilité)
     if (patientId != null && patientId is Map) {
       final patientMap = Map<String, dynamic>.from(patientId);
-      if (patientFirstName == 'Patient') {
-        final firstName = patientMap['firstName']?.toString() ?? '';
-        final lastName = patientMap['lastName']?.toString() ?? '';
-        final fullName = patientMap['fullName']?.toString().trim();
-        if (fullName != null && fullName.isNotEmpty) {
-          patientFirstName = fullName;
-        } else if (firstName.isNotEmpty || lastName.isNotEmpty) {
-          patientFirstName = '${firstName.trim()} ${lastName.trim()}'.trim();
-        } else {
-          patientFirstName = patientMap['name']?.toString() ?? patientMap['email']?.toString() ?? 'Patient';
-        }
-      }
-
-      // Contact: parfois directement sur patient, parfois dans userId
-      final user = patientMap['userId'];
-      if (user is Map) {
-        final userMap = Map<String, dynamic>.from(user);
-        patientEmail ??= (userMap['email'] ?? patientMap['email'])?.toString();
-        patientPhone ??= (userMap['phone'] ?? patientMap['phone'])?.toString();
-        patientGender ??= _formatGender(patientMap['gender'] ?? userMap['gender'] ?? patientMap['sex']);
-        final dob = _tryParseDate(patientMap['dateOfBirth'] ?? userMap['dateOfBirth'] ?? patientMap['dob'] ?? patientMap['birthDate']);
-        final computedAge = _computeAgeFromDob(dob);
-        final rawAge = patientMap['age'] ?? userMap['age'];
-        patientAge ??= rawAge is num ? rawAge.toInt() : computedAge;
+      final firstName = patientMap['firstName']?.toString() ?? '';
+      final lastName = patientMap['lastName']?.toString() ?? '';
+      if (firstName.isNotEmpty || lastName.isNotEmpty) {
+        patientFirstName = '${firstName.trim()} ${lastName.trim()}'.trim();
       } else {
-        patientEmail ??= patientMap['email']?.toString();
-        patientPhone ??= patientMap['phone']?.toString();
-        patientGender ??= _formatGender(patientMap['gender'] ?? patientMap['sex']);
-        final dob = _tryParseDate(patientMap['dateOfBirth'] ?? patientMap['dob'] ?? patientMap['birthDate']);
-        final computedAge = _computeAgeFromDob(dob);
-        final rawAge = patientMap['age'];
-        patientAge ??= rawAge is num ? rawAge.toInt() : computedAge;
+        patientFirstName = patientMap['name']?.toString() ?? patientMap['email']?.toString() ?? 'Patient';
       }
-
-      if (patientAllergies.isEmpty) {
-        final rawAllergies = patientMap['allergies'];
-        if (rawAllergies is List) {
-          patientAllergies = rawAllergies.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
-        } else {
-          patientAllergies = const [];
-        }
-      }
-    }
-
-    // 3) Fallback patient connecté: certains backends renvoient patientId non-populé (string),
-    // donc on utilise les infos du patient connecté plutôt que d'afficher "Patient".
-    if (patientFirstName == 'Patient' && currentUser != null && currentUser.role == UserRole.patient) {
-      final name = currentUser.fullName?.toString().trim();
-      if (name != null && name.isNotEmpty) patientFirstName = name;
-      patientEmail ??= currentUser.email;
-      patientPhone ??= currentUser.phone;
-      patientGender ??= _formatGender(currentUser.gender);
-      patientAge ??= currentUser.age;
-      final a = currentUser.allergies;
-      if (patientAllergies.isEmpty && a != null && a.isNotEmpty) {
-        patientAllergies = a.map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList();
-      }
+      patientEmail = patientMap['email']?.toString();
+      patientPhone = patientMap['phone']?.toString();
     }
 
     final analysisType = appointment['analysisType']?.toString() ?? '';
@@ -241,7 +82,6 @@ class AppointmentDetailContent extends StatelessWidget {
     final notes = appointment['notes']?.toString() ?? '';
     final doctorId = appointment['doctorId'];
     final status = appointment['status']?.toString() ?? 'pending';
-    final statusColor = _getStatusColor(status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,68 +89,11 @@ class AppointmentDetailContent extends StatelessWidget {
       children: [
         // En-tête du document
         _buildDocumentHeader(),
-        const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: statusColor.withValues(alpha: 0.25)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  _getStatusMessage(status),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.25)),
-                ),
-                child: Text(
-                  _getStatusLabel(status),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: statusColor,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: 40),
         // Informations Patient
         _buildSectionHeader('INFORMATIONS PATIENT'),
         const SizedBox(height: 16),
-        _buildPatientInfo(
-          patientFirstName,
-          patientEmail,
-          patientPhone,
-          age: patientAge,
-          gender: patientGender,
-          allergies: patientAllergies,
-        ),
+        _buildPatientInfo(patientFirstName, patientEmail, patientPhone),
         const SizedBox(height: 32),
         // Médecin Référent (si disponible)
         if (doctorId != null && doctorId is Map) ...[
@@ -407,26 +190,15 @@ class AppointmentDetailContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPatientInfo(
-    String name,
-    String? email,
-    String? phone, {
-    int? age,
-    String? gender,
-    List<String> allergies = const [],
-  }) {
-    final List<TableRow> rows = [_buildTableRow('Nom complet', name)];
-
-    if (age != null) {
-      rows.add(_buildTableRow('Âge', '$age ans'));
+  Widget _buildPatientInfo(String name, String? email, String? phone) {
+    final List<TableRow> rows = [
+      _buildTableRow('Nom complet', name),
+    ];
+    if (email != null && email.isNotEmpty) {
+      rows.add(_buildTableRow('Email', email));
     }
-    if (gender != null && gender.trim().isNotEmpty) {
-      rows.add(_buildTableRow('Sexe', gender.trim()));
-    }
-    if (email != null && email.isNotEmpty) rows.add(_buildTableRow('Email', email));
-    if (phone != null && phone.isNotEmpty) rows.add(_buildTableRow('Téléphone', phone));
-    if (allergies.isNotEmpty) {
-      rows.add(_buildTableRow('Allergies', allergies.join(', ')));
+    if (phone != null && phone.isNotEmpty) {
+      rows.add(_buildTableRow('Téléphone', phone));
     }
     
     return Table(
@@ -467,7 +239,6 @@ class AppointmentDetailContent extends StatelessWidget {
   }
 
   Widget _buildDateTimeInfo(String dateString) {
-    final time = _formatTime(dateString);
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -475,7 +246,6 @@ class AppointmentDetailContent extends StatelessWidget {
       },
       children: [
         _buildTableRow('Date', _formatDate(dateString)),
-        if (time.isNotEmpty) _buildTableRow('Heure', time),
       ],
     );
   }

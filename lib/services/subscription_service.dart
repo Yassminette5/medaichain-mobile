@@ -9,11 +9,13 @@ class SubscriptionService extends ChangeNotifier {
   factory SubscriptionService() => _instance;
   SubscriptionService._();
 
+  // Test Store key (medaichain-v2) pour le développement / debug
   static const String _revenueCatApiKeyAndroid =
-      'goog_FevxHkfbvqfXDUihTjgkPBWTsMH';
-  static const String _revenueCatApiKeyIos = 'goog_FevxHkfbvqfXDUihTjgkPBWTsMH';
+      'test_mThrMrvmkejjQOaswkPPTrxmuLA';
+  // TODO: Remplacer par la vraie clé Play Store pour la production
+  static const String _revenueCatApiKeyIos = 'test_mThrMrvmkejjQOaswkPPTrxmuLA';
 
-  static const String _premiumEntitlement = 'medaichain Pro';
+  static const String _premiumEntitlement = 'Create a project called medaichain-v2 Pro';
 
   bool _isPremium = false;
   bool _isInitialized = false;

@@ -267,22 +267,16 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
               title: 'Premium - Analyses illimitées',
               subtitle:
                   'Accès illimité à l\'IA médicale\nSans publicités, priorité de traitement',
-              buttonText: _isPurchasing ? 'Achat en cours...' : 'S\'abonner',
+              buttonText: _isLoadingPackages
+                  ? 'Chargement...'
+                  : _isPurchasing
+                      ? 'Achat en cours...'
+                      : 'S\'abonner',
               buttonGradient: AppColors.aiGradient,
-              onPressed: _isPurchasing
+              onPressed: (_isLoadingPackages || _isPurchasing || _packages.isEmpty)
                   ? null
                   : () {
-                      if (_packages.isNotEmpty) {
-                        _purchase(_packages.first);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Offres non disponibles. Réessayez plus tard.',
-                            ),
-                          ),
-                        );
-                      }
+                      _purchase(_packages.first);
                     },
               badge: 'RECOMMANDÉ',
               badgeColor: AppColors.secondary,

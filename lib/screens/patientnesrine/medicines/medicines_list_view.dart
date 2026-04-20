@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../providers/medicines_provider.dart';
 import '../../../models/medicine_model.dart';
 import 'medicine_detail_screen.dart';
+import 'medical_routine_summary_screen.dart';
 
 class MedicinesListView extends StatefulWidget {
   const MedicinesListView({super.key});
@@ -72,7 +73,57 @@ class _MedicinesListViewState extends State<MedicinesListView> {
   }
 
   Widget _buildHeader() {
-    return Container(); // Placeholder or keep as is if empty
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Medication",
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Text(
+                  "Routine",
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MedicalRoutineSummaryScreen()),
+              );
+            },
+            icon: const Icon(Icons.picture_as_pdf, size: 18),
+            label: Text(
+              "Export",
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDateSelector() {
@@ -93,21 +144,21 @@ class _MedicinesListViewState extends State<MedicinesListView> {
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.secondary : Colors.white,
                 borderRadius: BorderRadius.circular(35),
-                boxShadow: isSelected 
-                  ? [
-                      BoxShadow(
-                          color: AppColors.secondary.withValues(alpha: 0.4),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                boxShadow: isSelected
+                    ? [
+                  BoxShadow(
+                    color: AppColors.secondary.withValues(alpha: 0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+                    : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
                 border: isSelected ? null : Border.all(color: Colors.grey.shade100, width: 1),
               ),
               child: Column(
@@ -165,15 +216,15 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                     width: 25,
                     height: 3.5,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        )
-                      ]
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
                     ),
                   ),
               ],
@@ -299,7 +350,7 @@ class _MedicinesListViewState extends State<MedicinesListView> {
   Widget _buildBadge(String time) {
     final label = time.replaceAll('_', ' ');
     final color = time.contains('breakfast') ? const Color(0xFF4ECDC4) : const Color(0xFFFF9B71);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

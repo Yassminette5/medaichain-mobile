@@ -13,7 +13,6 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  pdf: ^3.11.1
   mobile_scanner: ^7.1.4
   table_calendar: ^3.2.0
   fl_chart: 0.68.0
@@ -30,12 +29,11 @@ dependencies:
   file_picker: ^8.1.4
   agora_rtc_engine: ^6.3.2
   permission_handler: ^11.3.1
-  share_plus: ^10.0.0
-  purchases_flutter: ^8.9.0
-  google_mobile_ads: ^5.3.0
-  firebase_core: ^3.8.0
-  firebase_messaging: ^15.2.10
-  flutter_local_notifications: ^17.2.4
+  image_picker: ^1.1.2
+  speech_to_text: ^7.3.0
+
+  screenshot: ^3.0.0
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:776552618546:android:74afa5bf94aac0d80e3a2b",
         "android_client_info": {
-          "package_name": "com.example.madaichain"
+          "package_name": "app.medaichain.mobile"
         }
       },
       "oauth_client": [],

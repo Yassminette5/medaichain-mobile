@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../widgets/appointment_detail_content.dart';
 import 'prescription_detail_web_screen.dart';
 
 /// Écran de prescriptions/demandes adapté pour le web
@@ -16,33 +17,7 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
   List<Map<String, dynamic>> _appointments = [];
   List<Map<String, dynamic>> _filteredAppointments = [];
   bool _isLoading = true;
-
-  Map<String, dynamic> _extractPatientData(Map<String, dynamic> appointment) {
-    final patientInfo = appointment['patientInfo'];
-    if (patientInfo is Map) {
-      return Map<String, dynamic>.from(patientInfo);
-    }
-    final patientId = appointment['patientId'];
-    if (patientId is Map) {
-      return Map<String, dynamic>.from(patientId);
-    }
-    return <String, dynamic>{};
-  }
-
-  String _patientDisplayNameFrom(Map<String, dynamic> patient) {
-    final fullName = patient['fullName']?.toString().trim();
-    if (fullName != null && fullName.isNotEmpty) return fullName;
-
-    final firstName = patient['firstName']?.toString() ?? '';
-    final lastName = patient['lastName']?.toString() ?? '';
-    final combined = '${firstName.trim()} ${lastName.trim()}'.trim();
-    if (combined.isNotEmpty) return combined;
-
-    final email = patient['email']?.toString() ?? '';
-    if (email.contains('@')) return email.split('@').first;
-
-    return patient['name']?.toString() ?? 'Patient';
-  }
+  String _selectedFilter = 'En attente';
 
   @override
   void initState() {
@@ -97,14 +72,29 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
           return true;
         }
 
-        final patient = _extractPatientData(apt);
-        final patientName = _patientDisplayNameFrom(patient).toLowerCase();
-        final patientEmail = (patient['email']?.toString() ?? '').toLowerCase();
+        final patientId = apt['patientId'];
+        String patientName = '';
+        String patientEmail = '';
 
-        return patientName.contains(query) ||
-            patientEmail.contains(query);
+        if (patientId != null && patientId is Map) {
+          final firstName = patientId['firstName']?.toString() ?? '';
+          final lastName = patientId['lastName']?.toString() ?? '';
+          patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
+          patientEmail = patientId['email']?.toString() ?? '';
+        }
+
+        return patientName.toLowerCase().contains(query) ||
+            patientEmail.toLowerCase().contains(query) ||
+            (apt['analysisType']?.toString().toLowerCase() ?? '').contains(query);
       }).toList();
     });
+  }
+
+  void _applyFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
+    _filterAppointments();
   }
 
   void _showErrorSnackBar(String message) {
@@ -133,13 +123,13 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
   Color _getStatusColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return AppColors.warning;
+        return const Color(0xFFF59E0B);
       case 'accepted':
         return AppColors.success;
       case 'rejected':
         return AppColors.error;
       default:
-        return AppColors.warning;
+        return const Color(0xFFF59E0B);
     }
   }
 
@@ -160,6 +150,23 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
       }
     } catch (e) {
       return dateString;
+    }
+  }
+
+  String _getAnalysisTypeLabel(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'analyse_sanguin':
+        return 'Analyse sanguine';
+      case 'scanner':
+        return 'Scanner';
+      case 'radiologie':
+        return 'Radiologie';
+      case 'imagerie':
+        return 'Imagerie';
+      case 'biologie':
+        return 'Biologie';
+      default:
+        return type ?? 'Autre';
     }
   }
 
@@ -216,7 +223,7 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Rechercher par patient ou email...',
+                    hintText: 'Rechercher par patient, email, type d\'analyse...',
                     prefixIcon: const Icon(
                       Icons.search_rounded,
                       color: AppColors.textSecondary,
@@ -330,7 +337,9 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Aucune demande en attente pour le moment',
+                      _selectedFilter != 'Tous'
+                          ? 'Aucune demande ${_selectedFilter.toLowerCase()} pour le moment'
+                          : 'Aucune prescription n\'a été reçue pour le moment',
                       style: TextStyle(
                         fontSize: 16,
                         color: AppColors.textSecondary,
@@ -370,34 +379,115 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
     );
   }
 
+  Widget _buildFilterChip(String label, bool isSelected) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _applyFilter(label),
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.border,
+              width: 1.5,
+            ),
+            boxShadow: isSelected
+                ? [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isSelected)
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 18,
+                  color: Colors.white,
+                )
+              else
+                const SizedBox(width: 18),
+              if (isSelected) const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.textSecondary,
+                  fontWeight: isSelected
+                      ? FontWeight.w700
+                      : FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAppointmentsList() {
     return Wrap(
       spacing: 20,
       runSpacing: 20,
       children: _filteredAppointments.asMap().entries.map((entry) {
+        final index = entry.key;
         final appointment = entry.value;
 
-        // Extraire les informations du patient (patientInfo priorité, sinon patientId)
-        final patient = _extractPatientData(appointment);
-        final patientName = _patientDisplayNameFrom(patient);
-        final patientEmail = patient['email']?.toString() ?? '';
+        // Extraire les informations du patient
+        final patientId = appointment['patientId'];
+        String patientName = 'Patient';
+        String patientEmail = '';
+
+        if (patientId != null && patientId is Map) {
+          final firstName = patientId['firstName']?.toString() ?? '';
+          final lastName = patientId['lastName']?.toString() ?? '';
+          patientEmail = patientId['email']?.toString() ?? '';
+
+          if (firstName.isNotEmpty || lastName.isNotEmpty) {
+            patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
+          } else if (patientEmail.isNotEmpty) {
+            patientName = patientEmail.split('@')[0];
+          } else {
+            patientName = patientId['name']?.toString() ?? 'Patient';
+          }
+        }
 
         final status = appointment['status']?.toString() ?? 'pending';
         final statusColor = _getStatusColor(status);
         final appointmentDate = appointment['appointmentDate']?.toString() ?? '';
+        final analysisType = appointment['analysisType']?.toString() ?? '';
+        final isPending = status.toLowerCase() == 'pending';
 
         return SizedBox(
           width: 380,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cardShadow,
-                  blurRadius: 22,
-                  offset: const Offset(0, 10),
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 0,
                 ),
               ],
             ),
@@ -405,38 +495,23 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => _showAppointmentDetails(appointment),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Accent header
-                      Container(
-                        height: 6,
-                        width: 74,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                      // En-tête de la carte
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Avatar/Icone patient
                           Container(
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              gradient: AppColors.neonGradient,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.18),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(
                               Icons.person_rounded,
@@ -445,6 +520,7 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
+                          // Informations patient
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,24 +531,25 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                                       child: Text(
                                         patientName,
                                         style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w800,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
                                           color: AppColors.textPrimary,
                                           letterSpacing: -0.3,
                                         ),
                                       ),
                                     ),
+                                    // Badge de statut amélioré
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 14,
-                                        vertical: 7,
+                                        vertical: 8,
                                       ),
                                       decoration: BoxDecoration(
                                         color: statusColor.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: statusColor.withValues(alpha: 0.3),
-                                          width: 1.25,
+                                          width: 1.5,
                                         ),
                                       ),
                                       child: Row(
@@ -490,10 +567,10 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                                           Text(
                                             _getStatusLabel(status),
                                             style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w800,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
                                               color: statusColor,
-                                              letterSpacing: 0.3,
+                                              letterSpacing: 0.5,
                                             ),
                                           ),
                                         ],
@@ -507,19 +584,15 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                                     children: [
                                       Icon(
                                         Icons.email_outlined,
-                                        size: 16,
+                                        size: 14,
                                         color: AppColors.textSecondary,
                                       ),
                                       const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          patientEmail,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                      Text(
+                                        patientEmail,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -528,78 +601,169 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: AppColors.surface.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.14)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.10),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // Informations du rendez-vous
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 18,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Date demandée',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _formatDate(appointmentDate),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            child: const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 18,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
+                            if (analysisType.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Divider(height: 1),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.info.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.asset(
+                                        'assets/images/labo_icone.jpg',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            decoration: BoxDecoration(
+                                              color: AppColors.info.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: const Icon(
+                                              Icons.science_rounded,
+                                              size: 18,
+                                              color: AppColors.info,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Type d\'analyse',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _getAnalysisTypeLabel(analysisType),
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      _metaPill(
-                        icon: Icons.calendar_today_rounded,
-                        label: _formatDate(appointmentDate),
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+                      // Bouton Voir les détails
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.10),
-                              AppColors.primaryLight.withValues(alpha: 0.14),
-                              AppColors.surface,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.article_outlined, color: AppColors.primary, size: 18),
-                            const SizedBox(width: 10),
-                            const Expanded(
-                              child: Text(
-                                'Voir les détails de la demande',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.14)),
-                              ),
-                              child: const Icon(Icons.arrow_forward_rounded, size: 18, color: AppColors.primary),
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                              spreadRadius: 0,
                             ),
                           ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _showAppointmentDetails(appointment),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.visibility_rounded,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'Voir les détails',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -611,36 +775,6 @@ class _PrescriptionsWebScreenState extends State<PrescriptionsWebScreen> {
         );
 
       }).toList(),
-    );
-  }
-
-  Widget _metaPill({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.90),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.16)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

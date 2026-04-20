@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../widgets/medical_card.dart';
 import '../../medecin/screens/prescription/create_prescription_screen.dart';
+import '../../widgets/ai_assistant_chat.dart';
 
 /// Écran du dossier médical patient.
 /// Si [patientId] (et optionnellement [patientName]) sont fournis, charge les vraies données
@@ -154,6 +155,33 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => AiAssistantChat(userId: widget.patientId),
+          );
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: AppColors.aiGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withValues(alpha: 0.4),
+                blurRadius: 15,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 30),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -179,6 +207,8 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (_error != null) _buildError(),
+                        _buildAiAssistantCard(),
+                        const SizedBox(height: 20),
                         _buildPatientInfo(),
                         const SizedBox(height: 24),
                         _buildVitalSigns(),
@@ -196,6 +226,63 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiAssistantCard() {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AiAssistantChat(userId: widget.patientId),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: AppColors.aiGradient,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Besoin d\'aide ?',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Posez vos questions à l\'assistant IA sur votre dossier.',
+                    style: TextStyle(color: Colors.white, fontSize: 13, height: 1.3),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+          ],
         ),
       ),
     );
@@ -245,6 +332,27 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
           ),
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AiAssistantChat(userId: widget.patientId),
+              );
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: AppColors.aiGradient,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [BoxShadow(color: AppColors.secondary.withValues(alpha: 0.3), blurRadius: 8)],
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+            ),
+            tooltip: 'Assistant IA',
+          ),
+          const SizedBox(width: 8),
           if (widget.patientId != null && widget.patientId!.isNotEmpty)
             PopupMenuButton<String>(
               icon: Container(

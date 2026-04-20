@@ -11,7 +11,6 @@ import 'pharmacy_stock_screen.dart';
 import 'prescription_details_screen.dart';
 import 'pharmacy_profile_screen.dart';
 import 'web/pharmacy_web_dashboard.dart';
-import '../../widgets/pharmacie/mobile/pharmacy_mobile_notifications_bell.dart';
 
 /// Pharmacie Dashboard Screen - Automatically uses web version on web platform
 class PharmacieDashboardScreen extends StatelessWidget {
@@ -153,7 +152,7 @@ class _PharmacieDashboardMobileState extends State<_PharmacieDashboardMobile>
         ),
         Row(
           children: [
-            const PharmacyMobileNotificationsBell(useFilledContainer: true),
+            _buildIconButton(Icons.notifications_outlined, () {}),
             const SizedBox(width: 12),
             _buildIconButton(Icons.person_outline_rounded, () {
               Navigator.push(

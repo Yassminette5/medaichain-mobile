@@ -6,8 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/medical_card.dart';
+import '../../widgets/ai_assistant_chat.dart';
 import '../auth/login_screen.dart';
-import 'patient_upload_analysis_screen.dart';
 
 /// Tableau de Bord Patient - Espace Santé Personnel
 class PatientDashboardScreen extends StatefulWidget {
@@ -30,6 +30,34 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
           _PatientHealthView(),
           _PatientProfileView(),
         ],
+      ),
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+          );
+        },
+        child: Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            gradient: AppColors.aiGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.secondary.withValues(alpha: 0.4),
+                blurRadius: 15,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 30),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -107,11 +135,13 @@ class _PatientHomeView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(userName),
+              _buildHeader(userName, context),
+              const SizedBox(height: 20),
+              _buildAiAssistantCard(context),
               const SizedBox(height: 24),
               _buildHealthSummary(),
               const SizedBox(height: 24),
-              _buildQuickActions(context),
+              _buildQuickActions(),
               const SizedBox(height: 24),
               _buildUpcomingAppointments(),
               const SizedBox(height: 24),
@@ -123,7 +153,64 @@ class _PatientHomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(String userName) {
+  Widget _buildAiAssistantCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppColors.aiGradient,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Besoin d\'aide ?',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    'Parlez à notre assistant IA dès maintenant.',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(String userName, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -156,6 +243,27 @@ class _PatientHomeView extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            onPressed: () {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+              );
+            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, size: 20, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -236,7 +344,7 @@ class _PatientHomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -251,17 +359,13 @@ class _PatientHomeView extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildActionButton(Icons.calendar_month_rounded, 'Prendre\nRDV', AppColors.primary, null),
+              _buildActionButton(Icons.calendar_month_rounded, 'Prendre\nRDV', AppColors.primary),
               const SizedBox(width: 12),
-              _buildActionButton(Icons.description_rounded, 'Mes\nOrdonnances', AppColors.prescription, null),
+              _buildActionButton(Icons.description_rounded, 'Mes\nOrdonnances', AppColors.prescription),
               const SizedBox(width: 12),
-              _buildActionButton(Icons.upload_file_rounded, 'Ajouter\nAnalyse', AppColors.secondary, () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PatientUploadAnalysisScreen()),
-                );
-              }),
+              _buildActionButton(Icons.science_rounded, 'Mes\nAnalyses', AppColors.secondary),
               const SizedBox(width: 12),
-              _buildActionButton(Icons.chat_bubble_outline, 'Contacter\nMédecin', AppColors.diagnosis, null),
+              _buildActionButton(Icons.chat_bubble_outline, 'Contacter\nMédecin', AppColors.diagnosis),
             ],
           ),
         ],
@@ -269,28 +373,25 @@ class _PatientHomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback? onTap) {
+  Widget _buildActionButton(IconData icon, String label, Color color) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: 0.15)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(14)),
-                child: Icon(icon, color: Colors.white, size: 20),
-              ),
-              const SizedBox(height: 8),
-              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.2)),
-            ],
-          ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(14)),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(height: 8),
+            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.2)),
+          ],
         ),
       ),
     );
@@ -456,17 +557,15 @@ class _PatientHealthView extends StatelessWidget {
               const SizedBox(height: 8),
               Text('Gérez vos documents et votre dossier médical', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(height: 24),
-              _buildUploadAnalysisCard(context),
+              _buildMedicalCard('Dossier médical', 'Consultez votre historique médical complet', Icons.medical_information_rounded, AppColors.primary),
               const SizedBox(height: 12),
-              _buildMedicalCard('Dossier médical', 'Consultez votre historique médical complet', Icons.medical_information_rounded, AppColors.primary, null),
+              _buildMedicalCard('Ordonnances', 'Vos ordonnances et prescriptions actives', Icons.description_rounded, AppColors.prescription),
               const SizedBox(height: 12),
-              _buildMedicalCard('Ordonnances', 'Vos ordonnances et prescriptions actives', Icons.description_rounded, AppColors.prescription, null),
+              _buildMedicalCard('Résultats d\'analyses', 'Consultez vos résultats de laboratoire', Icons.science_rounded, AppColors.secondary),
               const SizedBox(height: 12),
-              _buildMedicalCard('Résultats d\'analyses', 'Consultez vos résultats de laboratoire', Icons.science_rounded, AppColors.secondary, null),
+              _buildMedicalCard('Vaccinations', 'Votre carnet de vaccination', Icons.vaccines_rounded, AppColors.success),
               const SizedBox(height: 12),
-              _buildMedicalCard('Vaccinations', 'Votre carnet de vaccination', Icons.vaccines_rounded, AppColors.success, null),
-              const SizedBox(height: 12),
-              _buildMedicalCard('Allergies & Antécédents', 'Vos informations médicales importantes', Icons.warning_amber_rounded, AppColors.warning, null),
+              _buildMedicalCard('Allergies & Antécédents', 'Vos informations médicales importantes', Icons.warning_amber_rounded, AppColors.warning),
             ],
           ),
         ),
@@ -474,80 +573,34 @@ class _PatientHealthView extends StatelessWidget {
     );
   }
 
-  Widget _buildUploadAnalysisCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PatientUploadAnalysisScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 5))],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-              ),
-              child: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Ajouter une analyse PDF', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text('Uploadez vos résultats d\'analyse (centre ou personnel)', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_rounded, color: Colors.white.withValues(alpha: 0.8)),
-          ],
-        ),
+  Widget _buildMedicalCard(String title, String subtitle, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
       ),
-    );
-  }
-
-  Widget _buildMedicalCard(String title, String subtitle, IconData icon, Color color, VoidCallback? onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.06), blurRadius: 15, offset: const Offset(0, 5))],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(16)),
-              child: Icon(icon, color: Colors.white, size: 24),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(16)),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textPrimary)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: AppColors.textSecondary.withValues(alpha: 0.5)),
-          ],
-        ),
+          ),
+          Icon(Icons.chevron_right, color: AppColors.textSecondary.withValues(alpha: 0.5)),
+        ],
       ),
     );
   }
@@ -563,8 +616,7 @@ class _PatientAnalysisResultsSection extends StatefulWidget {
 }
 
 class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsSection> {
-  List<dynamic> _labResults = [];
-  List<dynamic> _patientAnalyses = [];
+  List<dynamic> _results = [];
   bool _loading = true;
 
   @override
@@ -574,21 +626,11 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
     try {
-      final futures = await Future.wait([
-        ApiService.getPatientAnalysisResults(widget.userId).catchError((_) => <dynamic>[]),
-        ApiService.getPatientAnalyses().catchError((_) => <dynamic>[]),
-      ]);
-      if (mounted) {
-        setState(() {
-          _labResults = futures[0] is List ? futures[0] : [];
-          _patientAnalyses = futures[1] is List ? futures[1] : [];
-          _loading = false;
-        });
-      }
+      final list = await ApiService.getPatientAnalysisResults(widget.userId);
+      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() { _labResults = []; _patientAnalyses = []; _loading = false; });
+      if (mounted) setState(() { _results = []; _loading = false; });
     }
   }
 
@@ -615,258 +657,46 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
     }
   }
 
-  Future<void> _navigateToUpload() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const PatientUploadAnalysisScreen()),
-    );
-    if (result == true) _load();
-  }
-
-  Future<void> _deletePatientAnalysis(String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer l\'analyse ?'),
-        content: const Text('Cette action est irréversible.'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      await ApiService.deletePatientAnalysis(id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Analyse supprimée'), backgroundColor: AppColors.success),
-        );
-        _load();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final totalCount = _labResults.length + _patientAnalyses.length;
-
     return MedicalCard(
       title: 'Résultats d\'analyse',
       titleIcon: Icons.science_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Bouton ajouter
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _navigateToUpload,
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text('Ajouter un PDF d\'analyse'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_loading)
-            const Padding(
+      child: _loading
+          ? const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
             )
-          else if (totalCount == 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Aucun résultat d\'analyse pour le moment.\nAppuyez sur le bouton ci-dessus pour ajouter vos analyses.',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
-            )
-          else ...[
-            // Analyses uploadées par le patient
-            if (_patientAnalyses.isNotEmpty) ...[
-              _buildSectionHeader('Mes analyses uploadées', Icons.upload_file_rounded, AppColors.primary),
-              const SizedBox(height: 8),
-              for (int i = 0; i < _patientAnalyses.length; i++) ...[
-                if (i > 0) const SizedBox(height: 10),
-                _buildPatientAnalysisItem(_patientAnalyses[i]),
-              ],
-            ],
-            if (_patientAnalyses.isNotEmpty && _labResults.isNotEmpty) const SizedBox(height: 20),
-            // Résultats du centre d'analyse
-            if (_labResults.isNotEmpty) ...[
-              _buildSectionHeader('Résultats du centre d\'analyse', Icons.biotech_rounded, AppColors.secondary),
-              const SizedBox(height: 8),
-              for (int i = 0; i < _labResults.length; i++) ...[
-                if (i > 0) const SizedBox(height: 10),
-                _buildLabResultItem(_labResults[i]),
-              ],
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 8),
-        Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
-      ],
-    );
-  }
-
-  Widget _buildPatientAnalysisItem(dynamic a) {
-    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
-    final id = m['_id']?.toString() ?? '';
-    final title = m['title']?.toString() ?? 'Analyse';
-    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? '';
-    final typeStr = type.toString().replaceAll('_', ' ');
-    final source = m['source']?.toString() ?? '';
-    final centreName = m['centreName']?.toString() ?? '';
-    final date = m['analysisDate'];
-    String dateStr = '—';
-    if (date != null) {
-      try { dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString())); } catch (_) {}
-    }
-
-    final resultFile = m['resultFile']?.toString() ?? '';
-    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
-    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/uploads/patient-analyses/$filename' : null;
-
-    final isFromCentre = source == 'centre_analyse';
-    final color = isFromCentre ? AppColors.secondary : AppColors.primary;
-
-    final status = m['status']?.toString() ?? 'en_attente';
-    final aiAdvice = m['aiAdvice']?.toString();
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              isFromCentre ? Icons.business_rounded : Icons.person_rounded,
-              color: color,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                if (typeStr.isNotEmpty)
-                  Text(typeStr, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                if (centreName.isNotEmpty)
-                  Text(centreName, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                Row(
+          : _results.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Aucun résultat d\'analyse pour le moment.',
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(dateStr, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        isFromCentre ? 'Centre' : 'Personnel',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
-                      ),
-                    ),
-                    if (status == 'revise') ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
-                        child: const Text('Révisé', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.success)),
-                      ),
+                    for (int i = 0; i < _results.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 12),
+                      _buildResultItem(_results[i]),
                     ],
                   ],
                 ),
-                if (status == 'revise' && aiAdvice != null && aiAdvice.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppColors.successLight, borderRadius: BorderRadius.circular(8)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          const Icon(Icons.check_circle, size: 14, color: AppColors.success),
-                          const SizedBox(width: 4),
-                          const Text('Avis du Médecin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success)),
-                        ]),
-                        const SizedBox(height: 4),
-                        Text(aiAdvice, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (pdfUrl != null && pdfUrl.isNotEmpty)
-            IconButton(
-              onPressed: () => _openPdf(pdfUrl),
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 24),
-              tooltip: 'Ouvrir le PDF',
-              style: IconButton.styleFrom(backgroundColor: AppColors.error.withValues(alpha: 0.08)),
-            ),
-          if (id.isNotEmpty)
-            IconButton(
-              onPressed: () => _deletePatientAnalysis(id),
-              icon: Icon(Icons.delete_outline_rounded, color: AppColors.error.withValues(alpha: 0.7), size: 22),
-              tooltip: 'Supprimer',
-            ),
-        ],
-      ),
     );
   }
 
-  Widget _buildLabResultItem(dynamic a) {
+  Widget _buildResultItem(dynamic a) {
     final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
     final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
     final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
     final date = m['analysisDate'];
     String dateStr = '—';
     if (date != null) {
-      try { dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString())); } catch (_) {}
+      try {
+        dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+      } catch (_) {}
     }
     final lab = m['labId'];
     String labName = '';
@@ -876,21 +706,20 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
     final resultFile = m['resultFile']?.toString() ?? '';
     final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
     final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
-
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.secondary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.2)),
+        color: AppColors.secondary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.secondary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.biotech_rounded, color: AppColors.secondary, size: 20),
           ),
@@ -899,7 +728,7 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(typeStr.isNotEmpty ? typeStr : 'Résultat', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(typeStr.isNotEmpty ? typeStr : 'Résultat', style: const TextStyle(fontWeight: FontWeight.w600)),
                 if (labName.isNotEmpty) Text(labName, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 Text(dateStr, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ],
@@ -908,9 +737,9 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
           if (pdfUrl != null && pdfUrl.isNotEmpty)
             IconButton(
               onPressed: () => _openPdf(pdfUrl),
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 24),
+              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
               tooltip: 'Ouvrir le PDF',
-              style: IconButton.styleFrom(backgroundColor: AppColors.error.withValues(alpha: 0.08)),
+              style: IconButton.styleFrom(backgroundColor: AppColors.error.withValues(alpha: 0.1)),
             )
           else
             Icon(Icons.description_outlined, color: AppColors.textLight, size: 24),

@@ -4,10 +4,11 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   agora_rtc_engine
-  firebase_core
+  file_selector_windows
+  gal
   iris_method_channel
   permission_handler_windows
-  share_plus
+  speech_to_text_windows
   url_launcher_windows
 )
 

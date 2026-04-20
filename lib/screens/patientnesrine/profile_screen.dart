@@ -7,11 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
-
 import '../patientnesrine/edit_profile_screen.dart';
-import '../patientnesrine/subscription_screen.dart';
-import '../patientnesrine/document_list_screen.dart';
-import '../patient/patient_upload_analysis_screen.dart';
+import '../patientnesrine/patient_qr_screen.dart';
 
 
 class ProfileScreen extends StatelessWidget {
@@ -138,13 +135,16 @@ class ProfileScreen extends StatelessWidget {
                     builder: (context, auth, _) {
                       final user = auth.user;
                       return GestureDetector(
-                        onTap: () => _showMedicalCardModal(context, user),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PatientQrScreen()),
+                        ),
                         child: Container(
                           height: 200,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF0288D1)],
+                              colors: [Color(0xFF6C63FF), Color(0xFF8F89FF), Color(0xFFB4A5FF)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -290,79 +290,6 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // ── Plan & Abonnement ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Mon Abonnement",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Colors.grey.shade400, Colors.grey.shade600]),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: AppColors.colored(AppColors.primary),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Plan Gratuit',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Gérez votre abonnement',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white70,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right_rounded, color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
             // Access Control with Glassmorphic Design
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -452,250 +379,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showMedicalCardModal(BuildContext context, User? user) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(20),
-        child: Stack(
-          children: [
-            // Main Card Content
-            Center(
-              child: Container(
-                width: double.infinity,
-                constraints: const BoxConstraints(maxWidth: 500),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF0288D1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.5),
-                      blurRadius: 30,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 36),
-                            ),
-
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Patient Info
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Medical ID Card",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                user?.fullName?.toUpperCase() ?? "UTILISATEUR",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                                ),
-                                child: Text(
-                                  "ID: #${(user?.id != null && user!.id.length >= 8) ? user.id.substring(user.id.length - 8).toUpperCase() : (user?.id?.toUpperCase() ?? 'UNKNOWN')}",
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.monitor_weight_outlined, color: Colors.white.withOpacity(0.8), size: 18),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "${user?.weight ?? '-'} kg",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                                      child: Container(width: 1, height: 14, color: Colors.white.withOpacity(0.3)),
-                                    ),
-                                    Icon(Icons.height_rounded, color: Colors.white.withOpacity(0.8), size: 18),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "${user?.height ?? '-'} cm",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Large QR Code
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 20,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                                ),
-                                child: const Icon(
-                                  Icons.qr_code_2,
-                                  size: 180,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                "SCAN FOR MEDICAL RECORDS",
-                                style: GoogleFonts.poppins(
-                                  color: AppColors.primary.withOpacity(0.7),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 2.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Additional Info
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.info_outline, color: Colors.white, size: 20),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  "This QR code contains your medical information",
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white.withOpacity(0.95),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Close Button
-            Positioned(
-              top: 40,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildAccessTile(String title, bool isActive, IconData icon) {
     return Container(
@@ -746,7 +429,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// Section Résultats d'analyse dans le profil patient
+/// Section Résultats d'analyse dans My Medical Card (profil patient)
 class _ProfileAnalysisResultsSection extends StatefulWidget {
   const _ProfileAnalysisResultsSection({required this.userId});
   final String userId;
@@ -756,8 +439,7 @@ class _ProfileAnalysisResultsSection extends StatefulWidget {
 }
 
 class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsSection> {
-  List<dynamic> _labResults = [];
-  List<dynamic> _patientAnalyses = [];
+  List<dynamic> _results = [];
   bool _loading = true;
 
   @override
@@ -767,21 +449,11 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
     try {
-      final futures = await Future.wait([
-        ApiService.getPatientAnalysisResults(widget.userId).catchError((_) => <dynamic>[]),
-        ApiService.getPatientAnalyses().catchError((_) => <dynamic>[]),
-      ]);
-      if (mounted) {
-        setState(() {
-          _labResults = futures[0] is List ? futures[0] : [];
-          _patientAnalyses = futures[1] is List ? futures[1] : [];
-          _loading = false;
-        });
-      }
+      final list = await ApiService.getPatientAnalysisResults(widget.userId);
+      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() { _labResults = []; _patientAnalyses = []; _loading = false; });
+      if (mounted) setState(() { _results = []; _loading = false; });
     }
   }
 
@@ -808,61 +480,15 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
     }
   }
 
-  Future<void> _navigateToUpload() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const PatientUploadAnalysisScreen()),
-    );
-    if (result == true) _load();
-  }
-
-  Future<void> _deletePatientAnalysis(String id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Supprimer l'analyse ?", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text("Cette action est irréversible.", style: GoogleFonts.poppins()),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Annuler', style: GoogleFonts.poppins(color: AppColors.textGrey)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Supprimer', style: GoogleFonts.poppins(color: AppColors.error, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      await ApiService.deletePatientAnalysis(id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Analyse supprimée'), backgroundColor: AppColors.success),
-        );
-        _load();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final totalCount = _labResults.length + _patientAnalyses.length;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Mon dossier",
+            "Résultats d'analyse",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -870,60 +496,124 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
             ),
           ),
           const SizedBox(height: 16),
-          // Action: Accéder au dossier (HEAD)
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DocumentListScreen(
-                    title: 'Mon dossier',
-                    icon: Icons.folder_shared_rounded,
-                    gradient: LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
+          _loading
+              ? Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: AppColors.small,
                   ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: AppColors.small,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
-                      borderRadius: BorderRadius.circular(14),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    child: const Icon(Icons.folder_shared_rounded, color: Colors.white),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                )
+              : _results.isEmpty
+                  ? Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: AppColors.small,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.science_rounded, color: AppColors.primary, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              "Aucun résultat d'analyse pour le moment.",
+                              style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Column(
                       children: [
-                        Text(
-                          'Mon dossier médical',
-                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
-                        ),
-                        Text(
-                          "Analyses, ordonnances, examens",
-                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
-                        ),
+                        for (int i = 0; i < _results.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          _buildResultItem(_results[i]),
+                        ],
                       ],
                     ),
-                  ),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
-                ],
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultItem(dynamic a) {
+    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
+    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
+    final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
+    final date = m['analysisDate'];
+    String dateStr = '—';
+    if (date != null) {
+      try {
+        dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+      } catch (_) {}
+    }
+    final lab = m['labId'];
+    String labName = '';
+    if (lab is Map<String, dynamic>) {
+      labName = lab['centreName'] ?? lab['name'] ?? '';
+    }
+    final resultFile = m['resultFile']?.toString() ?? '';
+    final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
+    final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.small,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.biotech_rounded, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  typeStr.isNotEmpty ? typeStr : 'Résultat',
+                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                ),
+                if (labName.isNotEmpty)
+                  Text(labName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
+          if (pdfUrl != null && pdfUrl.isNotEmpty)
+            IconButton(
+              onPressed: () => _openPdf(pdfUrl),
+              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
+              tooltip: 'Ouvrir le PDF',
+              style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.1)),
+            )
+          else
+            Icon(Icons.description_outlined, color: AppColors.textGrey, size: 24),
         ],
       ),
     );

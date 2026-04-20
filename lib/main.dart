@@ -1,31 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-import 'firebase_options.dart';
-import 'services/notification_service.dart';
-
-
-
-
 // Clinique Imports
 import 'theme/app_theme.dart' as clinique_theme;
 import 'screens/clinique/web/dashboard_main_screen.dart';
-
-// Patient Imports
 import 'core/theme/app_theme.dart' as patient_theme;
 import 'providers/auth_provider.dart';
 import 'providers/medicines_provider.dart';
 import 'providers/calendar_provider.dart';
 import 'providers/patients_provider.dart';
 import 'services/api_service.dart';
-import 'services/subscription_service.dart';
-import 'services/ad_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/login_web_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -41,30 +29,16 @@ import 'screens/web/medecin_web_dashboard.dart';
 import 'screens/web/center_dashboard_web.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
 
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Register background handler before any Firebase init
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Test sur téléphone réel : décommenter et mettre l'IP de ton PC (même WiFi, ex: 192.168.1.10)
   // ApiService.backendUrlOverride = 'http://192.168.1.10:3000';
 
-  // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)
   await initializeDateFormatting('fr_FR', null);
 
-// Initialize Firebase for push notifications (merged from preprod3)
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('✅ Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('❌ Firebase initialization error: $e');
-    rethrow;
-  }
+  // Éviter LocaleDataException (DateFormat avec 'fr_FR' dans l'agenda, etc.)
+  await initializeDateFormatting('fr_FR', null);
 
   try {
     // Important en prod si l'app web est servie derrière un backend (ex: Nest/Express)
@@ -76,10 +50,6 @@ Future<void> main() async {
 
     // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
     await ApiService.enforceRememberPolicyOnStartup();
-
-    // Initialiser RevenueCat et AdMob
-    await SubscriptionService().initialize();
-    await AdService().initialize();
   } catch (e, st) {
     // En web, SharedPreferences ou l'init peuvent échouer (ex: mode privé).
     // On affiche l'app quand même ; l'utilisateur pourra se connecter.
@@ -89,7 +59,6 @@ Future<void> main() async {
       rethrow;
     }
   }
-
   try {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -115,28 +84,12 @@ Future<void> main() async {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Erreur d\'affichage',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
+                const Text('Erreur d\'affichage', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red)),
                 const SizedBox(height: 12),
-                SelectableText(
-                  details.exceptionAsString(),
-                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                ),
+                SelectableText(details.exceptionAsString(), style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
                 if (details.stack != null) ...[
                   const SizedBox(height: 12),
-                  SelectableText(
-                    details.stack.toString(),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
+                  SelectableText(details.stack.toString(), style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
                 ],
               ],
             ),
@@ -145,8 +98,6 @@ Future<void> main() async {
       );
     };
   }
-
-  NotificationService().attachNavigatorKey(rootNavigatorKey);
 
   runApp(const MEDAIChainApp());
 }
@@ -164,17 +115,14 @@ class MEDAIChainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
-        navigatorKey: rootNavigatorKey,
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,
         initialRoute: kIsWeb ? '/login' : '/',
         routes: {
           // Mobile: onboarding si pas de session mémorisée, sinon aller direct à l'app
-          '/': (context) =>
-              kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
-          '/login': (context) =>
-              kIsWeb ? const LoginWebScreen() : const LoginScreen(),
+          '/': (context) => kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
+          '/login': (context) => kIsWeb ? const LoginWebScreen() : const LoginScreen(),
           '/welcome': (context) => const WelcomeScreen(),
           '/dashboard': (context) => const DashboardMainScreen(),
           '/patient_home': (context) => const AuthWrapper(),
@@ -188,10 +136,8 @@ class MEDAIChainApp extends StatelessWidget {
           // Compat: certains liens anciens pointent vers des pages *.html (éviter une navigation cassée)
           '/clinique_dashboard.html': (context) => const MedecinWebDashboard(),
           '/centre_dashboard.html': (context) => const CenterDashboardWeb(),
-          '/centre_analyse_dashboard.html': (context) =>
-              const CenterDashboardWeb(),
-          '/pharmacie_dashboard.html': (context) =>
-              const PharmacieDashboardScreen(),
+          '/centre_analyse_dashboard.html': (context) => const CenterDashboardWeb(),
+          '/pharmacie_dashboard.html': (context) => const PharmacieDashboardScreen(),
           // Ancien écran de sélection (si besoin plus tard)
           '/launcher': (context) => const AppLauncherScreen(),
         },
@@ -211,19 +157,11 @@ class AppLauncherScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.health_and_safety,
-              size: 80,
-              color: Color(0xFF0D47A1),
-            ),
+            const Icon(Icons.health_and_safety, size: 80, color: Color(0xFF0D47A1)),
             const SizedBox(height: 20),
             const Text(
               'Bienvenue sur MEDAIChain',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
             ),
             const SizedBox(height: 12),
             Text(
@@ -231,7 +169,7 @@ class AppLauncherScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 48),
-
+            
             // Espace Clinique Button
             InkWell(
               onTap: () {
@@ -241,16 +179,10 @@ class AppLauncherScreen extends StatelessWidget {
                 width: 300,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2E5BFF), Color(0xFF0030E5)],
-                  ),
+                  gradient: const LinearGradient(colors: [Color(0xFF2E5BFF), Color(0xFF0030E5)]),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2E5BFF).withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
+                    BoxShadow(color: const Color(0xFF2E5BFF).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
                 child: const Row(
@@ -260,18 +192,14 @@ class AppLauncherScreen extends StatelessWidget {
                     SizedBox(width: 12),
                     Text(
                       'ESPACE CLINIQUE',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
-
+            
             // Connexion Professionnelle (Pharmacie, Centre d'Analyse, Admin)
             _buildEspaceButton(
               context: context,
@@ -280,9 +208,10 @@ class AppLauncherScreen extends StatelessWidget {
               subtitle: 'Pharmacie · Laboratoire · Admin',
               icon: Icons.local_hospital,
               colors: const [Color(0xFF2E5BFF), Color(0xFF0030E5)],
+
             ),
             const SizedBox(height: 24),
-
+            
             // Espace Patient Button
             InkWell(
               onTap: () {
@@ -292,16 +221,10 @@ class AppLauncherScreen extends StatelessWidget {
                 width: 300,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF10B981), Color(0xFF059669)],
-                  ),
+                  gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
+                    BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
                   ],
                 ),
                 child: const Row(
@@ -311,11 +234,7 @@ class AppLauncherScreen extends StatelessWidget {
                     SizedBox(width: 12),
                     Text(
                       'ESPACE PATIENT',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -344,11 +263,7 @@ class AppLauncherScreen extends StatelessWidget {
           gradient: LinearGradient(colors: colors),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(
-              color: colors[0].withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
+            BoxShadow(color: colors[0].withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
           ],
         ),
         child: Row(
@@ -368,30 +283,19 @@ class AppLauncherScreen extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
                     ),
                   ],
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.7),
-              size: 18,
-            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.7), size: 18),
           ],
         ),
       ),
@@ -409,15 +313,12 @@ class AuthWrapper extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final authProvider = Provider.of<AuthProvider>(context);
-          if (authProvider.isLoading)
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+          if (authProvider.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
           if (authProvider.isLoggedIn) {
             return const MainScreen();
           }
           return const WelcomeScreen();
-        },
+        }
       ),
     );
   }

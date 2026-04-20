@@ -38,29 +38,23 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
       for (var appointment in appointments) {
         final status = appointment['status']?.toString().toLowerCase();
         if (status == 'accepted') {
-          final patientRaw = appointment['patientInfo'] ?? appointment['patientId'];
-          if (patientRaw != null && patientRaw is Map) {
-            final patientMap = Map<String, dynamic>.from(patientRaw);
+          final patientId = appointment['patientId'];
+          if (patientId != null && patientId is Map) {
+            final patientMap = Map<String, dynamic>.from(patientId);
             final patientIdStr = patientMap['_id']?.toString() ??
                 patientMap['id']?.toString() ??
-                (patientMap['email']?.toString() ?? '');
+                '';
 
             if (patientIdStr.isNotEmpty && !uniquePatients.containsKey(patientIdStr)) {
-              // Compter le nombre de rendez-vous acceptés pour ce patient (par id ou email)
-              final patientEmail = patientMap['email']?.toString();
+              // Compter le nombre de rendez-vous acceptés pour ce patient
               final appointmentCount = appointments.where((apt) {
                 final aptStatus = apt['status']?.toString().toLowerCase();
-                if (aptStatus != 'accepted') return false;
-                final aptPatientRaw = apt['patientInfo'] ?? apt['patientId'];
-                if (aptPatientRaw is Map) {
-                  final aptPatientMap = Map<String, dynamic>.from(aptPatientRaw);
+                final aptPatientId = apt['patientId'];
+                if (aptPatientId != null && aptPatientId is Map) {
+                  final aptPatientMap = Map<String, dynamic>.from(aptPatientId);
                   final aptPatientIdStr = aptPatientMap['_id']?.toString() ??
-                      aptPatientMap['id']?.toString() ??
-                      (aptPatientMap['email']?.toString() ?? '');
-                  if (aptPatientIdStr.isNotEmpty) return aptPatientIdStr == patientIdStr;
-                  if (patientEmail != null && patientEmail.isNotEmpty) {
-                    return (aptPatientMap['email']?.toString() ?? '') == patientEmail;
-                  }
+                      aptPatientMap['id']?.toString() ?? '';
+                  return aptStatus == 'accepted' && aptPatientIdStr == patientIdStr;
                 }
                 return false;
               }).length;
@@ -130,8 +124,7 @@ class _PatientsWebScreenState extends State<PatientsWebScreen> {
 
   void _openPatientHistory(Map<String, dynamic> patient) {
     final patientId = patient['_id']?.toString() ??
-        patient['id']?.toString() ??
-        (patient['email']?.toString() ?? '');
+        patient['id']?.toString() ?? '';
     final patientName = _getPatientName(patient);
     final patientEmail = _getPatientEmail(patient);
 

@@ -7,6 +7,7 @@ class Patient {
   final DateTime? dateOfBirth;
   final String? gender;
   final String? bloodType;
+  final String? emergencyContact;
   final List<String> allergies;
   final List<String> chronicDiseases;
   final String? phone;
@@ -24,6 +25,7 @@ class Patient {
     this.dateOfBirth,
     this.gender,
     this.bloodType,
+    this.emergencyContact,
     this.allergies = const [],
     this.chronicDiseases = const [],
     this.phone,
@@ -80,6 +82,7 @@ class Patient {
           : null,
       gender: json['gender'] ?? userMap['gender'],
       bloodType: json['bloodType'],
+      emergencyContact: json['emergencyContact'],
       allergies: json['allergies'] != null
           ? List<String>.from(json['allergies'])
           : [],
@@ -103,6 +106,7 @@ class Patient {
       'dateOfBirth': dateOfBirth?.toIso8601String(),
       'gender': gender,
       'bloodType': bloodType,
+      'emergencyContact': emergencyContact,
       'allergies': allergies,
       'chronicDiseases': chronicDiseases,
       'phone': phone,

@@ -5,6 +5,9 @@ import '../patientnesrine/document_list_screen.dart';
 import '../../core/theme/app_colors.dart';
 import 'medicines/medicines_list_view.dart';
 import 'medicines/add_medicine_screen.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/ai_assistant_chat.dart';
+import 'package:provider/provider.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});
@@ -59,17 +62,21 @@ class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProvider
                           fontSize: 22,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
                           ),
-                        ),
-                        child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                        ],
                       ),
                     ],
                   ),

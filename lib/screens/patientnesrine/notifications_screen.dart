@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
-import 'lab_appointment_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -164,25 +163,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             isUnread: !isRead,
                             onTap: () {
                               if (!isRead) _markAsRead(id);
-                              if (type == 'appointment') {
-                                final data = notif['data'];
-                                String? appointmentId;
-                                if (data is Map) {
-                                  appointmentId = (data['appointmentId'] ?? data['appointment_id'] ?? data['id'])?.toString();
-                                }
-                                appointmentId ??= (notif['appointmentId'] ?? notif['appointment_id'])?.toString();
-                                if (appointmentId != null && appointmentId.trim().isNotEmpty) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => LabAppointmentDetailScreen(
-                                        appointmentId: appointmentId!.trim(),
-                                        notificationData: data is Map ? Map<String, dynamic>.from(data) : null,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
                             },
                           );
                         },

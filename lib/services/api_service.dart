@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
@@ -37,6 +39,9 @@ class ApiService {
     }
     return 'http://127.0.0.1:3000';
   }
+
+  /// Base URL pour le serveur IA local (Flask sur port 5000)
+  static String get aiBaseUrl => 'https://5200-34-77-165-174.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -658,6 +663,54 @@ class ApiService {
       return deleteMedicine(id);
     } else {
       throw Exception('Erreur de suppression du médicament');
+    }
+  }
+
+  // ========== DOCUMENTS MÉDICAUX ==========
+  static Future<Map<String, dynamic>> uploadMedicalDocument({
+    required List<int> fileBytes,
+    required String fileName,
+    required String category,
+    required String title,
+  }) async {
+    final token = await getAccessToken();
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/medical/documents'));
+    
+    request.headers.addAll({
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields['category'] = category;
+    request.fields['title'] = title;
+    
+    // Inférence du content type pour le backend
+    String contentType = 'application/pdf';
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
+    else if (lower.endsWith('.png')) contentType = 'image/png';
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      fileBytes,
+      filename: fileName,
+      contentType: MediaType.parse(contentType),
+    ));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return uploadMedicalDocument(
+        fileBytes: fileBytes,
+        fileName: fileName,
+        category: category,
+        title: title,
+      );
+    } else {
+      throw Exception('Failed to upload document');
     }
   }
 
@@ -3426,33 +3479,38 @@ class ApiService {
     bool? is24Hours,
     bool? hasDelivery,
   }) async {
-    final queryParams = <String, String>{};
-    if (city != null && city.isNotEmpty) queryParams['city'] = city;
-    if (wilaya != null && wilaya.isNotEmpty) queryParams['wilaya'] = wilaya;
-    if (is24Hours != null) queryParams['is24Hours'] = is24Hours.toString();
-    if (hasDelivery != null) queryParams['hasDelivery'] = hasDelivery.toString();
+    try {
+      final queryParams = <String, String>{};
+      if (city != null) queryParams['city'] = city;
+      if (wilaya != null) queryParams['wilaya'] = wilaya;
+      if (is24Hours != null) queryParams['is24Hours'] = is24Hours.toString();
+      if (hasDelivery != null) queryParams['hasDelivery'] = hasDelivery.toString();
 
-    final uri = Uri.parse('$baseUrl/pharmacy/list/all').replace(
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
+      final listUri = Uri.parse('$baseUrl/pharmacy/list/all').replace(queryParameters: queryParams);
+      debugPrint('🔍 Fetching pharmacies from $listUri');
 
-    final response = await http.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final pharmacies =
-          data is List ? data : (data is Map && data['data'] is List ? data['data'] : []);
-      return List<Map<String, dynamic>>.from(
-        (pharmacies as List).map((p) => Map<String, dynamic>.from(p as Map)),
+      final response = await http.get(
+        listUri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       );
-    }
 
-    throw Exception('Erreur de chargement des pharmacies: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final pharmacies = data is List ? data : (data['data'] is List ? data['data'] : []);
+        debugPrint('✅ Fetch pharmacies success: ${ (pharmacies as List).length } items');
+
+        return List<Map<String, dynamic>>.from(
+          pharmacies.map((p) => Map<String, dynamic>.from(p as Map))
+        );
+      } else {
+        throw Exception('Failed to load pharmacies: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error fetching pharmacies: $e');
+      rethrow;
+    }
   }
 
   static Future<Map<String, dynamic>> getPharmacyDetails(String pharmacyId) async {
@@ -3868,4 +3926,210 @@ class ApiService {
       throw Exception(error['message'] ?? 'Erreur lors de la validation');
     }
   }
+
+  // ========== MISSING METHODS FROM NESSRINE ==========
+
+  static Future<Map<String, dynamic>> getMedicationInfo(String name) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/medicines/info/$name'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMedicationInfo(name);
+    } else {
+      throw Exception('Failed to get medication info');
+    }
+  }
+
+  static Future<http.Response> getMedicationReport() async {
+    final token = await getAccessToken();
+    return await http.get(
+      Uri.parse('$baseUrl/medicines/report'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  static Future<List<dynamic>> getAiConversationMessages(String conversationId) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/ai/conversations/$conversationId/messages'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getAiConversationMessages(conversationId);
+    } else {
+      throw Exception('Failed to get AI conversation messages');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createAiConversation(String firstMessage) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/ai/conversations'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'firstMessage': firstMessage,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return createAiConversation(firstMessage);
+    } else {
+      throw Exception('Failed to create AI conversation');
+    }
+  }
+
+  static Future<void> addAiMessage({
+    required String conversationId,
+    String? role,
+    required String content,
+    required String type,
+  }) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/ai/conversations/$conversationId/messages'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'role': role,
+        'content': content,
+        'type': type,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return addAiMessage(
+        conversationId: conversationId,
+        role: role,
+        content: content,
+        type: type,
+      );
+    } else {
+      throw Exception('Failed to add AI message');
+    }
+  }
+
+  static Future<String> analyzeImage({required String filePath}) async {
+    final token = await getAccessToken();
+    final file = File(filePath);
+    final bytes = await file.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/analyze-image'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'image': base64Image,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['result'] ?? '';
+    } else {
+      throw Exception('Failed to analyze image');
+    }
+  }
+
+  static Future<String> chatWithAI({
+    required String message,
+  }) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/chat'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'message': message,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['response'] ?? '';
+    } else {
+      throw Exception('Failed to chat with AI');
+    }
+  }
+
+  static Future<List<dynamic>> getAiConversations() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/ai/conversations'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getAiConversations();
+    } else {
+      throw Exception('Failed to get AI conversations');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMySummaryUrl() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/patient/summary-url'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMySummaryUrl();
+    } else {
+      throw Exception('Failed to get summary URL');
+    }
+  }
+
+  static Future<Uint8List> getQRCodeBytes(String data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/qr/generate'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'data': data,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      throw Exception('Failed to generate QR code');
+    }
+  }
+
+
+
 }

@@ -35,7 +35,7 @@ class _SignupScreenState extends State<SignupScreen>
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   int _currentStep = 0; // 0 = personal info, 1 = password + terms
-
+  
   // Invitation parameters
   String? _inviteToken;
   String? _inviteRole;
@@ -52,20 +52,20 @@ class _SignupScreenState extends State<SignupScreen>
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
-
+    
     // Extract URL parameters if on web
     if (kIsWeb) {
       _extractUrlParameters();
     }
   }
-
+  
   void _extractUrlParameters() {
     // Get URL parameters from browser
     final uri = Uri.base;
     _inviteToken = uri.queryParameters['token'];
     _inviteRole = uri.queryParameters['role'];
     _inviteEmail = uri.queryParameters['email'];
-
+    
     // Pre-fill email if from invitation
     if (_inviteEmail != null && _inviteEmail!.isNotEmpty) {
       _emailController.text = Uri.decodeComponent(_inviteEmail!);
@@ -146,7 +146,7 @@ class _SignupScreenState extends State<SignupScreen>
             top: 400,
             left: -60,
             child: _buildOrb(
-                150, AppColors.primaryLight.withValues(alpha: 0.12))),
+                150, AppColors.prescription.withValues(alpha: 0.1))),
       ],
     );
   }
@@ -765,7 +765,7 @@ class _SignupScreenState extends State<SignupScreen>
         // Normal registration (patient only)
         const UserRole role = UserRole.patient;
         final fullName = _nameController.text.trim();
-
+        
         success = await authProvider.register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
