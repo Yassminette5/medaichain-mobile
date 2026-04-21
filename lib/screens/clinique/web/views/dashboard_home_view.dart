@@ -23,11 +23,15 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
   late AnimationController _staggerController;
   late AnimationController _heartbeatController;
   late Animation<double> _heartbeatAnim;
+  bool _isAnalyzing = false;
+  List<Map<String, dynamic>> _aiResults = [];
+  bool _isLoadingAiResults = false;
 
   @override
   void initState() {
     super.initState();
     _dashboardStats = ApiService.getDashboardStats();
+    _loadAiResults();
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -68,6 +72,32 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
     setState(() {
       _dashboardStats = ApiService.getDashboardStats();
     });
+    _loadAiResults();
+  }
+
+  Future<void> _loadAiResults() async {
+    if (_isLoadingAiResults) return;
+    setState(() => _isLoadingAiResults = true);
+    try {
+      final results = await ApiService.getClinicAiResults();
+      
+      // Trier par niveau de risque : les patients les plus à risque d'abord.
+      // Le 'riskScore' est la probabilité d'adhérence. 
+      // Plus elle est basse, plus le risque d'abandon est élevé.
+      // On trie donc par score croissant (du plus faible au plus élevé).
+      results.sort((a, b) {
+        final double scoreA = (a['riskScore'] ?? 0).toDouble();
+        final double scoreB = (b['riskScore'] ?? 0).toDouble();
+        return scoreA.compareTo(scoreB);
+      });
+
+      if (mounted) setState(() => _aiResults = results);
+    } catch (e) {
+      debugPrint('[AI] Erreur chargement résultats: $e');
+
+    } finally {
+      if (mounted) setState(() => _isLoadingAiResults = false);
+    }
   }
 
   @override
@@ -146,14 +176,11 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                     true,
                   ))),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildStaggeredKpi(3, _buildKpiCard(
-                    'Médecins actifs',
-                    totalDoctors.toString(),
-                    Icons.medical_information_rounded,
-                    AppTheme.indigo,
-                    AppTheme.purpleGradient,
-                    'Staff',
-                    true,
+                  Expanded(child: _buildStaggeredKpi(3, _buildAiKpiCard(
+                    'Patients à risque (IA)',
+                    (overview['highRiskAdherencePatients'] ?? 0).toString(),
+                    Icons.psychology_alt_rounded,
+                    Colors.redAccent,
                   ))),
                 ],
               ),
@@ -196,6 +223,10 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                   )),
                 ],
               ),
+              const SizedBox(height: 28),
+
+              // ======= 🧠 ALERTES IA — Adhérence =======
+              _buildAiAlertsSection(),
               const SizedBox(height: 28),
 
               // ======= Charts Row =======
@@ -623,6 +654,544 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
       ),
     );
   }
+
+  Widget _buildAiKpiCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: AppTheme.cardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              ElevatedButton(
+                onPressed: _isAnalyzing ? null : () async {
+                  setState(() => _isAnalyzing = true);
+                  try {
+                    final result = await ApiService.triggerClinicAdherenceAnalysis();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${result['analyzed']} dossiers analysés avec Kaggle !'), backgroundColor: AppTheme.primaryMedical)
+                      );
+                      _refresh();
+                    }
+                  } catch (e) {
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Erreur: Vérifiez l\'URL IA'), backgroundColor: Colors.red));
+                  } finally {
+                    if (mounted) setState(() => _isAnalyzing = false);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryMedical,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: _isAnalyzing 
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Text('Lancer', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.darkNavy,
+              letterSpacing: -1,
+            ),
+          ),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ======= 🧠 AI ALERTS SECTION (PRO) =======
+  Widget _buildAiAlertsSection() {
+    final highCount = _aiResults.where((r) => r['riskLevel'] == 'élevé').length;
+    final medCount = _aiResults.where((r) => r['riskLevel'] == 'modéré').length;
+    final lowCount = _aiResults.where((r) => r['riskLevel'] == 'faible').length;
+    final total = _aiResults.length;
+    final healthScore = total > 0 ? ((lowCount / total) * 100).round() : 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 24, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ═══════ GRADIENT HEADER ═══════
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Intelligence Artificielle',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Prédiction d\'adhérence au traitement • Modèle Kaggle',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        // Bouton Lancer
+                        ElevatedButton.icon(
+                          onPressed: _isAnalyzing ? null : () async {
+                            setState(() => _isAnalyzing = true);
+                            try {
+                              final result = await ApiService.triggerClinicAdherenceAnalysis();
+                              await _loadAiResults();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('✅ ${result['analyzed']} patients analysés avec succès !'),
+                                    backgroundColor: const Color(0xFF22C55E),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('❌ Erreur: Vérifiez la configuration IA (🤖)'),
+                                    backgroundColor: Colors.redAccent,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) setState(() => _isAnalyzing = false);
+                            }
+                          },
+                          icon: _isAnalyzing
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1E1B4B)))
+                              : const Icon(Icons.play_arrow_rounded, size: 20),
+                          label: Text(_isAnalyzing ? 'Analyse en cours...' : 'Lancer l\'analyse'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF1E1B4B),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                            textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _loadAiResults,
+                          icon: const Icon(Icons.refresh_rounded, color: Colors.white70, size: 22),
+                          tooltip: 'Actualiser',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                // ═══ Stats Summary Cards ═══
+                if (_aiResults.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      _buildHeaderStat('Patients analysés', '$total', Icons.people_alt_rounded, const Color(0xFF818CF8)),
+                      const SizedBox(width: 12),
+                      _buildHeaderStat('Risque élevé', '$highCount', Icons.warning_amber_rounded, const Color(0xFFFB7185)),
+                      const SizedBox(width: 12),
+                      _buildHeaderStat('Risque modéré', '$medCount', Icons.info_outline_rounded, const Color(0xFFFBBF24)),
+                      const SizedBox(width: 12),
+                      _buildHeaderStat('Santé globale', '$healthScore%', Icons.favorite_rounded, const Color(0xFF34D399)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // ═══════ TABLE CONTENT ═══════
+          if (_isLoadingAiResults)
+            const Padding(
+              padding: EdgeInsets.all(48),
+              child: Center(child: CircularProgressIndicator(color: Color(0xFF4338CA))),
+            )
+          else if (_aiResults.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(48),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F3FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.analytics_outlined, size: 48, color: Color(0xFFA78BFA)),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aucune analyse disponible',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.darkNavy),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Cliquez sur "Lancer l\'analyse" pour détecter les patients à risque d\'abandon',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Table Header
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(flex: 4, child: Text('PATIENT & RECOMMANDATION IA', style: _tableHeaderStyle())),
+                        Expanded(flex: 2, child: Text('SCORE', style: _tableHeaderStyle())),
+                        Expanded(flex: 2, child: Text('NIVEAU', style: _tableHeaderStyle())),
+                        Expanded(flex: 1, child: Text('CONFIANCE', style: _tableHeaderStyle())),
+                        Expanded(flex: 2, child: Text('ACTION', style: _tableHeaderStyle())),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Table Rows
+                  ...List.generate(_aiResults.length, (i) => _buildAiPatientRow(_aiResults[i], i)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  TextStyle _tableHeaderStyle() {
+    return GoogleFonts.plusJakartaSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: const Color(0xFF94A3B8),
+      letterSpacing: 1.0,
+    );
+  }
+
+  Widget _buildHeaderStat(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: Colors.white60)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiPatientRow(Map<String, dynamic> r, int index) {
+    final rawAdherenceScore = (r['riskScore'] ?? 0).toDouble();
+    // Inverser le score pour afficher le "Risque d'abandon" plutôt que "Probabilité d'adhérence"
+    // Ainsi, un haut risque (ex: 22% adhérence) deviendra 78% (Risque Élevé), très intuitif !
+    final score = 100 - rawAdherenceScore; 
+
+    final level = r['riskLevel'] ?? 'faible';
+    final isHigh = level == 'élevé';
+    final isMed = level == 'modéré';
+    final confidence = (r['confidence'] ?? 0).toDouble();
+    final riskFactors = List<String>.from(r['riskFactors'] ?? []);
+    final recommendation = r['recommendation'] ?? r['recommendedAction'] ?? 'Suivi standard';
+
+    Color badgeColor = const Color(0xFF22C55E);
+    Color badgeBg = const Color(0xFFDCFCE7);
+    String badgeLabel = 'Faible';
+    IconData levelIcon = Icons.check_circle_rounded;
+
+    if (isHigh) {
+      badgeColor = const Color(0xFFEF4444);
+      badgeBg = const Color(0xFFFEE2E2);
+      badgeLabel = 'Élevé';
+      levelIcon = Icons.error_rounded;
+    } else if (isMed) {
+      badgeColor = const Color(0xFFF59E0B);
+      badgeBg = const Color(0xFFFEF3C7);
+      badgeLabel = 'Modéré';
+      levelIcon = Icons.warning_rounded;
+    }
+
+    final name = r['patientName'] ?? 'Patient';
+    final initials = name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.substring(0, 1).toUpperCase();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isHigh ? const Color(0xFFFFF5F5) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHigh ? const Color(0xFFFECACA) : isMed ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
+          width: isHigh ? 1.5 : 1,
+        ),
+        boxShadow: isHigh ? [BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4))] : [],
+      ),
+      child: Column(
+        children: [
+          // ═══ Main Row ═══
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isHigh
+                          ? [const Color(0xFFEF4444), const Color(0xFFF97316)]
+                          : isMed
+                              ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]
+                              : [const Color(0xFF6366F1), const Color(0xFF818CF8)],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [BoxShadow(color: badgeColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
+                  ),
+                  child: Center(
+                    child: Text(initials, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                // Nom + description
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                      const SizedBox(height: 2),
+                      Text(
+                        recommendation,
+                        style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // Score + bar
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${score.toStringAsFixed(1)}%',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w900, color: badgeColor),
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: score / 100,
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          color: badgeColor,
+                          minHeight: 5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(levelIcon, size: 15, color: badgeColor),
+                      const SizedBox(width: 5),
+                      Text(badgeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: badgeColor)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Confiance IA
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F3FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF7C3AED)),
+                      const SizedBox(width: 4),
+                      Text('${confidence.toStringAsFixed(0)}%', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF7C3AED))),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Action Button
+                isHigh || isMed
+                  ? ElevatedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('📞 Rappel planifié pour $name'),
+                            backgroundColor: const Color(0xFF4338CA),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      },
+                      icon: Icon(isHigh ? Icons.phone_rounded : Icons.sms_rounded, size: 14),
+                      label: Text(isHigh ? 'Appeler' : 'SMS'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: badgeColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                        textStyle: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF22C55E)),
+                          const SizedBox(width: 5),
+                          Text('Stable', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E))),
+                        ],
+                      ),
+                    ),
+              ],
+            ),
+          ),
+
+          // ═══ Risk Factors Tags ═══
+          if (riskFactors.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(76, 0, 18, 14),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: riskFactors.map((f) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: badgeColor.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isHigh ? Icons.report_problem_rounded : isMed ? Icons.info_outline_rounded : Icons.check_rounded,
+                        size: 11,
+                        color: badgeColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        f,
+                        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w600, color: badgeColor.withOpacity(0.9)),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
 
   // ======= QUICK ACTION =======
   Widget _buildQuickAction(String title, String subtitle, IconData icon, Color color, int targetIndex) {

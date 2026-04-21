@@ -1546,6 +1546,7 @@ class ApiService {
     String? reason,
     String? patientName,
     String? doctorName,
+    int? patientAge,
   }) async {
     final body = <String, dynamic>{
       'doctorId': doctorId,
@@ -1558,6 +1559,7 @@ class ApiService {
       body['patientName'] = patientName;
     if (doctorName != null && doctorName.isNotEmpty)
       body['doctorName'] = doctorName;
+    if (patientAge != null) body['patientAge'] = patientAge;
 
     final response = await http.post(
       Uri.parse(
@@ -4127,5 +4129,38 @@ class ApiService {
     } else {
       throw Exception('Failed to generate QR code');
     }
+  }
+
+  // ================= CLINIC AI ANALYSIS =================
+  static Future<List<dynamic>> getClinicAiResults() async {
+    final token = await getAccessToken();
+    final clinicId = await _getClinicId();
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinic-management/my/ai-results'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> triggerClinicAdherenceAnalysis() async {
+    final token = await getAccessToken();
+    final clinicId = await _getClinicId();
+    final response = await http.post(
+      Uri.parse('$baseUrl/clinic-management/my/ai-analysis'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    }
+    throw Exception('Failed to trigger AI analysis');
   }
 }
