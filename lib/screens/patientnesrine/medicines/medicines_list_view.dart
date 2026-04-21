@@ -144,21 +144,21 @@ class _MedicinesListViewState extends State<MedicinesListView> {
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.secondary : Colors.white,
                 borderRadius: BorderRadius.circular(35),
-                boxShadow: isSelected
-                    ? [
-                  BoxShadow(
-                    color: AppColors.secondary.withValues(alpha: 0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-                    : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                boxShadow: isSelected 
+                  ? [
+                      BoxShadow(
+                          color: AppColors.secondary.withValues(alpha: 0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                 border: isSelected ? null : Border.all(color: Colors.grey.shade100, width: 1),
               ),
               child: Column(
@@ -216,15 +216,15 @@ class _MedicinesListViewState extends State<MedicinesListView> {
                     width: 25,
                     height: 3.5,
                     decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
                     ),
                   ),
               ],
@@ -338,6 +338,10 @@ class _MedicinesListViewState extends State<MedicinesListView> {
               ),
             ),
             IconButton(
+              onPressed: () => _showMedicineInfo(med),
+              icon: Icon(Icons.info_outline_rounded, color: AppColors.primary.withOpacity(0.7)),
+            ),
+            IconButton(
               onPressed: () {},
               icon: const Icon(Icons.more_vert, color: AppColors.textGrey),
             ),
@@ -347,14 +351,165 @@ class _MedicinesListViewState extends State<MedicinesListView> {
     );
   }
 
+  void _showMedicineInfo(Medicine med) async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return FutureBuilder<Map<String, dynamic>>(
+            future: context.read<MedicinesProvider>().getMedicationInfo(med.name),
+            builder: (context, snapshot) {
+              return Container(
+                height: MediaQuery.of(context).size.height * 0.75,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10))),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: _buildInfoContent(snapshot),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInfoContent(AsyncSnapshot<Map<String, dynamic>> snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+    if (snapshot.hasError || !snapshot.hasData) {
+      return Center(child: Text("Erreur lors de la récupération des données", style: GoogleFonts.poppins()));
+    }
+
+    final data = snapshot.data!;
+    final type = data['type']?.toString();
+
+    if (type == 'paragraph') {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search_off_rounded, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(data['message'] ?? "Informations non trouvées", textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textGrey)),
+          ],
+        ),
+      );
+    }
+
+    if (type == 'medicine') {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Text('💊', style: TextStyle(fontSize: 40)),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    data['brand'] ?? 'Médicament',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildInfoRow('🧬', 'Generic name', data['generic'] ?? 'N/A'),
+            _buildInfoRow('⚖️', 'Strength', data['strength'] ?? 'N/A'),
+            _buildInfoRow('🎯', 'Used for', data['used_for'] ?? 'N/A'),
+            _buildInfoRow('🔬', 'How it works', data['how_it_works'] ?? 'N/A'),
+            _buildInfoRow('📋', 'Dosage', data['dosage'] ?? 'N/A'),
+            _buildInfoRow('🏷️', 'Drug class', data['drug_class'] ?? 'N/A'),
+            const SizedBox(height: 40),
+          ],
+        ),
+      );
+    }
+
+    return Center(child: Text("Format de réponse inconnu"));
+  }
+
+  Widget _buildInfoRow(String icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(icon, style: const TextStyle(fontSize: 20)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: AppColors.textGrey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBadge(String time) {
     final label = time.replaceAll('_', ' ');
     final color = time.contains('breakfast') ? const Color(0xFF4ECDC4) : const Color(0xFFFF9B71);
-
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ConstrainedBox(

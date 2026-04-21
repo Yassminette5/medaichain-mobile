@@ -21,6 +21,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   String _frequency = 'Daily';
   String _description = '';
   bool _isLoadingInfo = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -45,10 +46,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     });
 
     try {
-      final info = await context.read<MedicinesProvider>().getMedicationInfo(_nameController.text);
+      final data = await context.read<MedicinesProvider>().getMedicationInfo(_nameController.text);
       if (mounted) {
+        String displayInfo = '';
+        if (data['type'] == 'paragraph') {
+          displayInfo = data['message'] ?? '';
+        } else if (data['type'] == 'medicine') {
+          final inst = data['instructions'] ?? {};
+          displayInfo = inst['used_for'] ?? inst['generic_name'] ?? '';
+        }
+        
         setState(() {
-          _description = info['description'] ?? '';
+          _description = displayInfo;
         });
       }
     } catch (e) {
@@ -95,7 +104,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             const SizedBox(height: 40),
             _buildFieldLabel("Medicine Name"),
             _buildTextField(_nameController, "e.g., Panadol", focusNode: _nameFocusNode),
-            if (_isLoadingInfo)
+            if (_isLoadingInfo) 
               const Padding(
                 padding: EdgeInsets.only(top: 8.0),
                 child: LinearProgressIndicator(color: AppColors.primary, backgroundColor: Colors.transparent),
@@ -300,31 +309,31 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         _buildFieldLabel(label),
         GestureDetector(
           onTap: () {
-            // Simple dialog or bottom sheet to pick options
-            showModalBottomSheet(
-              context: context,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-              builder: (context) => Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("Select $label", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
-                    const SizedBox(height: 16),
-                    ...options.map((opt) => ListTile(
-                      title: Text(opt, style: GoogleFonts.poppins()),
-                      onTap: () {
-                        setState(() {
-                          if (label == "Duration") _duration = opt;
-                          if (label == "Frequency") _frequency = opt;
-                        });
-                        Navigator.pop(context);
-                      },
-                    )).toList(),
-                  ],
-                ),
-              ),
-            );
+             // Simple dialog or bottom sheet to pick options
+             showModalBottomSheet(
+               context: context,
+               shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+               builder: (context) => Container(
+                 padding: const EdgeInsets.all(24),
+                 child: Column(
+                   mainAxisSize: MainAxisSize.min,
+                   children: [
+                     Text("Select $label", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18)),
+                     const SizedBox(height: 16),
+                     ...options.map((opt) => ListTile(
+                       title: Text(opt, style: GoogleFonts.poppins()),
+                       onTap: () {
+                         setState(() {
+                           if (label == "Duration") _duration = opt;
+                           if (label == "Frequency") _frequency = opt;
+                         });
+                         Navigator.pop(context);
+                       },
+                     )).toList(),
+                   ],
+                 ),
+               ),
+             );
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -368,16 +377,25 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
         ),
-        child: Text(
-          "Add Reminder",
-          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
+        child: _isSubmitting
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+            )
+          : Text(
+              "Add Reminder",
+              style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
       ),
     );
   }
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty) return;
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
 
     final medicine = Medicine(
       id: '',
@@ -394,9 +412,35 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       isActive: true,
     );
 
-    final success = await context.read<MedicinesProvider>().addMedicine(medicine);
-    if (success && mounted) {
-      Navigator.pop(context);
+    try {
+      final success = await context.read<MedicinesProvider>().addMedicine(medicine);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Succès ! Rappel ajouté.'),
+            backgroundColor: Color(0xFF4ECDC4),
+          ),
+        );
+        Navigator.pop(context);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'ajout. Réessaie.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 }

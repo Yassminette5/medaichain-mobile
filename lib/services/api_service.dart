@@ -40,8 +40,7 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
-  /// Base URL pour le serveur IA local (Flask sur port 5000)
-  static String get aiBaseUrl => 'https://5200-34-77-165-174.ngrok-free.app';
+  static String get aiBaseUrl => 'https://5bea-34-85-169-31.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -4129,7 +4128,4 @@ class ApiService {
       throw Exception('Failed to generate QR code');
     }
   }
-
-
-
 }
