@@ -121,8 +121,8 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        // Backend: PDF uniquement
-        allowedExtensions: ['pdf'],
+        // Backend: PDF et Images
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
         allowMultiple: false,
       );
 
@@ -130,10 +130,10 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
         final picked = result.files.single;
         final name = picked.name.toLowerCase();
         final ext = name.contains('.') ? name.split('.').last : '';
-        if (ext != 'pdf') {
+        if (!['pdf', 'png', 'jpg', 'jpeg'].contains(ext)) {
           _showErrorDialog(
             title: 'Format non autorisé',
-            message: 'Seul le format PDF est accepté.',
+            message: 'Seuls les formats PDF, JPG, JPEG et PNG sont acceptés.',
           );
           return;
         }
@@ -155,17 +155,17 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     }
 
     if (_selectedFile == null || _selectedFile!.bytes == null) {
-      _showErrorDialog(title: 'Fichier manquant', message: 'Veuillez sélectionner un fichier PDF.');
+      _showErrorDialog(title: 'Fichier manquant', message: 'Veuillez sélectionner un fichier (PDF ou Image).');
       return;
     }
 
     // Double sécurité côté front
     final fileName = _selectedFile!.name.toLowerCase();
     final ext = fileName.contains('.') ? fileName.split('.').last : '';
-    if (ext != 'pdf') {
+    if (!['pdf', 'png', 'jpg', 'jpeg'].contains(ext)) {
       _showErrorDialog(
         title: 'Format non autorisé',
-        message: 'Seul le format PDF est accepté.',
+        message: 'Seuls les formats PDF, JPG, JPEG et PNG sont acceptés.',
       );
       return;
     }
@@ -923,7 +923,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-                  'PDF uniquement (jusqu’à 50MB)',
+                  'PDF ou Images (PNG, JPG) jusqu’à 50MB',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,

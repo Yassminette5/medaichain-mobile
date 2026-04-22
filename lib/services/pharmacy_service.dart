@@ -20,7 +20,7 @@ class PharmacyService {
   static Future<Map<String, String>> _headers() async {
     final token = await ApiService.getAccessToken();
     if (token == null || token.isEmpty) {
-      throw Exception('Non connectÃ©');
+      throw Exception('Non connecte');
     }
     return {
       'Content-Type': 'application/json',
@@ -31,7 +31,10 @@ class PharmacyService {
   // ================= DASHBOARD (MY) =================
   static Future<PharmacyDashboard> getMyDashboard() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/my/dashboard'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/dashboard'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -45,12 +48,16 @@ class PharmacyService {
   }
 
   // Legacy wrapper (fedibenman code expects a pharmacyId)
-  static Future<PharmacyDashboard> getDashboard(String pharmacyId) async => getMyDashboard();
+  static Future<PharmacyDashboard> getDashboard(String pharmacyId) async =>
+      getMyDashboard();
 
   // ================= STOCK (MY) =================
   static Future<PharmacyStock> getMyStock() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/my/stock'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/stock'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -63,9 +70,12 @@ class PharmacyService {
     }
   }
 
-  static Future<PharmacyStock> getStock(String pharmacyId) async => getMyStock();
+  static Future<PharmacyStock> getStock(String pharmacyId) async =>
+      getMyStock();
 
-  static Future<MedicationStock> createMyStock(Map<String, dynamic> stockData) async {
+  static Future<MedicationStock> createMyStock(
+    Map<String, dynamic> stockData,
+  ) async {
     final headers = await _headers();
     final response = await http.post(
       Uri.parse('$baseUrl/pharmacy/my/stock'),
@@ -85,9 +95,15 @@ class PharmacyService {
     }
   }
 
-  static Future<MedicationStock> createStock(String pharmacyId, Map<String, dynamic> stockData) async => createMyStock(stockData);
+  static Future<MedicationStock> createStock(
+    String pharmacyId,
+    Map<String, dynamic> stockData,
+  ) async => createMyStock(stockData);
 
-  static Future<MedicationStock> updateMyStock(String stockId, Map<String, dynamic> updates) async {
+  static Future<MedicationStock> updateMyStock(
+    String stockId,
+    Map<String, dynamic> updates,
+  ) async {
     final headers = await _headers();
     final response = await http.put(
       Uri.parse('$baseUrl/pharmacy/my/stock/$stockId'),
@@ -105,13 +121,21 @@ class PharmacyService {
       throw Exception('MÃ©dicament non trouvÃ©');
     } else if (response.statusCode == 400) {
       final errorData = jsonDecode(response.body);
-      throw Exception('Erreur de validation: ${errorData['message'] ?? 'DonnÃ©es invalides'}');
+      throw Exception(
+        'Erreur de validation: ${errorData['message'] ?? 'DonnÃ©es invalides'}',
+      );
     } else {
-      throw Exception('Erreur lors de la mise Ã  jour du stock (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Erreur lors de la mise Ã  jour du stock (${response.statusCode}): ${response.body}',
+      );
     }
   }
 
-  static Future<MedicationStock> updateStock(String pharmacyId, String stockId, Map<String, dynamic> updates) async => updateMyStock(stockId, updates);
+  static Future<MedicationStock> updateStock(
+    String pharmacyId,
+    String stockId,
+    Map<String, dynamic> updates,
+  ) async => updateMyStock(stockId, updates);
 
   static Future<void> deleteMyStock(String stockId) async {
     final headers = await _headers();
@@ -130,11 +154,15 @@ class PharmacyService {
     }
   }
 
-  static Future<void> deleteStock(String pharmacyId, String stockId) async => deleteMyStock(stockId);
+  static Future<void> deleteStock(String pharmacyId, String stockId) async =>
+      deleteMyStock(stockId);
 
   static Future<StockSettings> getMyStockSettings() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/my/stock/settings'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/stock/settings'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -147,9 +175,12 @@ class PharmacyService {
     }
   }
 
-  static Future<StockSettings> getStockSettings(String pharmacyId) async => getMyStockSettings();
+  static Future<StockSettings> getStockSettings(String pharmacyId) async =>
+      getMyStockSettings();
 
-  static Future<StockSettings> updateMyStockSettings(Map<String, dynamic> settings) async {
+  static Future<StockSettings> updateMyStockSettings(
+    Map<String, dynamic> settings,
+  ) async {
     final headers = await _headers();
     final response = await http.put(
       Uri.parse('$baseUrl/pharmacy/my/stock/settings'),
@@ -168,12 +199,18 @@ class PharmacyService {
     }
   }
 
-  static Future<StockSettings> updateStockSettings(String pharmacyId, Map<String, dynamic> settings) async => updateMyStockSettings(settings);
+  static Future<StockSettings> updateStockSettings(
+    String pharmacyId,
+    Map<String, dynamic> settings,
+  ) async => updateMyStockSettings(settings);
 
   // ================= STATISTICS (MY) =================
   static Future<PharmacyStatistics> getMyStatistics() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/my/statistics'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/statistics'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -186,10 +223,39 @@ class PharmacyService {
     }
   }
 
-  static Future<PharmacyStatistics> getStatistics(String pharmacyId) async => getMyStatistics();
+  static Future<PharmacyStatistics> getStatistics(String pharmacyId) async =>
+      getMyStatistics();
+
+  // ================= MEDICATION STATISTICS (MY) =================
+  static Future<List<TopMedication>> getMyMedicationStatistics({
+    String? month,
+  }) async {
+    final headers = await _headers();
+    final query = (month != null && month.trim().isNotEmpty)
+        ? '?month=${Uri.encodeQueryComponent(month.trim())}'
+        : '';
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/medication-statistics$query'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+      return data
+          .map((item) => TopMedication.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getMyMedicationStatistics(month: month);
+    } else {
+      throw Exception('Failed to load medication statistics');
+    }
+  }
 
   // ================= REQUESTS (MY) =================
-  static Future<List<MedicationRequest>> getMyRequests({RequestStatus? status}) async {
+  static Future<List<MedicationRequest>> getMyRequests({
+    RequestStatus? status,
+  }) async {
     final headers = await _headers();
     String url = '$baseUrl/pharmacy/my/requests';
     if (status != null && status != RequestStatus.tout) {
@@ -208,9 +274,15 @@ class PharmacyService {
     }
   }
 
-  static Future<List<MedicationRequest>> getRequests(String pharmacyId, {RequestStatus? status}) async => getMyRequests(status: status);
+  static Future<List<MedicationRequest>> getRequests(
+    String pharmacyId, {
+    RequestStatus? status,
+  }) async => getMyRequests(status: status);
 
-  static Future<MedicationRequest> updateMyRequest(String requestId, Map<String, dynamic> updates) async {
+  static Future<MedicationRequest> updateMyRequest(
+    String requestId,
+    Map<String, dynamic> updates,
+  ) async {
     final headers = await _headers();
     final response = await http.put(
       Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
@@ -229,7 +301,29 @@ class PharmacyService {
     }
   }
 
-  static Future<MedicationRequest> updateRequest(String pharmacyId, String requestId, Map<String, dynamic> updates) async => updateMyRequest(requestId, updates);
+  static Future<MedicationRequest> updateRequest(
+    String pharmacyId,
+    String requestId,
+    Map<String, dynamic> updates,
+  ) async => updateMyRequest(requestId, updates);
+
+  static Future<MedicationRequest> getMyRequestById(String requestId) async {
+    final headers = await _headers();
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return MedicationRequest.fromJson(data);
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getMyRequestById(requestId);
+    } else {
+      throw Exception('Failed to load request');
+    }
+  }
 
   static Future<void> deleteMyRequest(String requestId) async {
     final headers = await _headers();
@@ -248,12 +342,18 @@ class PharmacyService {
     }
   }
 
-  static Future<void> deleteRequest(String pharmacyId, String requestId) async => deleteMyRequest(requestId);
+  static Future<void> deleteRequest(
+    String pharmacyId,
+    String requestId,
+  ) async => deleteMyRequest(requestId);
 
   // ================= AVAILABLE MEDICATIONS =================
   static Future<List<dynamic>> getMyAvailableMedications() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/my/available-medications'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/available-medications'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as List<dynamic>;
@@ -266,7 +366,9 @@ class PharmacyService {
   }
 
   /// Public endpoint for patients: GET /pharmacy/:pharmacyId/available-medications
-  static Future<List<dynamic>> getAvailableMedications(String pharmacyId) async {
+  static Future<List<dynamic>> getAvailableMedications(
+    String pharmacyId,
+  ) async {
     final headers = await _headers();
     final response = await http.get(
       Uri.parse('$baseUrl/pharmacy/$pharmacyId/available-medications'),
@@ -286,7 +388,10 @@ class PharmacyService {
   // ================= PATIENT/PUBLIC =================
   static Future<List<dynamic>> getAllPharmacies() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/list/all'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/list/all'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as List<dynamic>;
@@ -299,7 +404,10 @@ class PharmacyService {
   }
 
   /// Patient -> Pharmacie: POST /pharmacy/:pharmacyId/requests
-  static Future<MedicationRequest> createRequest(String pharmacyId, Map<String, dynamic> requestData) async {
+  static Future<MedicationRequest> createRequest(
+    String pharmacyId,
+    Map<String, dynamic> requestData,
+  ) async {
     final headers = await _headers();
     final response = await http.post(
       Uri.parse('$baseUrl/pharmacy/$pharmacyId/requests'),
@@ -321,7 +429,10 @@ class PharmacyService {
   // ================= PROFILE =================
   static Future<Map<String, dynamic>> getPharmacyProfile() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/profile'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/profile'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -335,7 +446,10 @@ class PharmacyService {
 
   static Future<Map<String, dynamic>> getPharmacyProfileRaw() async {
     final headers = await _headers();
-    final response = await http.get(Uri.parse('$baseUrl/pharmacy/profile/raw'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/profile/raw'),
+      headers: headers,
+    );
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
@@ -348,12 +462,30 @@ class PharmacyService {
   }
 
   // Legacy signature used by imported UI (pharmacyId is ignored on preprod1; resolved from JWT).
-  static Future<void> updatePharmacySettings(String pharmacyId, Map<String, dynamic> settings) async {
+  static Future<void> updatePharmacySettings(
+    String pharmacyId,
+    Map<String, dynamic> settings,
+  ) async {
     final headers = await _headers();
+
+    // Normalize field names for consistency
+    final normalizedSettings = Map<String, dynamic>.from(settings);
+
+    // Handle both old and new field names for backward compatibility
+    if (normalizedSettings.containsKey('notificationsEnabled')) {
+      normalizedSettings['hasNotifications'] =
+          normalizedSettings['notificationsEnabled'];
+      normalizedSettings.remove('notificationsEnabled');
+    }
+    if (normalizedSettings.containsKey('offersDelivery')) {
+      normalizedSettings['hasDelivery'] = normalizedSettings['offersDelivery'];
+      normalizedSettings.remove('offersDelivery');
+    }
+
     final response = await http.put(
       Uri.parse('$baseUrl/pharmacy/profile'),
       headers: headers,
-      body: jsonEncode(settings),
+      body: jsonEncode(normalizedSettings),
     );
 
     if (response.statusCode == 200) {
@@ -369,12 +501,18 @@ class PharmacyService {
   }
 
   // ================= PASSWORD =================
-  static Future<void> changePassword({required String currentPassword, required String newPassword}) async {
+  static Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
     final headers = await _headers();
     final response = await http.post(
       Uri.parse('$baseUrl/auth/change-password'),
       headers: headers,
-      body: jsonEncode({'currentPassword': currentPassword, 'newPassword': newPassword}),
+      body: jsonEncode({
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -383,7 +521,10 @@ class PharmacyService {
       final errorBody = jsonDecode(response.body);
       if (errorBody['message']?.contains('refresh') == true) {
         await ApiService.refreshToken();
-        return changePassword(currentPassword: currentPassword, newPassword: newPassword);
+        return changePassword(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        );
       } else {
         throw Exception('Mot de passe actuel incorrect');
       }

@@ -9,6 +9,10 @@ import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../patientnesrine/edit_profile_screen.dart';
 import '../patientnesrine/patient_qr_screen.dart';
+import '../patientnesrine/document_list_screen.dart';
+import '../patient/patient_upload_analysis_screen.dart';
+import '../patientnesrine/ocr_analyze_screen.dart';
+import '../patientnesrine/ocr_document_detail_screen.dart';
 
 
 class ProfileScreen extends StatelessWidget {
@@ -429,7 +433,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// Section Résultats d'analyse dans My Medical Card (profil patient)
+/// Section Résultats d'analyse dans le profil patient
 class _ProfileAnalysisResultsSection extends StatefulWidget {
   const _ProfileAnalysisResultsSection({required this.userId});
   final String userId;
@@ -439,7 +443,8 @@ class _ProfileAnalysisResultsSection extends StatefulWidget {
 }
 
 class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsSection> {
-  List<dynamic> _results = [];
+  List<dynamic> _labResults = [];
+  List<dynamic> _patientAnalyses = [];
   bool _loading = true;
 
   @override
@@ -449,11 +454,21 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
   }
 
   Future<void> _load() async {
+    setState(() => _loading = true);
     try {
-      final list = await ApiService.getPatientAnalysisResults(widget.userId);
-      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
+      final futures = await Future.wait([
+        ApiService.getPatientAnalysisResults(widget.userId).catchError((_) => <dynamic>[]),
+        ApiService.getPatientAnalyses().catchError((_) => <dynamic>[]),
+      ]);
+      if (mounted) {
+        setState(() {
+          _labResults = futures[0] is List ? futures[0] : [];
+          _patientAnalyses = futures[1] is List ? futures[1] : [];
+          _loading = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() { _results = []; _loading = false; });
+      if (mounted) setState(() { _labResults = []; _patientAnalyses = []; _loading = false; });
     }
   }
 
@@ -480,15 +495,61 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
     }
   }
 
+  Future<void> _navigateToUpload() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PatientUploadAnalysisScreen()),
+    );
+    if (result == true) _load();
+  }
+
+  Future<void> _deletePatientAnalysis(String id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Supprimer l'analyse ?", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text("Cette action est irréversible.", style: GoogleFonts.poppins()),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Annuler', style: GoogleFonts.poppins(color: AppColors.textGrey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Supprimer', style: GoogleFonts.poppins(color: AppColors.error, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ApiService.deletePatientAnalysis(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Analyse supprimée'), backgroundColor: AppColors.success),
+        );
+        _load();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final totalCount = _labResults.length + _patientAnalyses.length;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Résultats d'analyse",
+            "Mon dossier",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -496,6 +557,88 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
             ),
           ),
           const SizedBox(height: 16),
+          // Accéder au dossier médical
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DocumentListScreen(
+                    title: 'Mon dossier',
+                    icon: Icons.folder_shared_rounded,
+                    gradient: LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppColors.small,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF8F89FF)]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.folder_shared_rounded, color: Colors.white),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mon dossier médical',
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                        ),
+                        Text(
+                          "Analyses, ordonnances, examens",
+                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Titre de la liste
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Résultats d'analyse",
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$totalCount document${totalCount > 1 ? 's' : ''}',
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
           _loading
               ? Container(
                   padding: const EdgeInsets.symmetric(vertical: 24),
@@ -512,7 +655,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                     ),
                   ),
                 )
-              : _results.isEmpty
+              : totalCount == 0
                   ? Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -533,7 +676,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(
-                              "Aucun résultat d'analyse pour le moment.",
+                              "Aucun résultat d'analyse pour le moment.\nAjoutez-en via le bouton ci-dessus.",
                               style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textGrey),
                             ),
                           ),
@@ -542,9 +685,17 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                     )
                   : Column(
                       children: [
-                        for (int i = 0; i < _results.length; i++) ...[
+                        // Lab results
+                        for (int i = 0; i < _labResults.length; i++) ...[
                           if (i > 0) const SizedBox(height: 12),
-                          _buildResultItem(_results[i]),
+                          _buildLabResultItem(_labResults[i]),
+                        ],
+                        if (_labResults.isNotEmpty && _patientAnalyses.isNotEmpty)
+                          const SizedBox(height: 12),
+                        // Patient-uploaded analyses
+                        for (int i = 0; i < _patientAnalyses.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          _buildPatientAnalysisItem(_patientAnalyses[i]),
                         ],
                       ],
                     ),
@@ -553,7 +704,7 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
     );
   }
 
-  Widget _buildResultItem(dynamic a) {
+  Widget _buildLabResultItem(dynamic a) {
     final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
     final type = m['analysisType'] ?? m['analysisTypeOther'] ?? 'Analyse';
     final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
@@ -572,49 +723,161 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
     final resultFile = m['resultFile']?.toString() ?? '';
     final filename = resultFile.contains('/') ? resultFile.split('/').last : resultFile;
     final pdfUrl = filename.isNotEmpty ? '${ApiService.baseUrl}/lab/uploads/results/$filename' : null;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.small,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OcrDocumentDetailScreen(document: m)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppColors.small,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.biotech_rounded, color: AppColors.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    typeStr.isNotEmpty ? typeStr : 'Résultat',
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                  ),
+                  if (labName.isNotEmpty)
+                    Text(labName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                  Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                ],
+              ),
+            ),
+            if (pdfUrl != null && pdfUrl.isNotEmpty)
+              IconButton(
+                onPressed: () => _openPdf(pdfUrl),
+                icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
+                tooltip: 'Ouvrir le PDF',
+                style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.1)),
+              )
+            else
+              Icon(Icons.chevron_right_rounded, color: AppColors.textGrey, size: 24),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+    );
+  }
+
+  Widget _buildPatientAnalysisItem(dynamic a) {
+    final m = a is Map<String, dynamic> ? a : <String, dynamic>{};
+    final title = m['title']?.toString() ?? '';
+    final type = m['analysisType'] ?? m['analysisTypeOther'] ?? '';
+    final typeStr = type.toString().replaceAll('_', ' ').toLowerCase();
+    final label = title.isNotEmpty ? title : (typeStr.isNotEmpty ? typeStr : 'Analyse');
+    final date = m['analysisDate'] ?? m['createdAt'];
+    String dateStr = '—';
+    if (date != null) {
+      try {
+        dateStr = DateFormat('dd MMM yyyy', 'fr_FR').format(DateTime.parse(date.toString()));
+      } catch (_) {}
+    }
+    final centreName = m['centreName']?.toString() ?? '';
+    final source = m['source']?.toString() ?? '';
+    final id = m['_id']?.toString() ?? '';
+    final imageName = m['image_name']?.toString() ?? '';
+    final isImage = imageName.toLowerCase().endsWith('.jpg') ||
+        imageName.toLowerCase().endsWith('.jpeg') ||
+        imageName.toLowerCase().endsWith('.png') ||
+        imageName.toLowerCase().endsWith('.webp');
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OcrDocumentDetailScreen(document: m)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppColors.small,
+          border: Border.all(color: AppColors.success.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.success.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isImage ? Icons.image_rounded : Icons.description_rounded,
+                color: AppColors.success,
+                size: 20,
+              ),
             ),
-            child: Icon(Icons.biotech_rounded, color: AppColors.primary, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  typeStr.isNotEmpty ? typeStr : 'Résultat',
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
-                ),
-                if (labName.isNotEmpty)
-                  Text(labName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-                Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
-              ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                  ),
+                  if (centreName.isNotEmpty)
+                    Text(centreName, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                  Row(
+                    children: [
+                      Text(dateStr, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey)),
+                      if (source.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: source == 'patient'
+                                ? AppColors.success.withOpacity(0.1)
+                                : AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            source == 'patient' ? 'Personnel' : 'Centre',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: source == 'patient' ? AppColors.success : AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (pdfUrl != null && pdfUrl.isNotEmpty)
-            IconButton(
-              onPressed: () => _openPdf(pdfUrl),
-              icon: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 28),
-              tooltip: 'Ouvrir le PDF',
-              style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.1)),
-            )
-          else
-            Icon(Icons.description_outlined, color: AppColors.textGrey, size: 24),
-        ],
+            if (id.isNotEmpty)
+              IconButton(
+                onPressed: () => _deletePatientAnalysis(id),
+                icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
+                tooltip: 'Supprimer',
+                style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.08)),
+              ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right_rounded, color: AppColors.textGrey, size: 22),
+          ],
+        ),
       ),
     );
   }

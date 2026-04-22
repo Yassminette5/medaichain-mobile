@@ -69,10 +69,13 @@ class _OcrAnalyzeScreenState extends State<OcrAnalyzeScreen> {
         title: Text('Analyse OCR', style: GoogleFonts.poppins(fontWeight: FontWeight.w700)),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -159,6 +162,8 @@ class _OcrAnalyzeScreenState extends State<OcrAnalyzeScreen> {
               ),
             ],
           ],
+        ),
+      ),
         ),
       ),
     );

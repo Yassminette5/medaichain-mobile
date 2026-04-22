@@ -4175,4 +4175,29 @@ class ApiService {
     }
     throw Exception('Failed to trigger AI analysis');
   }
+
+  static Future<List<dynamic>> getMedicalDocuments({required String category}) async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/medical/documents?category=$category'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else {
+      throw Exception('Failed to load documents');
+    }
+  }
+
+  static Future<void> deleteMedicalDocument(String id) async {
+    final token = await getAccessToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/medical/documents/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete document');
+    }
+  }
 }
+

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 // Clinique Imports
@@ -28,6 +27,10 @@ import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/web/medecin_web_dashboard.dart';
 import 'screens/web/center_dashboard_web.dart';
 import 'screens/pharmacie/pharmacie_dashboard_screen.dart';
+import 'screens/centre_analyse/home_centre_analyse.dart';
+import 'medecin/screens/dashboard/dashboard_screen.dart';
+import 'screens/clinique/mobile/home_admin_clinique_mobile.dart';
+import 'models/user_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -308,16 +311,45 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    if (authProvider.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    
+    if (!authProvider.isLoggedIn) {
+      return const WelcomeScreen();
+    }
+
+    final user = authProvider.user;
+    final userRole = user?.role ?? UserRole.patient;
+    final userEmail = user?.email ?? '';
+    
+    // Theme selection based on role (optional but recommended)
+    final themeData = (userRole == UserRole.patient) 
+        ? patient_theme.AppTheme.lightTheme 
+        : clinique_theme.AppTheme.lightTheme;
+
     return Theme(
-      data: patient_theme.AppTheme.lightTheme,
+      data: themeData,
       child: Builder(
         builder: (context) {
-          final authProvider = Provider.of<AuthProvider>(context);
-          if (authProvider.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          if (authProvider.isLoggedIn) {
+          // Rediriger vers le bon dashboard selon le rôle
+          if (userEmail.toLowerCase() == 'admin@medaichain.com' || 
+              userEmail.toLowerCase().contains('admin')) {
+            return const AdminDashboardScreen();
+          } else if (userRole == UserRole.centreAnalyse) {
+            return kIsWeb ? const CenterDashboardWeb() : const HomeCentreAnalyse();
+          } else if (userRole == UserRole.pharmacie) {
+            return const PharmacieDashboardScreen();
+          } else if (userRole == UserRole.medecin) {
+            return const DashboardScreen();
+          } else if (userRole == UserRole.clinique) {
+            return kIsWeb ? const DashboardMainScreen() : const HomeAdminCliniqueMobile();
+          } else {
+            // Patient
             return const MainScreen();
           }
-          return const WelcomeScreen();
         }
       ),
     );

@@ -403,6 +403,7 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
         _aiAnalyses.insert(0, {
           'diagnosis': response['diagnosis'] ?? 'Pas de diagnostic',
           'advice': response['advice'] ?? '',
+          'regime': response['regime'] ?? response['diet'] ?? '',
           'prescriptions': response['prescription_suggestions'] ?? [],
           'emergency_level': response['emergency_level'] ?? 'faible',
           'timestamp': DateTime.now().toIso8601String(),
@@ -416,6 +417,16 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
             'recommendation': response['advice'],
             'confidence': response['confidence'] ?? 0.85,
             'sources': response['sources'] ?? ['IA: $_aiProvider'],
+          });
+        }
+        
+        if ((response['regime'] != null && response['regime'].toString().isNotEmpty) || 
+            (response['diet'] != null && response['diet'].toString().isNotEmpty)) {
+          _recommendations.insert(0, {
+            'title': 'Régime Alimentaire Suggéré',
+            'recommendation': response['regime'] ?? response['diet'],
+            'confidence': response['confidence'] ?? 0.80,
+            'sources': ['Analyse Diététique IA'],
           });
         }
 
@@ -1163,6 +1174,45 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
                   const SizedBox(height: 6),
                   Text(
                     analysis['advice'].toString(),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          // Régime
+          if (analysis['regime'] != null && analysis['regime'].toString().isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4), // Vert très clair
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFBBF7D0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.restaurant_menu,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Régime Suggéré',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    analysis['regime'].toString(),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ],

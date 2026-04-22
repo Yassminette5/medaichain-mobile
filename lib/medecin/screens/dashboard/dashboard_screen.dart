@@ -871,18 +871,18 @@ class _HomeViewState extends State<_HomeView> {
               const SizedBox(width: 12),
               _buildModernActionButton(
                 context,
-                Icons.video_call_outlined,
-                'Appel\nVidéo',
-                AppColors.diagnosis,
-                LinearGradient(colors: [AppColors.diagnosis, AppColors.diagnosis.withValues(alpha: 0.7)]),
+                Icons.auto_awesome,
+                'Aide\nIA',
+                AppColors.secondary,
+                AppColors.aiGradient,
               ),
               const SizedBox(width: 12),
               _buildModernActionButton(
                 context,
-                Icons.calendar_today_outlined,
-                'Planifier',
-                AppColors.prescription,
-                LinearGradient(colors: [AppColors.prescription, AppColors.prescription.withValues(alpha: 0.7)]),
+                Icons.video_call_outlined,
+                'Appel\nVidéo',
+                AppColors.diagnosis,
+                LinearGradient(colors: [AppColors.diagnosis, AppColors.diagnosis.withValues(alpha: 0.7)]),
               ),
             ],
           ),
@@ -897,6 +897,9 @@ class _HomeViewState extends State<_HomeView> {
         onTap: () {
           if (label.contains('Consult')) {
             _showAddConsultationDialog(context);
+          } else if (label.contains('IA')) {
+            final dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
+            dashboardState?.navigateToTab(3);
           } else if (label.contains('Planifier')) {
             final dashboardState = context.findAncestorStateOfType<_DashboardScreenState>();
             dashboardState?.navigateToTab(2);

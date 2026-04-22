@@ -27,6 +27,7 @@ dependencies:
   intl: ^0.20.0
   url_launcher: ^6.2.5
   file_picker: ^8.1.4
+  share_plus: ^10.1.4
   agora_rtc_engine: ^6.3.2
   permission_handler: ^11.3.1
   image_picker: ^1.1.2
@@ -37,6 +38,7 @@ dependencies:
   purchases_flutter: ^10.0.1
   purchases_ui_flutter: ^10.0.1
   google_mobile_ads: ^8.0.0
+  firebase_core: ^4.7.0
 
 dev_dependencies:
   flutter_test:

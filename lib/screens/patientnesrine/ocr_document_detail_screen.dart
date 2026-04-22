@@ -113,9 +113,12 @@ class _OcrDocumentDetailScreenState extends State<OcrDocumentDetailScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
             Container(
@@ -400,6 +403,8 @@ class _OcrDocumentDetailScreenState extends State<OcrDocumentDetailScreen> {
             ],
           ],
         ),
+        ),
+          ),
         ),
       ),
     );
