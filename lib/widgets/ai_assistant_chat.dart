@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -476,7 +477,9 @@ class _AiAssistantChatState extends State<AiAssistantChat>
                       if (imagePath != null) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(14),
-                          child: Image.file(File(imagePath), width: 200, fit: BoxFit.cover),
+                          child: kIsWeb 
+                              ? Image.network(imagePath, width: 200, fit: BoxFit.cover)
+                              : Image.file(File(imagePath), width: 200, fit: BoxFit.cover),
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -773,6 +776,15 @@ class _AiAssistantChatState extends State<AiAssistantChat>
 
   // ─── Medicine card ───────────────────────────────────────────────
   Widget _buildMedicineCard(Map<String, dynamic> data) {
+    final brand = data['brand'] ?? data['name'] ?? 'Médicament';
+    final generic = data['generic'] ?? 'N/A';
+    final strength = data['strength'] ?? '';
+    final usedFor = data['used_for'] ?? 'N/A';
+    final howItWorks = data['how_it_works'] ?? 'N/A';
+    final dosage = data['dosage'] ?? 'N/A';
+    final drugClass = data['drug_class'] ?? 'N/A';
+    final instructions = data['instructions'];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
@@ -787,9 +799,9 @@ class _AiAssistantChatState extends State<AiAssistantChat>
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: _kAiGrad,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
               ),
               child: Row(children: [
                 const Text('💊', style: TextStyle(fontSize: 22)),
@@ -797,10 +809,12 @@ class _AiAssistantChatState extends State<AiAssistantChat>
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Conseil Médicament',
-                        style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w600)),
-                    Text(data['name'] ?? 'Médicament',
+                    Text(drugClass != 'N/A' ? drugClass : 'Conseil Médical',
+                        style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.w600)),
+                    Text(brand,
                         style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                    if (strength.isNotEmpty)
+                       Text(strength, style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12)),
                   ],
                 )),
               ]),
@@ -810,20 +824,38 @@ class _AiAssistantChatState extends State<AiAssistantChat>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    Icon(Icons.info_outline_rounded, size: 16, color: _kPurple),
-                    const SizedBox(width: 8),
-                    Text('Instructions', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: _kPurple)),
-                  ]),
-                  const SizedBox(height: 8),
-                  Text(data['instructions'] ?? '',
-                      style: GoogleFonts.poppins(fontSize: 14, height: 1.5, color: AppColors.textPrimary)),
+                  if (instructions != null) ...[
+                    _medInfoRow(Icons.info_outline_rounded, 'Instructions', instructions),
+                  ] else ...[
+                    _medInfoRow(Icons.science_rounded, 'Générique', generic),
+                    const Divider(height: 16),
+                    _medInfoRow(Icons.health_and_safety_rounded, 'Utilisation', usedFor),
+                    const Divider(height: 16),
+                    _medInfoRow(Icons.auto_fix_high_rounded, 'Mécanisme', howItWorks),
+                    const Divider(height: 16),
+                    _medInfoRow(Icons.timer_rounded, 'Dosage', dosage),
+                  ],
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _medInfoRow(IconData icon, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Icon(icon, size: 16, color: _kPurple),
+          const SizedBox(width: 8),
+          Text(label, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: _kPurple)),
+        ]),
+        const SizedBox(height: 6),
+        Text(value, style: GoogleFonts.poppins(fontSize: 13, height: 1.5, color: AppColors.textPrimary)),
+      ],
     );
   }
 

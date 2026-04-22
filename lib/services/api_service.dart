@@ -43,7 +43,7 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
   /// Base URL pour le serveur IA local (Flask sur port 5000)
-  static String get aiBaseUrl => 'https://5200-34-77-165-174.ngrok-free.app';
+  static String get aiBaseUrl => 'https://2cc1-34-169-50-143.ngrok-free.app';
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
@@ -2571,6 +2571,7 @@ class ApiService {
       Uri.parse('$aiBaseUrl/chat'),
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
         'question': message,
@@ -2586,17 +2587,24 @@ class ApiService {
   }
 
   static Future<String> analyzeImage({required String filePath}) async {
-    var request = http.MultipartRequest('POST', Uri.parse('$aiBaseUrl/analyze'));
-    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$aiBaseUrl/analyze"),
+    );
+    request.files.add(
+      await http.MultipartFile.fromPath("file", filePath),
+    );
     
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
+    // Add ngrok-skip-browser-warning header if needed
+    request.headers['ngrok-skip-browser-warning'] = 'true';
+    
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return response.body;
     } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['message'] ?? "Erreur lors de l'analyse de l'image");
+      throw Exception("Erreur lors de l'analyse de l'image (Status: ${response.statusCode})");
     }
   }
 
@@ -2700,6 +2708,7 @@ class ApiService {
       Uri.parse('$aiBaseUrl/medicine'),
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
         'name': name,
@@ -2718,6 +2727,7 @@ class ApiService {
       Uri.parse('$aiBaseUrl/qrcode'),
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
         'data': data,

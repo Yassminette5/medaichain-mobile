@@ -16,20 +16,7 @@ class RecordsScreen extends StatefulWidget {
   State<RecordsScreen> createState() => _RecordsScreenState();
 }
 
-class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _RecordsScreenState extends State<RecordsScreen> {
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +42,7 @@ class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Medical Records",
+                        "Medication Routine",
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -80,34 +67,12 @@ class _RecordsScreenState extends State<RecordsScreen> with SingleTickerProvider
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white.withOpacity(0.6),
-                    indicatorColor: Colors.white,
-                    indicatorWeight: 3,
-                    labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                    unselectedLabelStyle: GoogleFonts.poppins(fontSize: 14),
-                    tabs: const [
-                      Tab(text: "Treatments"),
-                      Tab(text: "Medical"),
-                      Tab(text: "Timeline"),
-                    ],
-                  ),
                 ],
               ),
             ),
 
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                   _buildTreatmentsTab(),
-                   const MedicinesListView(),
-                   _buildTimelineTab(),
-                ],
-              ),
+            const Expanded(
+              child: MedicinesListView(),
             ),
           ],
         ),

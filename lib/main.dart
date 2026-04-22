@@ -19,6 +19,8 @@ import 'screens/auth/login_web_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/patientnesrine/main_screen.dart';
+import 'screens/patients/patient_medical_record_screen.dart';
+import 'services/deep_link_service.dart';
 
 // Admin Imports
 import 'screens/admin/admin_login_screen.dart';
@@ -102,6 +104,29 @@ Future<void> main() async {
   runApp(const MEDAIChainApp());
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class DeepLinkWrapper extends StatefulWidget {
+  final Widget child;
+  const DeepLinkWrapper({super.key, required this.child});
+
+  @override
+  State<DeepLinkWrapper> createState() => _DeepLinkWrapperState();
+}
+
+class _DeepLinkWrapperState extends State<DeepLinkWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      DeepLinkService().init(navigatorKey);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class MEDAIChainApp extends StatelessWidget {
   const MEDAIChainApp({super.key});
 
@@ -115,10 +140,12 @@ class MEDAIChainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,
         initialRoute: kIsWeb ? '/login' : '/',
+        builder: (context, child) => DeepLinkWrapper(child: child!),
         routes: {
           // Mobile: onboarding si pas de session mémorisée, sinon aller direct à l'app
           '/': (context) => kIsWeb ? const LoginWebScreen() : const AuthWrapper(),
@@ -140,6 +167,17 @@ class MEDAIChainApp extends StatelessWidget {
           '/pharmacie_dashboard.html': (context) => const PharmacieDashboardScreen(),
           // Ancien écran de sélection (si besoin plus tard)
           '/launcher': (context) => const AppLauncherScreen(),
+        },
+        onGenerateRoute: (settings) {
+          // Handle /summary/:patientId redirection (from QR Code)
+          if (settings.name != null && settings.name!.startsWith('/summary/')) {
+            final patientId = settings.name!.replaceFirst('/summary/', '');
+            return MaterialPageRoute(
+              builder: (context) => PatientMedicalRecordScreen(patientId: patientId),
+              settings: settings,
+            );
+          }
+          return null;
         },
       ),
     );

@@ -24,20 +24,21 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
   Uint8List? _qrBytes;
   bool _isLoading = true;
 
+
   @override
   void initState() {
     super.initState();
     _loadQrData();
   }
 
+
   Future<void> _loadQrData() async {
     try {
-      final res = await ApiService.getMySummaryUrl();
-      // Use full URL for the QR data
-      final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
-      final fullUrl = '$baseUrl${res['url']}';
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.id;
+      if (userId == null) throw Exception("Utilisateur non connecté");
       
-      final bytes = await ApiService.getQRCodeBytes(fullUrl);
+      final bytes = await ApiService.getQRCodeBytes(userId);
       
       setState(() {
         _qrBytes = bytes;
@@ -55,20 +56,31 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
 
   Future<void> _captureAndSave() async {
     try {
-      final image = await _screenshotController.capture();
-      if (image == null) return;
+      final bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        final bool granted = await Gal.requestAccess();
+        if (!granted) {
+          throw Exception("Permission refusée. Impossible de sauvegarder.");
+        }
+      }
+
+      final image = await _screenshotController.capture(
+        delay: const Duration(milliseconds: 100),
+        pixelRatio: 2.0,
+      );
+      if (image == null) throw Exception("Erreur lors de la capture d'image.");
 
       await Gal.putImageBytes(image, album: 'MedAiChain');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Medical Card saved to gallery!')),
+          const SnackBar(content: Text('Carte Médicale enregistrée !')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save image: $e')),
+          SnackBar(content: Text('Erreur: $e')),
         );
       }
     }
@@ -159,13 +171,13 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
                               ],
                             ),
                             const SizedBox(height: 32),
-                            if (_qrBytes != null)
-                              Image.memory(
-                                _qrBytes!,
-                                width: 220,
-                                height: 220,
-                                fit: BoxFit.contain,
-                              ),
+                             if (_qrBytes != null)
+                               Image.memory(
+                                 _qrBytes!,
+                                 width: 220,
+                                 height: 220,
+                                 fit: BoxFit.contain,
+                               ),
                             const SizedBox(height: 32),
                             Text(
                               "SCAN TO VIEW EMERGENCY INFO",
