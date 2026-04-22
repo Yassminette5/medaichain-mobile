@@ -91,7 +91,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
         return scoreA.compareTo(scoreB);
       });
 
-      if (mounted) setState(() => _aiResults = results);
+      if (mounted) setState(() => _aiResults = List<Map<String, dynamic>>.from(results));
     } catch (e) {
       debugPrint('[AI] Erreur chargement résultats: $e');
 

@@ -1547,6 +1547,12 @@ class ApiService {
     String? patientName,
     String? doctorName,
     int? patientAge,
+    String? patientGender,
+    int? hipertension,
+    int? diabetes,
+    int? alcoholism,
+    int? handcap,
+    int? smsReceived,
   }) async {
     final body = <String, dynamic>{
       'doctorId': doctorId,
@@ -1560,6 +1566,12 @@ class ApiService {
     if (doctorName != null && doctorName.isNotEmpty)
       body['doctorName'] = doctorName;
     if (patientAge != null) body['patientAge'] = patientAge;
+    if (patientGender != null) body['patientGender'] = patientGender;
+    if (hipertension != null) body['hipertension'] = hipertension;
+    if (diabetes != null) body['diabetes'] = diabetes;
+    if (alcoholism != null) body['alcoholism'] = alcoholism;
+    if (handcap != null) body['handcap'] = handcap;
+    if (smsReceived != null) body['smsReceived'] = smsReceived;
 
     final response = await http.post(
       Uri.parse(

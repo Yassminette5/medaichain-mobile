@@ -20,8 +20,8 @@ android {
     // Plugins (ex: mobile_scanner) exigent compileSdk 36
     compileSdk = 36
 
-    // Plugins Android exigent NDK 27.0.12077973
-    ndkVersion = "27.0.12077973"
+    // Plugins Android exigent NDK 28.2.13676358
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,7 +37,10 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = file(keystoreProperties["storeFile"] as String)
+            val storeFilePath = keystoreProperties["storeFile"] as String?
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+            }
             storePassword = keystoreProperties["storePassword"] as String?
         }
     }

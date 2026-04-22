@@ -135,7 +135,7 @@ class RevenueCatBridge {
     }
     if (native is! Package) return false;
     final result = await Purchases.purchasePackage(native);
-    return result.entitlements.active.containsKey(entitlementId);
+    return result.customerInfo.entitlements.active.containsKey(entitlementId);
   }
 
   static Future<bool> restorePurchases(String entitlementId) async {
