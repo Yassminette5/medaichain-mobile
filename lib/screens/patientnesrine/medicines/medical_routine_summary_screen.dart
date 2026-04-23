@@ -207,37 +207,22 @@ class _MedicalRoutineSummaryScreenState extends State<MedicalRoutineSummaryScree
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _isExporting ? null : _saveToGallery,
-              icon: _isExporting 
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Icon(Icons.download_rounded),
-              label: const Text('Enregistrer PNG'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                side: const BorderSide(color: AppColors.primary),
-                foregroundColor: AppColors.primary,
-              ),
-            ),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _isExporting ? null : _saveToGallery,
+          icon: _isExporting 
+            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : const Icon(Icons.download_rounded),
+          label: const Text('Enregistrer PNG'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: _isExporting ? null : _selectAndSendToDoctor,
-              icon: const Icon(Icons.send_rounded),
-              label: const Text('Envoyer Docteur'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -245,14 +230,31 @@ class _MedicalRoutineSummaryScreenState extends State<MedicalRoutineSummaryScree
   Future<void> _saveToGallery() async {
     setState(() => _isExporting = true);
     try {
-      final Uint8List? imageBytes = await _screenshotController.capture();
+      // 1. Demander la permission d'accès
+      final bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        final bool granted = await Gal.requestAccess();
+        if (!granted) {
+          throw Exception("Permission refusée pour accéder à la galerie.");
+        }
+      }
+
+      // 2. Prendre le screenshot
+      final Uint8List? imageBytes = await _screenshotController.capture(
+        delay: const Duration(milliseconds: 100),
+        pixelRatio: 2.0,
+      );
+
+      // 3. Sauvegarder l'image
       if (imageBytes != null) {
-        await Gal.putImageBytes(imageBytes);
+        await Gal.putImageBytes(imageBytes, album: 'MedAiChain');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Routine enregistrée dans votre galerie !'), backgroundColor: AppColors.success),
           );
         }
+      } else {
+        throw Exception("Impossible de créer l'image (Capture échouée).");
       }
     } catch (e) {
       if (mounted) {
@@ -264,120 +266,5 @@ class _MedicalRoutineSummaryScreenState extends State<MedicalRoutineSummaryScree
       if (mounted) setState(() => _isExporting = false);
     }
   }
-
-  Future<void> _selectAndSendToDoctor() async {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _DoctorPickerSheet(
-        onSelected: (doctor) async {
-          Navigator.pop(ctx);
-          await _sendToDoctor(doctor);
-        },
-      ),
-    );
-  }
-
-  Future<void> _sendToDoctor(Map<String, dynamic> doctor) async {
-    setState(() => _isExporting = true);
-    try {
-      final Uint8List? imageBytes = await _screenshotController.capture();
-      if (imageBytes == null) return;
-
-      // Uploader le PNG comme document médical
-      final String doctorName = doctor['fullName'] ?? 'Docteur';
-      await ApiService.uploadMedicalDocument(
-        fileBytes: imageBytes,
-        fileName: 'routine_export.png',
-        title: 'Routine Médicale - Export',
-        category: 'Verification',
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Routine envoyée à $doctorName !'), backgroundColor: AppColors.success),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur d\'envoi: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isExporting = false);
-    }
-  }
 }
 
-class _DoctorPickerSheet extends StatefulWidget {
-  final Function(Map<String, dynamic>) onSelected;
-  const _DoctorPickerSheet({required this.onSelected});
-
-  @override
-  State<_DoctorPickerSheet> createState() => _DoctorPickerSheetState();
-}
-
-class _DoctorPickerSheetState extends State<_DoctorPickerSheet> {
-  List<Map<String, dynamic>> _doctors = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchDoctors();
-  }
-
-  Future<void> _fetchDoctors() async {
-    try {
-      final list = await ApiService.searchDoctors();
-      if (mounted) setState(() { _doctors = list; _isLoading = false; });
-    } catch (e) {
-      if (mounted) setState(() { _isLoading = false; });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 24),
-          Text('Sélectionner un Médecin', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : _doctors.isEmpty
-                ? const Center(child: Text('Aucun médecin trouvé'))
-                : ListView.builder(
-                    itemCount: _doctors.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemBuilder: (ctx, i) {
-                      final d = _doctors[i];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withOpacity(0.1),
-                          child: const Icon(Icons.person, color: AppColors.primary),
-                        ),
-                        title: Text(d['fullName'] ?? 'Médecin', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                        subtitle: Text(d['speciality'] ?? 'Spécialiste', style: GoogleFonts.poppins(fontSize: 12)),
-                        onTap: () => widget.onSelected(d),
-                      );
-                    },
-                  ),
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-}

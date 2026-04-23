@@ -40,7 +40,7 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
-  static String get aiBaseUrl => 'https://5bea-34-85-169-31.ngrok-free.app';
+  static String get aiBaseUrl => 'https://0904-136-114-246-151.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -585,6 +585,26 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Erreur');
     }
+  }
+
+  static Future<http.Response> getMedicationReport() async {
+    final token = await getAccessToken();
+    return await http.get(
+      Uri.parse('$baseUrl/medicines/report'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+  }
+
+  static Future<http.Response> exportOcrPdf() async {
+    final token = await getAccessToken();
+    return await http.get(
+      Uri.parse('$baseUrl/patient/ocr/export-pdf'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
   }
 
   // ========== DÉCONNEXION ==========
@@ -3961,16 +3981,6 @@ class ApiService {
     }
   }
 
-  static Future<http.Response> getMedicationReport() async {
-    final token = await getAccessToken();
-    return await http.get(
-      Uri.parse('$baseUrl/medicines/report'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-  }
-
   static Future<List<dynamic>> getAiConversationMessages(String conversationId) async {
     final token = await getAccessToken();
     final response = await http.get(
@@ -4126,22 +4136,6 @@ class ApiService {
     }
   }
 
-  static Future<Uint8List> getQRCodeBytes(String data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/qr/generate'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'data': data,
-      }),
-    );
-    if (response.statusCode == 200) {
-      return response.bodyBytes;
-    } else {
-      throw Exception('Failed to generate QR code');
-    }
-  }
 
   // ================= CLINIC AI ANALYSIS =================
   static Future<List<dynamic>> getClinicAiResults() async {
@@ -4197,6 +4191,44 @@ class ApiService {
     );
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete document');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMedicineInfo(String name) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/medicine'),
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({
+        'name': name,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erreur de récupération des infos du médicament');
+    }
+  }
+
+  static Future<Uint8List> getQRCodeBytes(String data) async {
+    final response = await http.post(
+      Uri.parse('$aiBaseUrl/qrcode'),
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({
+        'data': data,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return response.bodyBytes;
+    } else {
+      throw Exception('Erreur de récupération du QR Code');
     }
   }
 }

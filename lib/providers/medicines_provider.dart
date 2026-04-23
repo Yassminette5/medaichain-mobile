@@ -49,11 +49,8 @@ class MedicinesProvider extends ChangeNotifier {
     }
   }
 
-
-
-  
   Future<Map<String, dynamic>> getMedicationInfo(String name) async {
-    return ApiService.getMedicationInfo(name);
+    return ApiService.getMedicineInfo(name);
   }
 
   Future<void> downloadReport(BuildContext context) async {

@@ -13,10 +13,54 @@ import '../patientnesrine/document_list_screen.dart';
 import '../patient/patient_upload_analysis_screen.dart';
 import '../patientnesrine/ocr_analyze_screen.dart';
 import '../patientnesrine/ocr_document_detail_screen.dart';
+import '../../widgets/ai_assistant_chat.dart';
 
 
-class ProfileScreen extends StatelessWidget {
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isExporting = false;
+
+  Future<void> _exportMedicalRecord(BuildContext context) async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
+    try {
+      final response = await ApiService.exportOcrPdf();
+      if (response.statusCode == 200) {
+        final bytes = response.bodyBytes;
+        final dir = await getApplicationDocumentsDirectory();
+        final file = File('${dir.path}/medical_record.pdf');
+        await file.writeAsBytes(bytes);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dossier médical exporté avec succès !'), backgroundColor: AppColors.success),
+          );
+          await OpenFilex.open(file.path);
+        }
+      } else {
+        throw Exception('Erreur lors de la génération du PDF');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,9 +187,11 @@ class ProfileScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(builder: (context) => const PatientQrScreen()),
                         ),
-                        child: Container(
-                          height: 200,
-                          width: double.infinity,
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 200,
+                              width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF6C63FF), Color(0xFF8F89FF), Color(0xFFB4A5FF)],
@@ -276,12 +322,35 @@ class ProfileScreen extends StatelessWidget {
                             ],
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ],
+                      ],
+                    ),
+                  );
+                },
               ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isExporting ? null : () => _exportMedicalRecord(context),
+                    icon: _isExporting 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                        : const Icon(Icons.picture_as_pdf_rounded),
+                    label: Text(
+                      _isExporting ? "Exportation en cours..." : "Exporter Dossier Médical",
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      foregroundColor: AppColors.primary,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
             const SizedBox(height: 32),
 
             // Résultats d'analyse (centre d'analyse)
@@ -456,14 +525,14 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final futures = await Future.wait([
+      final results = await Future.wait([
         ApiService.getPatientAnalysisResults(widget.userId).catchError((_) => <dynamic>[]),
         ApiService.getPatientAnalyses().catchError((_) => <dynamic>[]),
       ]);
       if (mounted) {
         setState(() {
-          _labResults = futures[0] is List ? futures[0] : [];
-          _patientAnalyses = futures[1] is List ? futures[1] : [];
+          _labResults = results[0];
+          _patientAnalyses = results[1];
           _loading = false;
         });
       }
@@ -600,6 +669,57 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                         ),
                         Text(
                           "Analyses, ordonnances, examens",
+                          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Accéder à l'Assistant IA
+          GestureDetector(
+            onTap: () {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppColors.small,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.aiGradient,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Assistant IA Média',
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                        ),
+                        Text(
+                          "Posez vos questions de santé",
                           style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textGrey),
                         ),
                       ],

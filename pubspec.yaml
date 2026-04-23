@@ -39,6 +39,8 @@ dependencies:
   purchases_ui_flutter: ^10.0.1
   google_mobile_ads: ^8.0.0
   firebase_core: ^4.7.0
+  path_provider: ^2.1.5
+  open_filex: ^4.7.0
 
 dev_dependencies:
   flutter_test:
