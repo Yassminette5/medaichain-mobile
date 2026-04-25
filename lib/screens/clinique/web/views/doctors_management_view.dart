@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medaichainmobile/clinique/theme/app_theme.dart';
 import 'package:medaichainmobile/services/api_service.dart';
+import 'package:medaichainmobile/widgets/ads/web_banner_ad.dart';
 
 class DoctorsManagementView extends StatefulWidget {
+
   const DoctorsManagementView({super.key});
 
   @override
@@ -193,6 +195,15 @@ class _DoctorsManagementViewState extends State<DoctorsManagementView> {
               ],
             ),
           ],
+        ),
+        const SizedBox(height: 20),
+
+        // ======= BANNER AD =======
+        const Center(
+          child: WebBannerAdWidget(
+            width: 728,
+            height: 90,
+          ),
         ),
         const SizedBox(height: 20),
 

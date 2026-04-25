@@ -293,6 +293,7 @@ class _OcrDocumentDetailScreenState extends State<OcrDocumentDetailScreen> {
                                   final ok = await ApiService.saveOcrResult(
                                     fileName: fileName,
                                     result: _ocrResult!,
+                                    title: headerTitle,
                                   );
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -310,6 +311,30 @@ class _OcrDocumentDetailScreenState extends State<OcrDocumentDetailScreen> {
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // NOUVEAU BOUTON TELECHARGEMENT PDF
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final token = await ApiService.getAccessToken();
+                            final url = '${ApiService.baseUrl}/patient/ocr/export-pdf?token=$token';
+                            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                          },
+                          icon: const Icon(Icons.picture_as_pdf_rounded),
+                          label: Text('Télécharger le rapport (PDF)',
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: AppColors.primary),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),

@@ -208,32 +208,30 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
   }
 
   /// Vérifie l'accès premium avant de lancer une analyse IA.
-  /// Retourne true si l'utilisateur a accès (premium ou crédit pub).
+  /// Affiche TOUJOURS le paywall pour les utilisateurs gratuits (démo du flux complet).
   Future<bool> _checkPremiumAccess() async {
     final sub = SubscriptionService();
     await sub.refreshBackendStatus();
 
+    // Premium → accès direct sans paywall
     if (sub.isPremium) return true;
-    if (sub.adCredits > 0) {
-      return await sub.useAdCredit();
-    }
 
-    // Pas d'accès → afficher le paywall
+    // Utilisateur gratuit → toujours afficher le paywall (pub ou abonnement)
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
     );
 
-    // Plus besoin de `refreshBackendStatus` ici !
-    // Si l'utilisateur s'est abonné, RevenueCat a déjà un listener et `purchase` a forcé un refresh global.
-    // S'il a vu une pub, `addAdCredit` a déjà donné 1 crédit local (Optimistic UI)
-    // et a lancé la mise à jour BDD en arrière-plan.
-
-    if (result == true && sub.hasAiAccess) {
-      if (!sub.isPremium) return await sub.useAdCredit();
-      return true;
+    if (result == true) {
+      // Rafraîchir le statut depuis le backend après la pub/achat
+      await sub.refreshBackendStatus();
+      
+      if (sub.isPremium || sub.adCredits > 0 || sub.remainingQuota > 0) {
+        if (mounted) setState(() {}); // Rafraîchir l'affichage des crédits
+        return true;
+      }
     }
 
-    if (result == true && !sub.hasAiAccess && mounted) {
+    if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -581,7 +579,7 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
                                         Text(
                                           SubscriptionService().isPremium
                                               ? 'Premium'
-                                              : '${SubscriptionService().adCredits} crédits',
+                                              : '${SubscriptionService().remainingQuota + SubscriptionService().adCredits} crédits',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 11,

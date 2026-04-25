@@ -20,14 +20,16 @@ class SubscriptionService extends ChangeNotifier {
   bool _isPremium = false;
   bool _isInitialized = false;
   int _adCredits = 0;
+  int _remainingQuota = 50; // Default for free tier (dev mode)
   String? _plan = 'free';
 
   bool get isPremium => _isPremium;
   bool get isInitialized => _isInitialized;
   int get adCredits => _adCredits;
+  int get remainingQuota => _remainingQuota;
   String? get plan => _plan;
 
-  bool get hasAiAccess => _isPremium || _adCredits > 0;
+  bool get hasAiAccess => _isPremium || _adCredits > 0 || _remainingQuota > 0;
 
   Future<void> initialize({String? userId}) async {
     try {
@@ -81,6 +83,7 @@ class SubscriptionService extends ChangeNotifier {
       final status = await ApiService.getMySubscriptionStatus();
       _adCredits = status['aiCredits'] ?? 0;
       _plan = status['plan'] ?? 'free';
+      _remainingQuota = status['remainingQuota'] ?? 50;
       // Mettre à jour isPremium basé sur le backend si on veut
       // Mais RevenueCatBridge est plus précis pour le statut local
       notifyListeners();

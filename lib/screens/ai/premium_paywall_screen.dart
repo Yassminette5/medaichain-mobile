@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async';
+import 'dart:math';
 import '../../core/theme/app_colors.dart';
 import '../../services/subscription_service.dart';
 import '../../services/ad_service.dart';
@@ -173,7 +174,10 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
           children: [
             const SizedBox(height: 8),
 
@@ -336,8 +340,10 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
                   ],
                 ),
               ),
-            );
-          }
+            ),
+          ),
+        );
+      }
 
           Widget _buildOptionCard({
     required IconData icon,
@@ -492,11 +498,33 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
     );
   }
 }
+// ─────────────────────────────────────────────────────────────────────────────
+/// Données d'une publicité simulée pour le web.
+// ─────────────────────────────────────────────────────────────────────────────
+class _AdData {
+  final String appName;
+  final String tagline;
+  final String cta;
+  final IconData icon;
+  final Color bgColor;
+  final Color accentColor;
+  final List<Color> gradientColors;
+
+  const _AdData({
+    required this.appName,
+    required this.tagline,
+    required this.cta,
+    required this.icon,
+    required this.bgColor,
+    required this.accentColor,
+    required this.gradientColors,
+  });
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
-/// Dialog de simulation pub — Web uniquement.
-/// Affiche un compte à rebours de 10 secondes, puis débloque le bouton
-/// "Obtenir mon crédit". L'utilisateur ne peut PAS fermer avant la fin.
+/// Simulation plein écran de pub — Web uniquement.
+/// Affiche aléatoirement l'une des 8 publicités différentes à chaque ouverture.
+/// Reproduit fidèlement l'expérience Google Ads Test Ad sur mobile.
 // ─────────────────────────────────────────────────────────────────────────────
 class _WebAdCountdownDialog extends StatefulWidget {
   const _WebAdCountdownDialog();
@@ -505,15 +533,101 @@ class _WebAdCountdownDialog extends StatefulWidget {
   State<_WebAdCountdownDialog> createState() => _WebAdCountdownDialogState();
 }
 
-class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog> {
+class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog>
+    with SingleTickerProviderStateMixin {
   static const int _totalSeconds = 10;
   int _remaining = _totalSeconds;
   Timer? _timer;
+  bool _rewardGranted = false;
   bool _canClose = false;
+  late AnimationController _pulseController;
+  late _AdData _currentAd;
+
+  // ── Pool de 8 publicités variées ──────────────────────────────────────────
+  static final List<_AdData> _adPool = [
+    const _AdData(
+      appName: 'Uber Eats',
+      tagline: 'Commandez vos plats préférés\nlivrés en 30 min',
+      cta: 'Commander',
+      icon: Icons.delivery_dining,
+      bgColor: Color(0xFF142328),
+      accentColor: Color(0xFF06C167),
+      gradientColors: [Color(0xFF142328), Color(0xFF1A3A2A)],
+    ),
+    const _AdData(
+      appName: 'Spotify',
+      tagline: 'Écoutez des millions de titres\n3 mois gratuits Premium',
+      cta: 'Essayer gratuitement',
+      icon: Icons.music_note_rounded,
+      bgColor: Color(0xFF121212),
+      accentColor: Color(0xFF1DB954),
+      gradientColors: [Color(0xFF121212), Color(0xFF1A1A2E)],
+    ),
+    const _AdData(
+      appName: 'Netflix',
+      tagline: 'Films, séries et documentaires\nillimités dès 5,99€/mois',
+      cta: 'S\'abonner',
+      icon: Icons.movie_filter_rounded,
+      bgColor: Color(0xFF141414),
+      accentColor: Color(0xFFE50914),
+      gradientColors: [Color(0xFF141414), Color(0xFF2D0A0A)],
+    ),
+    const _AdData(
+      appName: 'Duolingo',
+      tagline: 'Apprenez une langue gratuitement\n5 min par jour suffisent !',
+      cta: 'Commencer',
+      icon: Icons.school_rounded,
+      bgColor: Color(0xFF235390),
+      accentColor: Color(0xFF58CC02),
+      gradientColors: [Color(0xFF235390), Color(0xFF1B3F6B)],
+    ),
+    const _AdData(
+      appName: 'Nike Run Club',
+      tagline: 'Votre coach running personnel\nGPS, plans d\'entraînement',
+      cta: 'Télécharger',
+      icon: Icons.directions_run_rounded,
+      bgColor: Color(0xFF111111),
+      accentColor: Color(0xFFFFFFFF),
+      gradientColors: [Color(0xFF111111), Color(0xFF1A1A1A)],
+    ),
+    const _AdData(
+      appName: 'Samsung Health',
+      tagline: 'Suivez votre santé au quotidien\nSommeil, sport, alimentation',
+      cta: 'Installer',
+      icon: Icons.favorite_rounded,
+      bgColor: Color(0xFF0A1F44),
+      accentColor: Color(0xFF1A73E8),
+      gradientColors: [Color(0xFF0A1F44), Color(0xFF0D2B5E)],
+    ),
+    const _AdData(
+      appName: 'YouTube Premium',
+      tagline: 'Vidéos sans pub, musique hors ligne\n1 mois offert',
+      cta: 'Essayer',
+      icon: Icons.play_circle_fill_rounded,
+      bgColor: Color(0xFF1A1A1A),
+      accentColor: Color(0xFFFF0000),
+      gradientColors: [Color(0xFF1A1A1A), Color(0xFF2D0000)],
+    ),
+    const _AdData(
+      appName: 'Starbucks',
+      tagline: 'Commandez et gagnez des étoiles\nBoisson offerte à l\'inscription',
+      cta: 'Rejoindre',
+      icon: Icons.coffee_rounded,
+      bgColor: Color(0xFF1E3932),
+      accentColor: Color(0xFF00704A),
+      gradientColors: [Color(0xFF1E3932), Color(0xFF0D2B22)],
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
+    // Choisir une pub aléatoire à chaque ouverture
+    _currentAd = _adPool[Random().nextInt(_adPool.length)];
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
     _startTimer();
   }
 
@@ -527,8 +641,11 @@ class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog> {
         _remaining--;
         if (_remaining <= 0) {
           _remaining = 0;
-          _canClose = true;
+          _rewardGranted = true;
           t.cancel();
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) setState(() => _canClose = true);
+          });
         }
       });
     });
@@ -537,49 +654,168 @@ class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog> {
   @override
   void dispose() {
     _timer?.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
-  double get _progress => (_totalSeconds - _remaining) / _totalSeconds;
-
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      child: Container(
-        width: 380,
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── En-tête ──────────────────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: AppColors.aiGradient,
-                borderRadius: BorderRadius.circular(20),
+    final ad = _currentAd;
+
+    return Dialog.fullscreen(
+      backgroundColor: ad.bgColor,
+      child: Stack(
+        children: [
+          // ── Fond dégradé ────────────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [...ad.gradientColors, ad.bgColor],
               ),
-              child: const Row(
-                children: [
-                  Icon(Icons.play_circle_filled, color: Colors.white, size: 32),
-                  SizedBox(width: 12),
-                  Expanded(
+            ),
+          ),
+
+          // ── Contenu central ─────────────────────────────────────
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Logo App
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    final scale = 1.0 + (_pulseController.value * 0.05);
+                    return Transform.scale(scale: scale, child: child);
+                  },
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ad.accentColor.withValues(alpha: 0.4),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        ad.icon,
+                        size: 56,
+                        color: ad.accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Nom de l'app
+                Text(
+                  ad.appName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Tagline
+                Text(
+                  ad.tagline,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Bouton CTA
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: ad.accentColor,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ad.accentColor.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    ad.cta,
+                    style: TextStyle(
+                      color: ad.accentColor.computeLuminance() > 0.5
+                          ? Colors.black87
+                          : Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+
+                // ── Stars / Rating simulé ─────────────────────────
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ...List.generate(5, (i) => Icon(
+                      i < 4 ? Icons.star_rounded : Icons.star_half_rounded,
+                      color: const Color(0xFFFFC107),
+                      size: 18,
+                    )),
+                    const SizedBox(width: 6),
+                    Text(
+                      '4.5',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '100M+',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Progress bar
+                if (!_rewardGranted) ...[
+                  const SizedBox(height: 48),
+                  SizedBox(
+                    width: 200,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Publicité MEDAIChain',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (_totalSeconds - _remaining) / _totalSeconds,
+                            minHeight: 4,
+                            backgroundColor: Colors.white12,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              ad.accentColor.withValues(alpha: 0.8),
+                            ),
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 8),
                         Text(
-                          'Regardez pour gagner 1 crédit IA',
+                          'Fermer dans $_remaining s',
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 12,
                           ),
                         ),
@@ -587,203 +823,120 @@ class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog> {
                     ),
                   ),
                 ],
+              ],
+            ),
+          ),
+
+          // ── Bannière "Test Ad" en haut ─────────────────────────
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              color: Colors.black54,
+              child: const Center(
+                child: Text(
+                  'Test Ad',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── "Reward granted" notification ───────────────────────
+          if (_rewardGranted)
+            Positioned(
+              top: 44,
+              right: 16,
+              child: AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 400),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.greenAccent, size: 16),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Reward granted',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _canClose ? () => Navigator.of(context).pop(true) : null,
+                        child: const Icon(Icons.close, color: Colors.white54, size: 16),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
-            const SizedBox(height: 28),
-
-            // ── Zone pub simulée ─────────────────────────────────────────────
-            Container(
-              height: 160,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0D47A1), Color(0xFF1565C0), Color(0xFF00838F)],
+          // ── Bouton X pour fermer ────────────────────────────────
+          if (_canClose)
+            Positioned(
+              top: 44,
+              left: 16,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(true),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 22),
                 ),
-                borderRadius: BorderRadius.circular(16),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+
+          // ── "Ad" badge en bas à gauche (comme Google) ───────────
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.health_and_safety_rounded,
-                    color: Colors.white,
-                    size: 48,
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335)],
+                    ).createShader(bounds),
+                    child: const Icon(Icons.ads_click, size: 14, color: Colors.white),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(width: 4),
                   const Text(
-                    'MEDAIChain',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Votre santé, notre priorité',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 13,
-                    ),
+                    'Ad • Google',
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // ── Barre de progression ─────────────────────────────────────────
-            Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _canClose
-                          ? 'Publicité terminée !'
-                          : 'Publicité en cours...',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _canClose
-                            ? AppColors.success
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _canClose
-                            ? AppColors.successLight
-                            : AppColors.blockchainLight,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _canClose ? '✓ Terminé' : '$_remaining s',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _canClose
-                              ? AppColors.success
-                              : AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: _progress,
-                    minHeight: 8,
-                    backgroundColor: AppColors.borderLight,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _canClose ? AppColors.success : AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // ── Boutons ──────────────────────────────────────────────────────
-            Row(
-              children: [
-                // Fermer sans crédit
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.borderLight),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Annuler',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Obtenir crédit (actif seulement après countdown)
-                Expanded(
-                  flex: 2,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    decoration: BoxDecoration(
-                      gradient: _canClose
-                          ? const LinearGradient(
-                              colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
-                            )
-                          : LinearGradient(
-                              colors: [
-                                Colors.grey.shade300,
-                                Colors.grey.shade300,
-                              ],
-                            ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: _canClose
-                          ? [
-                              BoxShadow(
-                                color: AppColors.success.withValues(alpha: 0.35),
-                                blurRadius: 12,
-                                offset: const Offset(0, 5),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _canClose
-                          ? () => Navigator.of(context).pop(true)
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _canClose
-                                ? Icons.check_circle_rounded
-                                : Icons.hourglass_top_rounded,
-                            color: _canClose ? Colors.white : Colors.grey,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 7),
-                          Text(
-                            _canClose
-                                ? 'Obtenir mon crédit'
-                                : 'Patientez $_remaining s',
-                            style: TextStyle(
-                              color: _canClose ? Colors.white : Colors.grey,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -128,25 +128,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Logo with glow
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: AppColors.neonGradient,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: -5),
+        SizedBox(
+          width: double.infinity,
+          child: Column(
+            children: [
+              // Logo with glow
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: AppColors.neonGradient,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 20, spreadRadius: -5),
+                  ],
+                ),
+                child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 28),
+              ),
+              const SizedBox(height: 16),
+              // Title with gradient
+              ShaderMask(
+                shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
+                child: const Text('MEDAIChain', style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
+              ),
             ],
           ),
-          child: const Icon(Icons.local_hospital_rounded, color: Colors.white, size: 28),
         ),
-        const SizedBox(height: 20),
-        // Title with gradient
-        ShaderMask(
-          shaderCallback: (bounds) => AppColors.neonGradient.createShader(bounds),
-          child: const Text('MEDAIChain', style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1)),
-        ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 24),
         Text('Bienvenue', style: TextStyle(fontSize: 17, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w300)),
         const SizedBox(height: 2),
         Text('Connectez-vous pour accéder à vos patients', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4))),

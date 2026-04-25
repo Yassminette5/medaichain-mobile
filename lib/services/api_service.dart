@@ -40,7 +40,7 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
-  static String get aiBaseUrl => 'https://0904-136-114-246-151.ngrok-free.app';
+  static String get aiBaseUrl => 'https://a2f1-35-204-67-245.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -2864,12 +2864,21 @@ class ApiService {
     required Map<String, dynamic> result,
     String? mimeType,
     String? sourceType,
+    String? title,
   }) async {
     final token = await getAccessToken();
     final url = '$baseUrl/patient/ocr/save';
-    final body = <String, dynamic>{ 'filename': fileName, 'data': result };
+    
+    // On met tout à plat pour que le backend trouve 'title', 'description', etc.
+    final body = <String, dynamic>{ 
+      'filename': fileName,
+      'title': title ?? result['title'] ?? 'Analyse Médicale',
+      ...result,
+    };
+    
     if (mimeType != null) body['mimeType'] = mimeType;
     if (sourceType != null) body['sourceType'] = sourceType;
+    
     final response = await http.post(
       Uri.parse(url),
       headers: {
@@ -3784,9 +3793,11 @@ class ApiService {
     final body = <String, dynamic>{'reportImage': reportImage};
     if (context != null) body['context'] = context;
 
+    debugPrint('[analyzeReport] Envoi vers $baseUrl/doctor-ai/analyze (image: ${reportImage.length} chars)');
+
     final response = await http
         .post(
-          Uri.parse('$baseUrl/doctor-ai/analyze-patient-analysis'),
+          Uri.parse('$baseUrl/doctor-ai/analyze'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -3795,13 +3806,18 @@ class ApiService {
         )
         .timeout(const Duration(seconds: 180));
 
+    debugPrint('[analyzeReport] Status: ${response.statusCode}, Body: ${response.body.substring(0, response.body.length > 300 ? 300 : response.body.length)}');
+
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else if (response.statusCode == 401) {
       await refreshToken();
       return analyzeReport(reportImage: reportImage, context: context);
+    } else if (response.statusCode == 402) {
+      throw Exception('Quota IA épuisé. Regardez une publicité ou passez à Premium.');
     } else {
-      throw Exception('Erreur d\'analyse du rapport médical');
+      final detail = response.body.length < 200 ? response.body : 'Status ${response.statusCode}';
+      throw Exception('Erreur d\'analyse du rapport médical ($detail)');
     }
   }
 
@@ -4065,6 +4081,7 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
         'image': base64Image,
@@ -4087,14 +4104,25 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
-        'message': message,
+        'question': message,
       }),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['response'] ?? '';
+      if (data.containsKey('response')) {
+        return data['response'];
+      } else if (data.containsKey('result')) {
+        return data['result'];
+      } else if (data.containsKey('message')) {
+        return data['message'];
+      } else if (data.containsKey('answer')) {
+        return data['answer'];
+      } else {
+        return 'Réponse reçue (format inconnu): ${response.body}';
+      }
     } else {
       throw Exception('Failed to chat with AI');
     }
