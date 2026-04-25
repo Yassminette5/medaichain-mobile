@@ -6,7 +6,9 @@ import '../../models/pharmacy_model.dart';
 import 'pharmacy_ordonnance_form_screen.dart';
 
 class PharmaciesListScreen extends StatefulWidget {
-  const PharmaciesListScreen({super.key});
+  const PharmaciesListScreen({super.key, this.prescriptionId});
+
+  final String? prescriptionId;
 
   @override
   State<PharmaciesListScreen> createState() => _PharmaciesListScreenState();
@@ -349,6 +351,7 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                     MaterialPageRoute(
                       builder: (_) => PharmacyOrdonnanceFormScreen(
                         pharmacy: pharmacy,
+                        prescriptionId: widget.prescriptionId,
                       ),
                     ),
                   );
@@ -361,7 +364,10 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                   ),
                 ),
                 child: Text(
-                  'Send Prescription',
+                  widget.prescriptionId != null &&
+                          widget.prescriptionId!.isNotEmpty
+                      ? 'Send & Share Prescription'
+                      : 'Send Prescription',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,

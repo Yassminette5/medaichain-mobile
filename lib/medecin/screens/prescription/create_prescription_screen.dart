@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
-import 'package:medaichainmobile/services/api_service.dart';
+import 'package:medaichainmobile/services/prescriptions_service.dart';
 import 'package:medaichainmobile/providers/patients_provider.dart';
 import 'package:medaichainmobile/models/patient_model.dart';
 import 'package:medaichainmobile/widgets/primary_button.dart';
@@ -282,7 +282,7 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
       };
     }).toList();
 
-    ApiService.createPrescription(
+    PrescriptionsService.createPrescription(
       patientId: _selectedPatientId!,
       medications: meds,
       notes: _notesController.text,

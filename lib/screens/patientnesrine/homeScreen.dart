@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../services/prescriptions_service.dart';
 import '../patientnesrine/notifications_screen.dart';
 import '../patientnesrine/doctor_detail_sheet.dart';
 import '../../core/theme/app_colors.dart';
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadPrescriptions() async {
     setState(() => _prescriptionsLoading = true);
     try {
-      final list = await ApiService.getMyPrescriptions();
+      final list = await PrescriptionsService.getMyPrescriptions();
       if (mounted) setState(() { _prescriptions = list; _prescriptionsLoading = false; });
     } catch (_) {
       if (mounted) setState(() { _prescriptions = []; _prescriptionsLoading = false; });
