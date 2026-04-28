@@ -21,6 +21,10 @@ class ApiService {
   /// - Android émulateur: 10.0.2.2 (machine hôte)
   /// - Téléphone réel: définir backendUrlOverride dans main.dart avec l'IP du PC (même WiFi).
   static String get baseUrl {
+    // 1. Sur le Web, on doit utiliser localhost pour éviter les erreurs CORS
+    if (kIsWeb) return 'http://localhost:3000';
+
+    // 2. Sur téléphone physique ou émulateur, on utilise l'IP locale si elle est définie
     if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
       String url = backendUrlOverride!.trim();
       if (!url.startsWith('http')) url = 'http://$url';
@@ -32,15 +36,14 @@ class ApiService {
     const envOverride = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     if (envOverride.isNotEmpty) return envOverride;
 
-    if (kIsWeb) return 'http://127.0.0.1:3000';
+    // 3. Fallbacks par défaut (Emulateur Android et iOS Simulator)
     if (defaultTargetPlatform == TargetPlatform.android) {
-      // Android emulator -> host machine loopback
       return 'http://10.0.2.2:3000';
     }
     return 'http://127.0.0.1:3000';
   }
 
-  static String get aiBaseUrl => 'https://a2f1-35-204-67-245.ngrok-free.app';
+  static String get aiBaseUrl => 'https://82c8-35-190-205-158.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -2957,7 +2960,14 @@ class ApiService {
       },
     );
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      // Backend wraps in { message, data: [...] }
+      if (decoded is Map && decoded['data'] is List) {
+        return decoded['data'] as List<dynamic>;
+      }
+      // Direct array response (fallback)
+      if (decoded is List) return decoded;
+      return [];
     } else if (response.statusCode == 401) {
       await refreshToken();
       return getOcrDocuments();

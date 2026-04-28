@@ -68,7 +68,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFF2563EB),
           onRefresh: _loadDoctors,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
@@ -102,7 +102,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.refresh_rounded, color: Color(0xFF7C3AED)),
+                      icon: const Icon(Icons.refresh_rounded, color: Color(0xFF2563EB)),
                       onPressed: _loadDoctors,
                     ),
                   )
@@ -113,7 +113,7 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                 sliver: SliverFillRemaining(
                   hasScrollBody: false,
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)))
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
                       : FadeTransition(
                           opacity: _fadeAnimation,
                           child: _errorMessage != null ? _buildErrorView() : _buildDoctorsList(),
@@ -245,30 +245,41 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
   Widget _buildDoctorCard(String name, String specialty, String status) {
     final isActive = status == 'active';
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF3B82F6), Color(0xFF1E3A8A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Icon(Icons.person_rounded, color: Color(0xFF7C3AED)),
+            child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -279,8 +290,9 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                   name,
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                    fontSize: 17,
                     color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -289,24 +301,42 @@ class _CliniqueDoctorsTabState extends State<CliniqueDoctorsTab> with SingleTick
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              isActive ? 'Actif' : 'Inactif',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: isActive ? Colors.green : Colors.red,
+              color: isActive ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isActive ? const Color(0xFF10B981).withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
               ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFF10B981) : Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isActive ? 'Actif' : 'Inactif',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: isActive ? const Color(0xFF059669) : Colors.red,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

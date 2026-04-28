@@ -35,8 +35,8 @@ import 'models/user_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Test sur téléphone réel : décommenter et mettre l'IP de ton PC (même WiFi, ex: 192.168.1.10)
-  // ApiService.backendUrlOverride = 'http://192.168.1.10:3000';
+  // Test sur téléphone réel (IP du Mac sur le même WiFi)
+  ApiService.backendUrlOverride = 'http://172.20.10.4:3000';
 
   await initializeDateFormatting('fr_FR', null);
 

@@ -74,7 +74,7 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
                 : '01/01/2024';
 
             if (isLoading) {
-              return const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED)));
+              return const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)));
             }
 
             return FadeTransition(
@@ -293,12 +293,13 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Icon(icon, color: AppColors.textSecondary, size: 20),
+            child: Icon(icon, color: const Color(0xFF64748B), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -308,18 +309,19 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
                 Text(
                   title,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   value,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: const Color(0xFF0F172A),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ],

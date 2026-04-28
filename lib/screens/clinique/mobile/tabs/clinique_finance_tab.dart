@@ -125,28 +125,28 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Finance Summary Cards
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildSummaryCard(
-                                    'Revenus Totaux',
-                                    '${_formatMoney(totalRevenue)} DA',
-                                    Icons.account_balance_wallet_rounded,
-                                    const Color(0xFF43A047),
+                              // Finance Summary Cards
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSummaryCard(
+                                      'Revenus Totaux',
+                                      '${_formatMoney(totalRevenue)} DA',
+                                      Icons.account_balance_wallet_rounded,
+                                      const Color(0xFF1E3A8A), // Deep Blue
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: _buildSummaryCard(
-                                    'En Attente',
-                                    '${_formatMoney(totalPending)} DA',
-                                    Icons.pending_actions_rounded,
-                                    const Color(0xFFF57C00),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: _buildSummaryCard(
+                                      'En Attente',
+                                      '${_formatMoney(totalPending)} DA',
+                                      Icons.pending_actions_rounded,
+                                      const Color(0xFF4F46E5), // Indigo
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             const SizedBox(height: 24),
                             
                             // Filters
@@ -195,48 +195,69 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
   }
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+    // Generate a sleek gradient based on the base color
+    final gradientStart = color.withValues(alpha: 0.9);
+    final gradientEnd = color.withValues(alpha: 0.7);
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        gradient: LinearGradient(
+          colors: [gradientStart, gradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.trending_up_rounded, color: Colors.white, size: 16),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            value,
+            title,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.1,
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            value,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              height: 1.1,
             ),
           ),
         ],
@@ -248,29 +269,29 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
     bool isActive = _filterStatus == status;
     return InkWell(
       onTap: () => setState(() => _filterStatus = status),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(30),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF7C3AED) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isActive ? const Color(0xFF1E1B4B) : Colors.white,
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isActive ? const Color(0xFF7C3AED) : AppColors.border,
+            color: isActive ? const Color(0xFF1E1B4B) : AppColors.border.withValues(alpha: 0.5),
           ),
           boxShadow: isActive ? [
             BoxShadow(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: const Color(0xFF1E1B4B).withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             )
           ] : null,
         ),
         child: Text(
           label,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
             color: isActive ? Colors.white : AppColors.textSecondary,
           ),
         ),
@@ -280,11 +301,11 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
 
   Map<String, dynamic> _getPaymentStatusInfo(String status) {
     switch (status) {
-      case 'paid': return {'label': 'Payée', 'color': const Color(0xFF43A047)};
-      case 'pending': return {'label': 'En attente', 'color': const Color(0xFFF57C00)};
-      case 'partial': return {'label': 'Partiel', 'color': const Color(0xFF7C3AED)};
-      case 'cancelled': return {'label': 'Annulée', 'color': const Color(0xFFE53935)};
-      default: return {'label': status, 'color': Colors.grey};
+      case 'paid': return {'label': 'Payée', 'color': const Color(0xFF10B981)};
+      case 'pending': return {'label': 'En attente', 'color': const Color(0xFFF59E0B)};
+      case 'partial': return {'label': 'Partiel', 'color': const Color(0xFF6366F1)};
+      case 'cancelled': return {'label': 'Annulée', 'color': const Color(0xFFEF4444)};
+      default: return {'label': status, 'color': const Color(0xFF94A3B8)};
     }
   }
 
@@ -294,97 +315,125 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
     final date = invoice['date'] != null ? DateFormat('dd/MM/yyyy').format(DateTime.parse(invoice['date'])) : '-';
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (statusInfo['color'] as Color).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.receipt_rounded, color: statusInfo['color'], size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [(statusInfo['color'] as Color).withValues(alpha: 0.2), (statusInfo['color'] as Color).withValues(alpha: 0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: (statusInfo['color'] as Color).withValues(alpha: 0.2)),
+                ),
+                child: Icon(Icons.receipt_long_rounded, color: statusInfo['color'], size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          invoice['patientName'] ?? 'Patient Anonyme',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          date,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       invoice['invoiceNumber'] ?? 'FAC-???',
                       style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      date,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  invoice['patientName'] ?? 'Patient Anonyme',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: (statusInfo['color'] as Color).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: (statusInfo['color'] as Color).withValues(alpha: 0.2)),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
-                        color: (statusInfo['color'] as Color).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        statusInfo['label'],
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: statusInfo['color'],
-                        ),
+                        color: statusInfo['color'],
+                        shape: BoxShape.circle,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
-                      '${_formatMoney((invoice['totalAmount'] ?? 0).toDouble())} DA',
+                      statusInfo['label'],
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF7C3AED), // Premium Blue
+                        color: statusInfo['color'],
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Text(
+                '${_formatMoney((invoice['totalAmount'] ?? 0).toDouble())} DA',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E1B4B),
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
           ),
         ],
       ),
