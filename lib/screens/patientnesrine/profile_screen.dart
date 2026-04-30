@@ -29,6 +29,22 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isExporting = false;
+  bool _temporaryAccessEnabled = false;
+  DateTime? _temporaryAccessUntil;
+  bool _isUpdatingTemporaryAccess = false;
+  bool _accessStateInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_accessStateInitialized) return;
+    final user = context.read<AuthProvider>().user;
+    if (user?.role == UserRole.patient) {
+      _temporaryAccessEnabled = user?.temporaryAccessEnabled ?? false;
+      _temporaryAccessUntil = user?.temporaryAccessUntil;
+      _accessStateInitialized = true;
+    }
+  }
 
   Future<void> _exportMedicalRecord(BuildContext context) async {
     if (_isExporting) return;
@@ -380,7 +396,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildAccessTile("Allow Emergency Access", true, Icons.emergency),
                   _buildAccessTile("Share Record with Dr. Smith", true, Icons.share),
-                  _buildAccessTile("Temporary Access (24h)", false, Icons.access_time),
+                  _buildTemporaryAccessTile(),
                 ],
               ),
             ),
@@ -494,6 +510,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
               value: isActive,
               activeColor: AppColors.primary,
               onChanged: (val) {},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleTemporaryAccess(bool enabled) async {
+    if (_isUpdatingTemporaryAccess) return;
+    setState(() => _isUpdatingTemporaryAccess = true);
+
+    try {
+      final until = enabled ? DateTime.now().add(const Duration(hours: 24)) : null;
+      await context.read<AuthProvider>().updatePatientTemporaryAccess(
+            enabled: enabled,
+            until: until,
+          );
+      if (!mounted) return;
+      setState(() {
+        _temporaryAccessEnabled = enabled;
+        _temporaryAccessUntil = until;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(enabled ? 'Accès temporaire activé pour 24h' : 'Accès temporaire désactivé'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdatingTemporaryAccess = false);
+    }
+  }
+
+  Widget _buildTemporaryAccessTile() {
+    final enabled = _temporaryAccessEnabled;
+    final untilText = enabled && _temporaryAccessUntil != null
+        ? 'Expire le ${DateFormat('dd/MM/yyyy HH:mm').format(_temporaryAccessUntil!.toLocal())}'
+        : 'Activé pour 24h quand vous l’allumez';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.small,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: enabled ? AppColors.primaryGradient : null,
+              color: enabled ? null : AppColors.backgroundDark,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.access_time,
+              color: enabled ? Colors.white : AppColors.textGrey,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Temporary Access (24h)',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  untilText,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: AppColors.textGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Transform.scale(
+            scale: 0.85,
+            child: Switch(
+              value: enabled,
+              activeColor: AppColors.primary,
+              onChanged: _isUpdatingTemporaryAccess ? null : (val) => _toggleTemporaryAccess(val),
             ),
           ),
         ],

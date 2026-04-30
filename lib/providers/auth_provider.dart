@@ -59,6 +59,8 @@ class AuthProvider with ChangeNotifier {
           allergies: (fetchedUser.allergies != null && fetchedUser.allergies!.isNotEmpty) 
               ? fetchedUser.allergies 
               : savedUser?.allergies,
+          temporaryAccessEnabled: fetchedUser.temporaryAccessEnabled ?? savedUser?.temporaryAccessEnabled,
+          temporaryAccessUntil: fetchedUser.temporaryAccessUntil ?? savedUser?.temporaryAccessUntil,
         );
         debugPrint('[AuthProvider] Merged user fullName: ${_user?.fullName}');
       } else if (savedUser != null) {
@@ -240,6 +242,31 @@ class AuthProvider with ChangeNotifier {
         height: height,
         weight: weight,
         allergies: allergies,
+      );
+      _user = updatedUser;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<bool> updatePatientTemporaryAccess({
+    required bool enabled,
+    DateTime? until,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final updatedUser = await ApiService.patchPatientProfileFields(
+        temporaryAccessEnabled: enabled,
+        temporaryAccessUntil: until,
       );
       _user = updatedUser;
       _isLoading = false;

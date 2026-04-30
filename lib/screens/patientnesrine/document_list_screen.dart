@@ -3,9 +3,12 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
+import '../../services/prescriptions_service.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'ocr_analyze_screen.dart';
@@ -59,6 +62,16 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
 
   /// URL pour ouvrir le fichier (résultat labo ou scan patient dans /uploads/).
   String? _documentFileUrl(Map<String, dynamic> doc) {
+    // prescription image
+    var presUrl = (doc['prescriptionImageUrl'] ?? '').toString();
+    if (presUrl.isNotEmpty) {
+      // Resolve relative URLs (starting with /) against backend baseUrl
+      if (presUrl.startsWith('/')) {
+        presUrl = '${ApiService.baseUrl}$presUrl';
+      }
+      return presUrl;
+    }
+
     final rf = (doc['resultFile'] ?? '').toString();
     if (rf.isNotEmpty) {
       final fileName = rf.split('/').last;
@@ -86,8 +99,15 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   }
 
   bool _isPrescriptionDoc(Map<String, dynamic> doc) {
+    final src = (doc['_docSource'] ?? '').toString().toLowerCase();
+    if (src == 'prescription') return true;
+
     final cat = (doc['documentCategory'] ?? '').toString().toLowerCase();
     if (cat == 'prescription') return true;
+
+    // direct prescription image/url field
+    final presUrl = (doc['prescriptionImageUrl'] ?? '').toString();
+    if (presUrl.isNotEmpty) return true;
     final title = (doc['title'] ?? '').toString().toLowerCase();
     if (title.startsWith('ordonnance')) return true;
     final details = doc['details'];
@@ -141,6 +161,18 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
           }
         } catch (_) {}
       }
+
+      // fetch prescriptions for the patient
+      try {
+        final pres = await PrescriptionsService.getMyPrescriptions();
+        for (final e in pres) {
+          final m = Map<String, dynamic>.from(e);
+          m['_docSource'] = 'prescription';
+          // ensure image URL is present under prescriptionImageUrl
+          // backend returns prescriptionImageUrl field when present
+          lab.add(m);
+        }
+      } catch (_) {}
 
       try {
         final rawOcr = await ApiService.getOcrDocuments();
@@ -562,18 +594,12 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
     if (showThumb) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(14),
-        child: FutureBuilder<Map<String, String>>(
-          future: ApiService.authImageHeaders(),
+        child: FutureBuilder<Uint8List?>(
+          future: kIsWeb ? _fetchImageBytes(openUrl) : Future.value(null),
           builder: (context, snapshot) {
-            return Image.network(
-              openUrl,
-              width: 52,
-              height: 52,
-              fit: BoxFit.cover,
-              headers: snapshot.data,
-              gaplessPlayback: true,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
+            final bytes = snapshot.data;
+            if (kIsWeb) {
+              if (snapshot.connectionState != ConnectionState.done) {
                 return Container(
                   width: 52,
                   height: 52,
@@ -585,8 +611,46 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: accent),
                   ),
                 );
+              }
+              if (bytes != null && bytes.isNotEmpty) {
+                return Image.memory(
+                  bytes,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                );
+              }
+              return _buildCardIconPlaceholder(isPrescription, accent, looksPdf);
+            }
+
+            return FutureBuilder<Map<String, String>>(
+              future: ApiService.authImageHeaders(openUrl),
+              builder: (context, hdrSnap) {
+                return Image.network(
+                  openUrl,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  headers: hdrSnap.data,
+                  gaplessPlayback: true,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      color: accent.withValues(alpha: 0.1),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: accent),
+                      ),
+                    );
+                  },
+                  errorBuilder: (_, __, ___) => _buildCardIconPlaceholder(isPrescription, accent, looksPdf),
+                );
               },
-              errorBuilder: (_, __, ___) => _buildCardIconPlaceholder(isPrescription, accent, looksPdf),
             );
           },
         ),
@@ -618,6 +682,16 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
         ),
       ),
     );
+  }
+
+  Future<Uint8List?> _fetchImageBytes(String? url) async {
+    if (url == null || url.isEmpty) return null;
+    try {
+      final headers = await ApiService.authImageHeaders(url);
+      final resp = await http.get(Uri.parse(url), headers: headers);
+      if (resp.statusCode == 200) return resp.bodyBytes;
+    } catch (_) {}
+    return null;
   }
 
   Widget _buildTabScrollContent() {

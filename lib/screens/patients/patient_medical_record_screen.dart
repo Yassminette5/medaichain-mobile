@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../services/prescriptions_service.dart';
 import '../../widgets/medical_card.dart';
 import '../../medecin/screens/prescription/create_prescription_screen.dart';
 import '../../widgets/ai_assistant_chat.dart';
@@ -31,6 +32,7 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
   List<dynamic> _medicalRecords = [];
   List<dynamic> _analysisResults = [];
   List<dynamic> _medicalHistory = [];
+  List<dynamic> _prescriptions = [];
   bool _loading = true;
   String? _error;
 
@@ -53,6 +55,7 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
     List<dynamic> records = [];
     List<dynamic> analyses = [];
     List<dynamic> history = [];
+    List<dynamic> prescriptions = [];
     String? errorMsg;
 
     try {
@@ -77,11 +80,19 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
       history = [];
     }
 
+    try {
+      prescriptions = await PrescriptionsService.getMyPrescriptions();
+      if (prescriptions is! List) prescriptions = [];
+    } catch (_) {
+      prescriptions = [];
+    }
+
     if (mounted) {
       setState(() {
         _medicalRecords = records;
         _analysisResults = analyses;
         _medicalHistory = history;
+        _prescriptions = prescriptions;
         _error = errorMsg;
         _loading = false;
       });
@@ -216,6 +227,8 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
                         if (_hasRealData) _buildAnalysisSection(),
                         if (_hasRealData) const SizedBox(height: 24),
                         _buildMedicalHistory(),
+                        const SizedBox(height: 24),
+                        _buildPrescriptionsSection(),
                         const SizedBox(height: 24),
                         _buildCurrentMedications(),
                         const SizedBox(height: 24),
@@ -688,6 +701,126 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
           Expanded(child: Text(condition, style: const TextStyle(fontWeight: FontWeight.w600))),
           Text(year, style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionsSection() {
+    if (_prescriptions.isEmpty) {
+      return MedicalCard(
+        title: 'Ordonnances reçues',
+        titleIcon: Icons.receipt_long,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'Aucune ordonnance pour le moment.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    return MedicalCard(
+      title: 'Ordonnances reçues',
+      titleIcon: Icons.receipt_long,
+      child: Column(
+        children: _prescriptions.take(5).map((presc) {
+          final map = presc is Map<String, dynamic> ? presc : <String, dynamic>{};
+          final medications = map['medications'] is List ? (map['medications'] as List) : [];
+          final medCount = medications.length;
+          final createdAt = map['createdAt'] != null
+              ? DateFormat('dd/MM/yyyy').format(DateTime.parse(map['createdAt'].toString()))
+              : 'N/A';
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.assignment, color: AppColors.primary, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ordonnance du $createdAt',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$medCount médicament(s)',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (map['prescriptionImageUrl'] != null && (map['prescriptionImageUrl'] as String).isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.image, color: AppColors.success, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Image',
+                              style: TextStyle(color: AppColors.success, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                if (medications.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 42),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: medications.take(2).map<Widget>((med) {
+                        final m = med is Map<String, dynamic> ? med : <String, dynamic>{};
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '• ${m['name'] ?? 'N/A'} ${m['dosage'] ?? ''}',
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  if (medCount > 2)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 42, top: 4),
+                      child: Text(
+                        '+ ${medCount - 2} autres',
+                        style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                ],
+                if (_prescriptions.indexOf(presc) < _prescriptions.length - 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Divider(height: 1, color: AppColors.border),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

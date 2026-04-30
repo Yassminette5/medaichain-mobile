@@ -79,6 +79,8 @@ class User {
   final int? height;
   final int? weight;
   final List<String>? allergies;
+  final bool? temporaryAccessEnabled;
+  final DateTime? temporaryAccessUntil;
 
   User({
     required this.id,
@@ -96,6 +98,8 @@ class User {
     this.height,
     this.weight,
     this.allergies,
+    this.temporaryAccessEnabled,
+    this.temporaryAccessUntil,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -120,6 +124,10 @@ class User {
       weight: (json['weight'] as num?)?.toInt(),
       allergies: json['allergies'] != null
           ? List<String>.from(json['allergies'])
+          : null,
+      temporaryAccessEnabled: json['temporaryAccessEnabled'] as bool?,
+      temporaryAccessUntil: json['temporaryAccessUntil'] != null
+          ? DateTime.tryParse(json['temporaryAccessUntil'].toString())
           : null,
     );
   }

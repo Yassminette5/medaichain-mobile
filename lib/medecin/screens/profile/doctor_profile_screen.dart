@@ -6,6 +6,7 @@ import 'package:medaichainmobile/widgets/medical_card.dart';
 import 'package:medaichainmobile/providers/auth_provider.dart';
 import 'package:medaichainmobile/models/doctor_profile_model.dart';
 import 'package:medaichainmobile/screens/onboarding/welcome_screen.dart';
+import 'package:medaichainmobile/medecin/screens/prescription/doctor_prescriptions_screen.dart';
 
 /// Écran du profil médecin — données dynamiques depuis le backend
 class DoctorProfileScreen extends StatefulWidget {
@@ -312,6 +313,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           _buildMenuItem(Icons.schedule_outlined, 'Horaires de consultation', AppColors.diagnosis, () {}),
           const SizedBox(height: 12),
           _buildMenuItem(Icons.medical_services_outlined, 'Spécialités', AppColors.prescription, () {}),
+          const SizedBox(height: 12),
+          _buildMenuItem(Icons.receipt_long_outlined, 'Mes ordonnances', AppColors.prescription, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DoctorPrescriptionsScreen()),
+            );
+          }),
         ],
       ),
     );

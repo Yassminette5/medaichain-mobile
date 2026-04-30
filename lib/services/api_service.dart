@@ -359,12 +359,23 @@ class ApiService {
   }
 
   /// En-têtes optionnels pour [Image.network] (fichiers sur l’API avec JWT).
-  static Future<Map<String, String>> authImageHeaders() async {
+  static Future<Map<String, String>> authImageHeaders([String? targetUrl]) async {
     final token = await getAccessToken();
-    return {
+    final headers = {
       'Authorization': 'Bearer $token',
       'Accept': 'image/*,*/*;q=0.8',
     };
+
+    // Decide whether to include the ngrok bypass header. Some setups use
+    // a public ngrok URL for uploaded images while the API baseUrl remains
+    // localhost/10.0.2.2. Check the explicit targetUrl first, then fallback
+    // to baseUrl.
+    final check = (targetUrl ?? baseUrl).toLowerCase();
+    if (check.contains('ngrok') || check.contains('ngrok-free')) {
+      headers['ngrok-skip-browser-warning'] = 'any';
+    }
+
+    return headers;
   }
 
   // ========== PROFIL UTILISATEUR ==========
@@ -469,6 +480,8 @@ class ApiService {
     int? weight,
     String? gender,
     String? fullName,
+    bool? temporaryAccessEnabled,
+    DateTime? temporaryAccessUntil,
   }) async {
     final token = await getAccessToken();
     final body = <String, dynamic>{};
@@ -480,6 +493,10 @@ class ApiService {
       body['gender'] = gender.trim().toLowerCase();
     }
     if (fullName != null && fullName.trim().isNotEmpty) body['fullName'] = fullName.trim();
+    if (temporaryAccessEnabled != null) body['temporaryAccessEnabled'] = temporaryAccessEnabled;
+    if (temporaryAccessUntil != null) {
+      body['temporaryAccessUntil'] = temporaryAccessUntil.toIso8601String();
+    }
     if (body.isEmpty) {
       return getProfile();
     }
@@ -507,6 +524,8 @@ class ApiService {
         weight: weight,
         gender: gender,
         fullName: fullName,
+        temporaryAccessEnabled: temporaryAccessEnabled,
+        temporaryAccessUntil: temporaryAccessUntil,
       );
     }
     try {
@@ -4008,7 +4027,7 @@ class ApiService {
       Uri.parse('$aiBaseUrl/medicine'),
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
+        'ngrok-skip-browser-warning': 'any',
       },
       body: jsonEncode({
         'name': name,
@@ -4027,7 +4046,7 @@ class ApiService {
       Uri.parse('$aiBaseUrl/qrcode'),
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
+        'ngrok-skip-browser-warning': 'any',
       },
       body: jsonEncode({
         'data': data,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import 'package:medaichainmobile/core/theme/app_colors.dart';
 import 'package:medaichainmobile/services/prescriptions_service.dart';
 import 'package:medaichainmobile/providers/patients_provider.dart';
@@ -28,6 +31,9 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
   final _formKey = GlobalKey<FormState>();
   final List<Map<String, dynamic>> _medications = [];
   final _notesController = TextEditingController();
+  XFile? _pickedImage;
+  Uint8List? _pickedImageBytes;
+  String? _uploadedImageUrl;
   String? _selectedPatientId;
   Patient? _selectedPatient;
   bool _isLoading = false;
@@ -54,6 +60,7 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
   @override
   void dispose() {
     _notesController.dispose();
+    _pickedImageBytes = null;
     super.dispose();
   }
 
@@ -97,6 +104,8 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
                 MedicalTextField(label: 'Instructions supplémentaires', hint: 'Entrez les instructions pour le patient...', controller: _notesController, maxLines: 3),
                 const SizedBox(height: 24),
                 _buildPrescriptionSummary(),
+                const SizedBox(height: 16),
+                _buildImagePicker(),
                 const SizedBox(height: 24),
                 _buildValidationStatus(),
               ]),
@@ -106,6 +115,44 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
         ]),
       ),
     );
+  }
+
+  Widget _buildImagePicker() {
+    return MedicalCard(
+      title: 'Image ordonnance (optionnel)',
+      child: Column(children: [
+        if (_pickedImage != null && _pickedImageBytes != null)
+          Column(children: [
+            Image.memory(_pickedImageBytes!, height: 180, fit: BoxFit.contain),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: OutlinedButton.icon(onPressed: () => setState(() { _pickedImage = null; _pickedImageBytes = null; }), icon: const Icon(Icons.delete), label: const Text('Retirer'))),
+            ])
+          ])
+        else
+          Row(children: [
+            Expanded(child: OutlinedButton.icon(onPressed: _pickFromGallery, icon: const Icon(Icons.photo), label: const Text('Choisir depuis la galerie'))),
+            const SizedBox(width: 8),
+            Expanded(child: OutlinedButton.icon(onPressed: _pickFromCamera, icon: const Icon(Icons.camera_alt), label: const Text('Prendre une photo'))),
+          ]),
+      ]),
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
+    final picker = ImagePicker();
+    final XFile? picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1600, maxHeight: 1600, imageQuality: 85);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    setState(() { _pickedImage = picked; _pickedImageBytes = bytes; });
+  }
+
+  Future<void> _pickFromCamera() async {
+    final picker = ImagePicker();
+    final XFile? picked = await picker.pickImage(source: ImageSource.camera, maxWidth: 1600, maxHeight: 1600, imageQuality: 85);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    setState(() { _pickedImage = picked; _pickedImageBytes = bytes; });
   }
 
   Widget _buildPatientHeader() {
@@ -282,6 +329,37 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
       };
     }).toList();
 
+    Future<void> doCreate(String? imageUrl) async {
+      await PrescriptionsService.createPrescription(
+        patientId: _selectedPatientId!,
+        medications: meds,
+        notes: _notesController.text,
+        prescriptionImageUrl: imageUrl,
+      );
+    }
+
+    Future(() async {
+      try {
+        String? imageUrl;
+        if (_pickedImage != null) {
+          imageUrl = await PrescriptionsService.uploadPrescriptionImage(_pickedImage!);
+          _uploadedImageUrl = imageUrl;
+        }
+        await doCreate(imageUrl);
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        _showSuccessDialog();
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    });
+    return;
+
+    // legacy flow (kept for reference)
     PrescriptionsService.createPrescription(
       patientId: _selectedPatientId!,
       medications: meds,
