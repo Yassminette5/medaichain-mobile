@@ -3,6 +3,8 @@ import 'store_offer.dart';
 
 /// Web : pas de SDK RevenueCat dans le navigateur (même binaire).
 class RevenueCatBridge {
+  static bool get isTestMode => true; // Web is always test mode
+
   static Future<void> configure(String apiKey, {String? userId}) async {}
 
   static Future<void> logIn(String userId) async {}
@@ -15,11 +17,19 @@ class RevenueCatBridge {
 
   static Future<bool> purchase(
     StoreOffer offer,
-    String entitlementId,
-  ) async =>
+    String entitlementId, {
+    bool skipNativeDialog = false,
+  }) async =>
       false;
 
   static Future<bool> restorePurchases(String entitlementId) async => false;
 
   static void addCustomerInfoListener(VoidCallback onUpdate) {}
+
+  static Future<bool> grantTestEntitlement(String entitlementId) async => false;
+
+  static Future<bool> purchaseNative(
+    StoreOffer offer,
+    String entitlementId,
+  ) async => false;
 }

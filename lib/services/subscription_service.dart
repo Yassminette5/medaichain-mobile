@@ -112,14 +112,54 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
-  Future<bool> purchaseStoreOffer(StoreOffer offer) async {
+  Future<bool> purchaseStoreOffer(StoreOffer offer, {bool skipNativeDialog = false}) async {
     try {
-      _isPremium = await RevenueCatBridge.purchase(offer, _premiumEntitlement);
+      _isPremium = await RevenueCatBridge.purchase(
+        offer,
+        _premiumEntitlement,
+        skipNativeDialog: skipNativeDialog,
+      );
       await refreshBackendStatus();
       notifyListeners();
       return _isPremium;
     } catch (e) {
       debugPrint('Purchase error: $e');
+      return false;
+    }
+  }
+
+  /// Accorde le premium via l'API REST (test mode).
+  /// Retourne true si l'API REST a réussi.
+  /// Si l'API échoue, retourne false → le caller utilise le fallback natif.
+  Future<bool> grantTestPremium() async {
+    try {
+      final success = await RevenueCatBridge.grantTestEntitlement(
+        _premiumEntitlement,
+      );
+      if (success) {
+        _isPremium = true;
+        await refreshBackendStatus();
+        notifyListeners();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Grant test premium error: $e');
+      return false;
+    }
+  }
+
+  /// Achat via le SDK natif (fallback si l'API REST échoue).
+  Future<bool> purchaseNative(StoreOffer offer) async {
+    try {
+      _isPremium = await RevenueCatBridge.purchaseNative(
+        offer,
+        _premiumEntitlement,
+      );
+      await refreshBackendStatus();
+      notifyListeners();
+      return _isPremium;
+    } catch (e) {
+      debugPrint('Native purchase error: $e');
       return false;
     }
   }

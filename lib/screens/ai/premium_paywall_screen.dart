@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:ui';
 import 'dart:async';
-import 'dart:math';
+
 import '../../core/theme/app_colors.dart';
 import '../../services/subscription_service.dart';
+import '../../services/revenuecat_bridge.dart';
 import '../../services/ad_service.dart';
 import '../../services/store_offer.dart';
 
@@ -126,17 +128,35 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
   }
 
   Future<void> _purchase(StoreOffer offer) async {
+    // Mode test : notre popup glassmorphism en premier
+    if (RevenueCatBridge.isTestMode) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _TestPurchaseDialog(offer: offer),
+      );
+      if (confirmed != true || !mounted) return;
+
+      setState(() => _isPurchasing = true);
+      
+      // On lance le paiement natif RevenueCat juste après pour l'enregistrer dans le dashboard
+      final successNative = await _subService.purchaseNative(offer);
+      
+      if (mounted) {
+        setState(() => _isPurchasing = false);
+        if (successNative) {
+          Navigator.of(context).pop(true);
+        }
+      }
+      return;
+    }
+
+    // Production : achat réel via le store natif (Google Play / App Store)
     setState(() => _isPurchasing = true);
     final success = await _subService.purchaseStoreOffer(offer);
     if (mounted) {
       setState(() => _isPurchasing = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Abonnement Premium activé !'),
-            backgroundColor: Colors.green,
-          ),
-        );
         Navigator.of(context).pop(true);
       }
     }
@@ -158,323 +178,273 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final isWeb = kIsWeb;
     final credits = _subService.adCredits;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Column(
-          children: [
-            const SizedBox(height: 8),
-
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: AppColors.aiGradient,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: AppColors.colored(AppColors.secondary),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.auto_awesome, color: Colors.white, size: 48),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'IA Premium',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Accédez à l\'analyse IA pour diagnostics, ordonnances et conseils médicaux',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Crédits actuels
-            if (credits > 0) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.successLight,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.success.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.token, color: AppColors.success),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Vous avez $credits crédit${credits > 1 ? 's' : ''} IA disponible${credits > 1 ? 's' : ''}',
-                        style: const TextStyle(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // Option 1 : Regarder une pub
-            _buildOptionCard(
-              icon: Icons.play_circle_filled,
-              iconColor: AppColors.info,
-              title: 'Gratuit - Regarder une vidéo',
-              subtitle:
-                  'Regardez une courte vidéo publicitaire\npour gagner 1 crédit d\'analyse IA',
-              buttonText: _isWatchingAd ? 'Chargement...' : 'Regarder la vidéo',
-              buttonGradient: const LinearGradient(
-                colors: [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
-              ),
-              onPressed: _isWatchingAd ? null : _watchAd,
-              badge: 'GRATUIT',
-              badgeColor: AppColors.info,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Option 2 : Abonnement Premium
-            _buildOptionCard(
-              icon: Icons.diamond,
-              iconColor: AppColors.secondary,
-              title: 'Premium - Analyses illimitées',
-              subtitle:
-                  'Accès illimité à l\'IA médicale\nSans publicités, priorité de traitement',
-              buttonText: _isLoadingPackages
-                  ? 'Chargement...'
-                  : _isPurchasing
-                      ? 'Achat en cours...'
-                      : 'S\'abonner',
-              buttonGradient: AppColors.aiGradient,
-              onPressed: (_isLoadingPackages || _isPurchasing || _packages.isEmpty)
-                  ? null
-                  : () {
-                      _purchase(_packages.first);
-                    },
-              badge: 'RECOMMANDÉ',
-              badgeColor: AppColors.secondary,
-              packages: _packages,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Avantages Premium
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Avantages Premium',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFeatureRow(
-                    Icons.all_inclusive,
-                    'Analyses IA illimitées',
-                  ),
-                  _buildFeatureRow(Icons.speed, 'Priorité de traitement'),
-                  _buildFeatureRow(Icons.block, 'Sans publicités'),
-                  _buildFeatureRow(
-                    Icons.medical_services,
-                    'Suggestions d\'ordonnances',
-                  ),
-                  _buildFeatureRow(Icons.insights, 'Diagnostics avancés'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Restaurer
-            if (!isWeb)
-              TextButton(
-                onPressed: _restore,
-                child: const Text(
-                  'Restaurer un achat existant',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-
-            const SizedBox(height: 32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-
-          Widget _buildOptionCard({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required String buttonText,
-    required LinearGradient buttonGradient,
-    required VoidCallback? onPressed,
-    required String badge,
-    required Color badgeColor,
-    List<StoreOffer>? packages,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppColors.small,
-      ),
-      child: Column(
+      backgroundColor: const Color(0xFF0A0E1A),
+      body: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 28),
+          // Arrière-plan avec orbes lumineuses pour l'effet premium
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF00D9FF).withValues(alpha: 0.15),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: badgeColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            badge,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          if (packages != null && packages.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            ...packages.map(
-              (p) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(
-                  '${p.title} - ${p.priceString}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
               ),
             ),
-          ],
-
-          const SizedBox(height: 14),
-
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: DecoratedBox(
+          ),
+          Positioned(
+            bottom: -50,
+            left: -100,
+            child: Container(
+              width: 250,
+              height: 250,
               decoration: BoxDecoration(
-                gradient: onPressed != null ? buttonGradient : null,
-                color: onPressed == null ? Colors.grey[300] : null,
-                borderRadius: BorderRadius.circular(14),
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.15),
               ),
-              child: ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+          
+          SafeArea(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16, top: 8),
+                    child: IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 20),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(false),
+                    ),
                   ),
                 ),
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 500),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                            child: Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(32),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 40,
+                                    spreadRadius: -10,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Crown Icon
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                      ),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                                          blurRadius: 20,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(Icons.diamond_rounded, color: Colors.white, size: 36),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  
+                                  const Text(
+                                    'MEDAIChain Pro',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  
+                                  Text(
+                                    "Accédez à la puissance illimitée de l'IA médicale sans interruption.",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 15,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 30),
+                                  
+                                  // Crédits actuels
+                                  if (credits > 0) ...[
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.05),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: const Color(0xFF00D9FF).withValues(alpha: 0.3)),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.bolt_rounded, color: Color(0xFF00D9FF), size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Vous avez $credits crédit${credits > 1 ? 's' : ''} IA',
+                                            style: const TextStyle(
+                                              color: Color(0xFF00D9FF),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                  ],
+                                  
+                                  // Features
+                                  _buildFeatureRow(Icons.check_circle_rounded, 'Analyses IA illimitées & rapides'),
+                                  _buildFeatureRow(Icons.check_circle_rounded, 'Suggestions de diagnostics expertes'),
+                                  _buildFeatureRow(Icons.check_circle_rounded, 'Zéro publicité, 100% focus'),
+                                  
+                                  const SizedBox(height: 32),
+                                  
+                                  // Abonnement
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFF00D9FF), Color(0xFF007BFF)],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF00D9FF).withValues(alpha: 0.4),
+                                            blurRadius: 20,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: (_isLoadingPackages || _isPurchasing || _packages.isEmpty)
+                                            ? null
+                                            : () => _purchase(_packages.first),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                        ),
+                                        child: Text(
+                                          _isLoadingPackages
+                                              ? 'Chargement...'
+                                              : _isPurchasing
+                                                  ? 'Activation...'
+                                                  : 'Devenir Pro - ${_packages.isNotEmpty ? _packages.first.priceString : ""}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  const SizedBox(height: 16),
+                                  
+                                  // Regarder Pub
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: OutlinedButton(
+                                      onPressed: _isWatchingAd ? null : _watchAd,
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.play_circle_fill_rounded, color: Colors.white.withValues(alpha: 0.7), size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            _isWatchingAd ? 'Chargement...' : 'Regarder une pub (1 crédit)',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white.withValues(alpha: 0.8),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  if (!isWeb) ...[
+                                    const SizedBox(height: 20),
+                                    GestureDetector(
+                                      onTap: _restore,
+                                      child: Text(
+                                        'Restaurer mes achats',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                          fontSize: 13,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -484,14 +454,16 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
 
   Widget _buildFeatureRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          Icon(icon, size: 22, color: const Color(0xFF00D9FF)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.9)),
+            ),
           ),
         ],
       ),
@@ -499,32 +471,8 @@ class _PremiumPaywallScreenState extends State<PremiumPaywallScreen> {
   }
 }
 // ─────────────────────────────────────────────────────────────────────────────
-/// Données d'une publicité simulée pour le web.
-// ─────────────────────────────────────────────────────────────────────────────
-class _AdData {
-  final String appName;
-  final String tagline;
-  final String cta;
-  final IconData icon;
-  final Color bgColor;
-  final Color accentColor;
-  final List<Color> gradientColors;
-
-  const _AdData({
-    required this.appName,
-    required this.tagline,
-    required this.cta,
-    required this.icon,
-    required this.bgColor,
-    required this.accentColor,
-    required this.gradientColors,
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-/// Simulation plein écran de pub — Web uniquement.
-/// Affiche aléatoirement l'une des 8 publicités différentes à chaque ouverture.
-/// Reproduit fidèlement l'expérience Google Ads Test Ad sur mobile.
+/// Simulation premium — Web uniquement.
+/// Affiche un écran glassmorphism avec compte à rebours avant d'accorder le crédit.
 // ─────────────────────────────────────────────────────────────────────────────
 class _WebAdCountdownDialog extends StatefulWidget {
   const _WebAdCountdownDialog();
@@ -534,100 +482,26 @@ class _WebAdCountdownDialog extends StatefulWidget {
 }
 
 class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const int _totalSeconds = 10;
   int _remaining = _totalSeconds;
   Timer? _timer;
   bool _rewardGranted = false;
   bool _canClose = false;
   late AnimationController _pulseController;
-  late _AdData _currentAd;
-
-  // ── Pool de 8 publicités variées ──────────────────────────────────────────
-  static final List<_AdData> _adPool = [
-    const _AdData(
-      appName: 'Uber Eats',
-      tagline: 'Commandez vos plats préférés\nlivrés en 30 min',
-      cta: 'Commander',
-      icon: Icons.delivery_dining,
-      bgColor: Color(0xFF142328),
-      accentColor: Color(0xFF06C167),
-      gradientColors: [Color(0xFF142328), Color(0xFF1A3A2A)],
-    ),
-    const _AdData(
-      appName: 'Spotify',
-      tagline: 'Écoutez des millions de titres\n3 mois gratuits Premium',
-      cta: 'Essayer gratuitement',
-      icon: Icons.music_note_rounded,
-      bgColor: Color(0xFF121212),
-      accentColor: Color(0xFF1DB954),
-      gradientColors: [Color(0xFF121212), Color(0xFF1A1A2E)],
-    ),
-    const _AdData(
-      appName: 'Netflix',
-      tagline: 'Films, séries et documentaires\nillimités dès 5,99€/mois',
-      cta: 'S\'abonner',
-      icon: Icons.movie_filter_rounded,
-      bgColor: Color(0xFF141414),
-      accentColor: Color(0xFFE50914),
-      gradientColors: [Color(0xFF141414), Color(0xFF2D0A0A)],
-    ),
-    const _AdData(
-      appName: 'Duolingo',
-      tagline: 'Apprenez une langue gratuitement\n5 min par jour suffisent !',
-      cta: 'Commencer',
-      icon: Icons.school_rounded,
-      bgColor: Color(0xFF235390),
-      accentColor: Color(0xFF58CC02),
-      gradientColors: [Color(0xFF235390), Color(0xFF1B3F6B)],
-    ),
-    const _AdData(
-      appName: 'Nike Run Club',
-      tagline: 'Votre coach running personnel\nGPS, plans d\'entraînement',
-      cta: 'Télécharger',
-      icon: Icons.directions_run_rounded,
-      bgColor: Color(0xFF111111),
-      accentColor: Color(0xFFFFFFFF),
-      gradientColors: [Color(0xFF111111), Color(0xFF1A1A1A)],
-    ),
-    const _AdData(
-      appName: 'Samsung Health',
-      tagline: 'Suivez votre santé au quotidien\nSommeil, sport, alimentation',
-      cta: 'Installer',
-      icon: Icons.favorite_rounded,
-      bgColor: Color(0xFF0A1F44),
-      accentColor: Color(0xFF1A73E8),
-      gradientColors: [Color(0xFF0A1F44), Color(0xFF0D2B5E)],
-    ),
-    const _AdData(
-      appName: 'YouTube Premium',
-      tagline: 'Vidéos sans pub, musique hors ligne\n1 mois offert',
-      cta: 'Essayer',
-      icon: Icons.play_circle_fill_rounded,
-      bgColor: Color(0xFF1A1A1A),
-      accentColor: Color(0xFFFF0000),
-      gradientColors: [Color(0xFF1A1A1A), Color(0xFF2D0000)],
-    ),
-    const _AdData(
-      appName: 'Starbucks',
-      tagline: 'Commandez et gagnez des étoiles\nBoisson offerte à l\'inscription',
-      cta: 'Rejoindre',
-      icon: Icons.coffee_rounded,
-      bgColor: Color(0xFF1E3932),
-      accentColor: Color(0xFF00704A),
-      gradientColors: [Color(0xFF1E3932), Color(0xFF0D2B22)],
-    ),
-  ];
+  late AnimationController _rotateController;
 
   @override
   void initState() {
     super.initState();
-    // Choisir une pub aléatoire à chaque ouverture
-    _currentAd = _adPool[Random().nextInt(_adPool.length)];
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+    _rotateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
     _startTimer();
   }
 
@@ -643,7 +517,7 @@ class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog>
           _remaining = 0;
           _rewardGranted = true;
           t.cancel();
-          Future.delayed(const Duration(milliseconds: 1500), () {
+          Future.delayed(const Duration(milliseconds: 800), () {
             if (mounted) setState(() => _canClose = true);
           });
         }
@@ -655,289 +529,696 @@ class _WebAdCountdownDialogState extends State<_WebAdCountdownDialog>
   void dispose() {
     _timer?.cancel();
     _pulseController.dispose();
+    _rotateController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ad = _currentAd;
+    final progress = (_totalSeconds - _remaining) / _totalSeconds;
 
     return Dialog.fullscreen(
-      backgroundColor: ad.bgColor,
+      backgroundColor: const Color(0xFF0A0E1A),
       child: Stack(
         children: [
-          // ── Fond dégradé ────────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [...ad.gradientColors, ad.bgColor],
-              ),
-            ),
-          ),
-
-          // ── Contenu central ─────────────────────────────────────
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          // ── Orbes lumineux animés ─────────────────────────────────
+          AnimatedBuilder(
+            animation: _rotateController,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _rotateController.value * 2 * 3.14159,
+                child: child,
+              );
+            },
+            child: Stack(
               children: [
-                // Logo App
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final scale = 1.0 + (_pulseController.value * 0.05);
-                    return Transform.scale(scale: scale, child: child);
-                  },
+                Positioned(
+                  top: -80,
+                  right: -60,
                   child: Container(
-                    width: 120,
-                    height: 120,
+                    width: 350,
+                    height: 350,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ad.accentColor.withValues(alpha: 0.4),
-                          blurRadius: 30,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Icon(
-                        ad.icon,
-                        size: 56,
-                        color: ad.accentColor,
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF00D9FF).withValues(alpha: 0.2),
+                          const Color(0xFF00D9FF).withValues(alpha: 0.0),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
-
-                // Nom de l'app
-                Text(
-                  ad.appName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Tagline
-                Text(
-                  ad.tagline,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 15,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Bouton CTA
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: ad.accentColor,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ad.accentColor.withValues(alpha: 0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    ad.cta,
-                    style: TextStyle(
-                      color: ad.accentColor.computeLuminance() > 0.5
-                          ? Colors.black87
-                          : Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // ── Stars / Rating simulé ─────────────────────────
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...List.generate(5, (i) => Icon(
-                      i < 4 ? Icons.star_rounded : Icons.star_half_rounded,
-                      color: const Color(0xFFFFC107),
-                      size: 18,
-                    )),
-                    const SizedBox(width: 6),
-                    Text(
-                      '4.5',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 13,
+                Positioned(
+                  bottom: -100,
+                  left: -80,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.2),
+                          AppColors.primary.withValues(alpha: 0.0),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '100M+',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-
-                // Progress bar
-                if (!_rewardGranted) ...[
-                  const SizedBox(height: 48),
-                  SizedBox(
+                Positioned(
+                  top: MediaQuery.of(context).size.height * 0.4,
+                  left: MediaQuery.of(context).size.width * 0.5 - 100,
+                  child: Container(
                     width: 200,
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: (_totalSeconds - _remaining) / _totalSeconds,
-                            minHeight: 4,
-                            backgroundColor: Colors.white12,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ad.accentColor.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Fermer dans $_remaining s',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFFFFD700).withValues(alpha: 0.1),
+                          const Color(0xFFFFD700).withValues(alpha: 0.0),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
 
-          // ── Bannière "Test Ad" en haut ─────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              color: Colors.black54,
-              child: const Center(
-                child: Text(
-                  'Test Ad',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // ── "Reward granted" notification ───────────────────────
-          if (_rewardGranted)
-            Positioned(
-              top: 44,
-              right: 16,
-              child: AnimatedOpacity(
-                opacity: 1.0,
-                duration: const Duration(milliseconds: 400),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Row(
+          // ── Contenu principal ──────────────────────────────────────
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.greenAccent, size: 16),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Reward granted',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                      // ── Icône animée ──────────────────────────────
+                      AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          final scale = 1.0 + (_pulseController.value * 0.08);
+                          return Transform.scale(scale: scale, child: child);
+                        },
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: _rewardGranted
+                                ? const LinearGradient(colors: [Color(0xFF00E676), Color(0xFF00C853)])
+                                : const LinearGradient(colors: [Color(0xFF00D9FF), Color(0xFF007BFF)]),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_rewardGranted ? const Color(0xFF00E676) : const Color(0xFF00D9FF))
+                                    .withValues(alpha: 0.5),
+                                blurRadius: 30,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _rewardGranted ? Icons.check_rounded : Icons.bolt_rounded,
+                            color: Colors.white,
+                            size: 48,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _canClose ? () => Navigator.of(context).pop(true) : null,
-                        child: const Icon(Icons.close, color: Colors.white54, size: 16),
+
+                      const SizedBox(height: 32),
+
+                      // ── Titre ──────────────────────────────────────
+                      Text(
+                        _rewardGranted ? 'Crédit Obtenu !' : 'Obtenir un Crédit IA',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        _rewardGranted
+                            ? 'Votre crédit IA a été ajouté avec succès.'
+                            : 'Patientez quelques secondes pour\nobtenir votre crédit gratuit.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // ── Carte glassmorphism ────────────────────────
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: Container(
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.07),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                // ── Circular progress ───────────────
+                                SizedBox(
+                                  width: 120,
+                                  height: 120,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 120,
+                                        height: 120,
+                                        child: CircularProgressIndicator(
+                                          value: progress,
+                                          strokeWidth: 6,
+                                          strokeCap: StrokeCap.round,
+                                          backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            _rewardGranted
+                                                ? const Color(0xFF00E676)
+                                                : const Color(0xFF00D9FF),
+                                          ),
+                                        ),
+                                      ),
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _rewardGranted ? '✓' : '$_remaining',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: _rewardGranted ? 36 : 40,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                          if (!_rewardGranted)
+                                            Text(
+                                              'secondes',
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(alpha: 0.5),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // ── Features ─────────────────────────
+                                _buildMiniFeature(Icons.smart_toy_rounded, 'Analyse IA médicale'),
+                                const SizedBox(height: 10),
+                                _buildMiniFeature(Icons.speed_rounded, 'Résultat instantané'),
+                                const SizedBox(height: 10),
+                                _buildMiniFeature(Icons.shield_rounded, 'Données sécurisées'),
+
+                                const SizedBox(height: 24),
+
+                                // ── Bouton ────────────────────────────
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 400),
+                                  child: _canClose
+                                      ? SizedBox(
+                                          key: const ValueKey('btn_ready'),
+                                          width: double.infinity,
+                                          height: 54,
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF00E676), Color(0xFF00C853)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(18),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF00E676).withValues(alpha: 0.4),
+                                                  blurRadius: 16,
+                                                  offset: const Offset(0, 6),
+                                                ),
+                                              ],
+                                            ),
+                                            child: ElevatedButton.icon(
+                                              onPressed: () => Navigator.of(context).pop(true),
+                                              icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
+                                              label: const Text(
+                                                'Utiliser mon crédit',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.transparent,
+                                                shadowColor: Colors.transparent,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(18),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : SizedBox(
+                                          key: const ValueKey('btn_wait'),
+                                          width: double.infinity,
+                                          height: 54,
+                                          child: OutlinedButton(
+                                            onPressed: null,
+                                            style: OutlinedButton.styleFrom(
+                                              side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(18),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white.withValues(alpha: 0.4),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  'Préparation du crédit...',
+                                                  style: TextStyle(
+                                                    color: Colors.white.withValues(alpha: 0.5),
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Annuler ────────────────────────────────────
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(
+                          'Annuler',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ),
-
-          // ── Bouton X pour fermer ────────────────────────────────
-          if (_canClose)
-            Positioned(
-              top: 44,
-              left: 16,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(true),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: const Icon(Icons.close, color: Colors.white, size: 22),
-                ),
-              ),
-            ),
-
-          // ── "Ad" badge en bas à gauche (comme Google) ───────────
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black45,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335)],
-                    ).createShader(bounds),
-                    child: const Icon(Icons.ads_click, size: 14, color: Colors.white),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Ad • Google',
-                    style: TextStyle(color: Colors.white54, fontSize: 11),
-                  ),
-                ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMiniFeature(IconData icon, String text) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00D9FF).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: const Color(0xFF00D9FF), size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          text,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+/// Test Purchase Dialog — Glassmorphism style
+/// Simulates a RevenueCat purchase confirmation (sandbox/test mode).
+// ─────────────────────────────────────────────────────────────────────────────
+class _TestPurchaseDialog extends StatefulWidget {
+  final StoreOffer offer;
+  const _TestPurchaseDialog({required this.offer});
+
+  @override
+  State<_TestPurchaseDialog> createState() => _TestPurchaseDialogState();
+}
+
+class _TestPurchaseDialogState extends State<_TestPurchaseDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  bool _isProcessing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirmPurchase() async {
+    setState(() => _isProcessing = true);
+    // Simulate processing time
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (mounted) Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Center(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Material(
+                color: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                    child: Container(
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF1A1F3A).withValues(alpha: 0.95),
+                            const Color(0xFF0F1329).withValues(alpha: 0.98),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00D9FF).withValues(alpha: 0.15),
+                            blurRadius: 40,
+                            spreadRadius: -5,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Badge "Test Mode"
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.science_rounded,
+                                    color: Colors.amber, size: 14),
+                                SizedBox(width: 6),
+                                Text(
+                                  'SANDBOX TEST',
+                                  style: TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Crown icon
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFFD700)
+                                      .withValues(alpha: 0.4),
+                                  blurRadius: 24,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.diamond_rounded,
+                                color: Colors.white, size: 32),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Title
+                          const Text(
+                            'Confirmer l\'abonnement',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Text(
+                            widget.offer.title,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 14,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Price card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF00D9FF).withValues(alpha: 0.1),
+                                  const Color(0xFF007BFF).withValues(alpha: 0.05),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: const Color(0xFF00D9FF)
+                                    .withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  widget.offer.priceString,
+                                  style: const TextStyle(
+                                    color: Color(0xFF00D9FF),
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Renouvellement automatique',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Features
+                          _buildCheckItem('Analyses IA illimitées'),
+                          const SizedBox(height: 8),
+                          _buildCheckItem('Aucune publicité'),
+                          const SizedBox(height: 8),
+                          _buildCheckItem('Support prioritaire'),
+                          const SizedBox(height: 8),
+                          _buildCheckItem('Annulable à tout moment'),
+
+                          const SizedBox(height: 28),
+
+                          // Confirm button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF00D9FF), Color(0xFF007BFF)],
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00D9FF)
+                                        .withValues(alpha: 0.4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed:
+                                    _isProcessing ? null : _confirmPurchase,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                ),
+                                child: _isProcessing
+                                    ? const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text(
+                                            'Traitement en cours...',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : const Text(
+                                        'Confirmer l\'achat',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          // Cancel
+                          TextButton(
+                            onPressed: _isProcessing
+                                ? null
+                                : () => Navigator.of(context).pop(false),
+                            child: Text(
+                              'Annuler',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCheckItem(String text) {
+    return Row(
+      children: [
+        const Icon(Icons.check_circle_rounded,
+            color: Color(0xFF00D9FF), size: 18),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 }

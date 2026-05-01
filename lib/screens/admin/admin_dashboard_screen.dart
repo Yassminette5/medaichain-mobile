@@ -26,6 +26,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Map<String, dynamic>? _stats;
   List<dynamic>? _users;
   bool _isLoading = false;
+  String? _deleteMessage;
+  bool _deleteIsError = false;
 
   void _goToLogin() {
     if (!mounted) return;
@@ -99,6 +101,59 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _logout() async {
     await _adminService.logout();
     _goToLogin();
+  }
+
+  Future<void> _confirmDeleteUser(String? userId, String email) async {
+    if (userId == null) return;
+    if (!mounted) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Supprimer l'utilisateur"),
+        content: Text('Êtes-vous sûr de vouloir supprimer définitivement $email ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      setState(() {
+        _isLoading = true;
+        _deleteMessage = null;
+      });
+      final error = await _adminService.deleteUser(userId);
+
+      if (!mounted) return;
+
+      if (error == null) {
+        setState(() {
+          _deleteMessage = 'Utilisateur supprimé avec succès';
+          _deleteIsError = false;
+        });
+        await _fetchUsers();
+      } else {
+        setState(() {
+          _isLoading = false;
+          _deleteMessage = error;
+          _deleteIsError = true;
+        });
+      }
+
+      // Clear message after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _deleteMessage = null);
+      });
+    }
   }
 
   @override
@@ -481,15 +536,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return const Center(child: Text('Aucun utilisateur trouvé', style: TextStyle(color: Color(0xFF64748B))));
     }
 
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+    return Column(
+      children: [
+        if (_deleteMessage != null)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: _deleteIsError ? const Color(0xFFEF4444).withOpacity(0.1) : const Color(0xFF10B981).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _deleteIsError ? const Color(0xFFEF4444) : const Color(0xFF10B981)),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _deleteIsError ? Icons.error_outline : Icons.check_circle_outline,
+                  color: _deleteIsError ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_deleteMessage!, style: TextStyle(color: _deleteIsError ? const Color(0xFFEF4444) : const Color(0xFF10B981), fontWeight: FontWeight.w600))),
+              ],
+            ),
+          ),
+        Expanded(
+          child: Card(
+            color: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
         itemCount: _users!.length,
         separatorBuilder: (c, i) => const Divider(color: Color(0xFFE2E8F0)),
         itemBuilder: (context, index) {
@@ -517,24 +596,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
              ),
              title: Text(user['email'], style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600)),
              subtitle: Text('Rôle: ${role.toString().toUpperCase()}', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-             trailing: Container(
-               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-               decoration: BoxDecoration(
-                 color: user['isProfileCompleted'] ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                 borderRadius: BorderRadius.circular(20),
-               ),
-               child: Text(
-                 user['isProfileCompleted'] ? 'Actif' : 'En attente',
-                 style: TextStyle(
-                   color: user['isProfileCompleted'] ? Colors.green : Colors.orange,
-                   fontSize: 12,
-                   fontWeight: FontWeight.bold,
+             trailing: Row(
+               mainAxisSize: MainAxisSize.min,
+               children: [
+                 Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                   decoration: BoxDecoration(
+                     color: user['isProfileCompleted'] ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                     borderRadius: BorderRadius.circular(20),
+                   ),
+                   child: Text(
+                     user['isProfileCompleted'] ? 'Actif' : 'En attente',
+                     style: TextStyle(
+                       color: user['isProfileCompleted'] ? Colors.green : Colors.orange,
+                       fontSize: 12,
+                       fontWeight: FontWeight.bold,
+                     ),
+                   ),
                  ),
-               ),
+                 const SizedBox(width: 8),
+                 IconButton(
+                   icon: const Icon(Icons.delete_outline, color: Colors.red),
+                   onPressed: () => _confirmDeleteUser(user['_id'] ?? user['id'], user['email']),
+                   tooltip: 'Supprimer',
+                 ),
+               ],
              ),
           );
         },
       ),
+          ),
+        ),
+      ],
     );
   }
 }

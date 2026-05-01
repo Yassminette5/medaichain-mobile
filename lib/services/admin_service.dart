@@ -164,6 +164,34 @@ class AdminService {
     }
   }
 
+  Future<String?> deleteUser(String id) async {
+    final token = await _getToken();
+    if (token == null) return 'Not authenticated';
+
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/users/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return null; // Success
+      } else {
+        try {
+          final data = jsonDecode(response.body);
+          return data['message'] ?? 'Suppression échouée';
+        } catch (_) {
+          return 'Suppression échouée';
+        }
+      }
+    } catch (e) {
+      return 'Error: $e';
+    }
+  }
+
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     // 1) Token dédié admin (flow AdminLoginScreen)

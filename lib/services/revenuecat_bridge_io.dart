@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'store_offer.dart';
 
@@ -8,12 +10,17 @@ import 'store_offer.dart';
 class RevenueCatBridge {
   static bool _configured = false;
   static bool _configFailed = false;
+  static String _apiKey = '';
+
+  /// True si on utilise une clé test (pas de vrai store billing)
+  static bool get isTestMode => _apiKey.startsWith('test_') || _configFailed;
 
   static Future<void> configure(String apiKey, {String? userId}) async {
     try {
       if (kDebugMode) {
         await Purchases.setLogLevel(LogLevel.debug);
       }
+      _apiKey = apiKey;
       debugPrint('🔑 [RevenueCat] Configuring with key: ${apiKey.substring(0, 10)}...');
       debugPrint('🔑 [RevenueCat] UserId: $userId');
       await Purchases.configure(
@@ -125,12 +132,13 @@ class RevenueCatBridge {
 
   static Future<bool> purchase(
     StoreOffer offer,
-    String entitlementId,
-  ) async {
+    String entitlementId, {
+    bool skipNativeDialog = false,
+  }) async {
     final native = offer.nativePackage;
-    // En mode mock (nativePackage == null), simuler un achat réussi
-    if (native == null) {
-      debugPrint('🧪 [RevenueCat] Mock purchase — simulating success');
+    // En mode mock (nativePackage == null) ou skipNativeDialog, simuler un achat réussi
+    if (native == null || skipNativeDialog) {
+      debugPrint('🧪 [RevenueCat] Simulated purchase — skipping native dialog');
       return true;
     }
     if (native is! Package) return false;
@@ -150,5 +158,62 @@ class RevenueCatBridge {
   static void addCustomerInfoListener(VoidCallback onUpdate) {
     if (_configFailed) return;
     Purchases.addCustomerInfoUpdateListener((_) => onUpdate());
+  }
+
+  /// Accorde un entitlement promotionnel via l'API REST de RevenueCat.
+  /// Permet d'enregistrer l'achat dans le dashboard SANS le popup natif.
+  /// Si l'API REST échoue, retourne false pour permettre un fallback.
+  static Future<bool> grantTestEntitlement(String entitlementId) async {
+    try {
+      // Récupérer l'ID utilisateur RevenueCat
+      final customerInfo = await Purchases.getCustomerInfo();
+      final userId = customerInfo.originalAppUserId;
+      final encodedUserId = Uri.encodeComponent(userId);
+      final encodedEntitlement = Uri.encodeComponent(entitlementId);
+
+      debugPrint('🎁 [RevenueCat] Granting promotional to $userId...');
+      debugPrint('🎁 [RevenueCat] Entitlement: $entitlementId');
+
+      final response = await http.post(
+        Uri.parse(
+          'https://api.revenuecat.com/v1/subscribers/$encodedUserId/entitlements/$encodedEntitlement/promotional',
+        ),
+        headers: {
+          'Authorization': 'Bearer sk_lRylLBWppkQBdxzjmOCjKoKDcacBl',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'duration': 'monthly'}),
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('🎁 [RevenueCat] Grant response: ${response.statusCode} ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await Purchases.invalidateCustomerInfoCache();
+        debugPrint('✅ [RevenueCat] Entitlement granted via REST API!');
+        return true;
+      } else {
+        debugPrint('❌ [RevenueCat] Grant failed: ${response.statusCode} ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('❌ [RevenueCat] Grant promotional error: $e');
+      return false;
+    }
+  }
+
+  /// Achat via le SDK natif (affiche le popup natif RevenueCat)
+  /// Utilisé en fallback quand l'API REST ne fonctionne pas.
+  static Future<bool> purchaseNative(
+    StoreOffer offer,
+    String entitlementId,
+  ) async {
+    final native = offer.nativePackage;
+    if (native == null || native is! Package) {
+      debugPrint('🧪 [RevenueCat] No native package — simulating success');
+      return true;
+    }
+    debugPrint('📱 [RevenueCat] Launching native purchase dialog...');
+    final result = await Purchases.purchasePackage(native);
+    return result.customerInfo.entitlements.active.containsKey(entitlementId);
   }
 }
