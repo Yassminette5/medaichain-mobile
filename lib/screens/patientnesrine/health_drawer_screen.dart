@@ -9,7 +9,8 @@ import '../../services/api_service.dart';
 import '../centre_analyse/centers_list_screen.dart';
 import '../centre_analyse/center_detail_screen.dart';
 import '../clinique/mobile/clinic_detail_screen.dart';
-import '../pharmacy/pharmacies_list_screen.dart';
+import '../../models/pharmacy_model.dart';
+import '../pharmacy/select_documents_screen.dart';
 
 enum _HealthDrawerFilter { pharmacies, analysisCenters, clinics }
 
@@ -32,7 +33,9 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
 
   bool _isLoadingPharmacies = false;
   String? _pharmaciesError;
-  List<Map<String, dynamic>> _pharmacies = [];
+  List<PharmacyModel> _pharmacies = [];
+  final Set<String> _selectedPharmacyIds = {};
+  String _pharmacySearchQuery = '';
 
   bool _isLoadingClinics = false;
   String? _clinicsError;
@@ -51,13 +54,6 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
     );
   }
 
-  void _openPharmaciesList(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PharmaciesListScreen()),
-    );
-  }
-
   Future<void> _loadPharmaciesIfNeeded() async {
     if (_isLoadingPharmacies) return;
     if (_pharmacies.isNotEmpty && _pharmaciesError == null) return;
@@ -70,14 +66,13 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
     try {
       final raw = await ApiService.getPharmacies();
 
-      final normalized = raw.map((pharmacy) {
-        return <String, dynamic>{
-          'id': (pharmacy['pharmacyId'] ?? pharmacy['_id'] ?? pharmacy['id'] ?? '').toString(),
-          'name': (pharmacy['name'] ?? pharmacy['pharmacyName'] ?? 'Pharmacy').toString(),
-          'address': (pharmacy['address'] ?? '').toString(),
-          'offersDelivery': pharmacy['offersDelivery'] == true || pharmacy['hasDelivery'] == true,
-        };
-      }).where((p) => (p['id'] as String).isNotEmpty).toList();
+      final normalized = raw
+          .map((pharmacy) {
+            final pharmacyMap = Map<String, dynamic>.from(pharmacy as Map);
+            return PharmacyModel.fromJson(pharmacyMap);
+          })
+          .where((p) => p.id.isNotEmpty)
+          .toList();
 
       if (!mounted) return;
       setState(() {
@@ -91,6 +86,66 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
         _isLoadingPharmacies = false;
       });
     }
+  }
+
+  List<PharmacyModel> get _filteredPharmacies {
+    final sorted = [..._pharmacies]
+      ..sort((a, b) {
+        final aBoost = _isBoostActive(a) ? 1 : 0;
+        final bBoost = _isBoostActive(b) ? 1 : 0;
+        if (aBoost != bBoost) return bBoost - aBoost;
+        if (a.boostScore != b.boostScore) return b.boostScore - a.boostScore;
+        return a.pharmacyName.compareTo(b.pharmacyName);
+      });
+
+    if (_pharmacySearchQuery.isEmpty) return sorted;
+
+    final query = _pharmacySearchQuery.toLowerCase();
+    return sorted.where((p) {
+      return p.pharmacyName.toLowerCase().contains(query) ||
+          p.city.toLowerCase().contains(query) ||
+          p.wilaya.toLowerCase().contains(query) ||
+          p.address.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  bool _isBoostActive(PharmacyModel pharmacy) {
+    final boostedUntil = pharmacy.boostedUntil;
+    return boostedUntil != null && boostedUntil.isAfter(DateTime.now());
+  }
+
+  void _togglePharmacySelection(String id) {
+    setState(() {
+      if (_selectedPharmacyIds.contains(id)) {
+        _selectedPharmacyIds.remove(id);
+      } else {
+        _selectedPharmacyIds.add(id);
+      }
+    });
+  }
+
+  void _navigateToDocuments() {
+    final selectedPharmacies = _pharmacies
+        .where((p) => _selectedPharmacyIds.contains(p.id))
+        .toList();
+
+    if (selectedPharmacies.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SelectDocumentsScreen(
+          selectedPharmacies: selectedPharmacies,
+        ),
+      ),
+    ).then((result) {
+      if (result == true && mounted) {
+        setState(() {
+          _selectedPharmacyIds.clear();
+          _pharmacySearchQuery = '';
+        });
+      }
+    });
   }
 
   Future<void> _loadClinicsIfNeeded() async {
@@ -461,26 +516,20 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                             color: AppColors.textDark,
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
-                            if (_selectedFilter == _HealthDrawerFilter.analysisCenters) {
+                        if (_selectedFilter == _HealthDrawerFilter.analysisCenters)
+                          InkWell(
+                            onTap: () {
                               _openCentersList(context);
-                              return;
-                            }
-                            if (_selectedFilter == _HealthDrawerFilter.pharmacies) {
-                              _openPharmaciesList(context);
-                              return;
-                            }
-                          },
-                          child: Text(
-                            "See All",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.primary,
+                            },
+                            child: Text(
+                              "See All",
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -543,6 +592,72 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                         ],
                       ],
                     ] else if (_selectedFilter == _HealthDrawerFilter.pharmacies) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() => _pharmacySearchQuery = value);
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search pharmacy, city...',
+                            hintStyle: GoogleFonts.poppins(color: AppColors.textGrey),
+                            prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                            suffixIcon: _pharmacySearchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() => _pharmacySearchQuery = '');
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.primary),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      if (_selectedPharmacyIds.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${_selectedPharmacyIds.length} pharmacy(ies) selected',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => setState(() => _selectedPharmacyIds.clear()),
+                                  child: Text(
+                                    'Clear',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textGrey,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       if (_isLoadingPharmacies)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
@@ -577,29 +692,59 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                             style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
                           ),
                         )
+                      else if (_filteredPharmacies.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text(
+                            _pharmacySearchQuery.isNotEmpty
+                                ? 'No pharmacies match your search'
+                                : 'No pharmacies available',
+                            style: GoogleFonts.poppins(color: AppColors.textGrey, fontSize: 12),
+                          ),
+                        )
                       else ...[
-                        for (final p in _pharmacies.take(5)) ...[
+                        for (final p in _filteredPharmacies) ...[
                           _buildPlaceCard(
                             icon: Icons.local_pharmacy,
-                            name: (p['name'] as String),
-                            distance: (p['address'] as String).isEmpty
-                                ? 'Localisation inconnue'
-                                : (p['address'] as String),
-                            status: (p['offersDelivery'] == true)
-                                ? 'Livraison disponible'
-                                : 'Sans livraison',
-                            statusColor: (p['offersDelivery'] == true)
-                                ? Colors.green
-                                : Colors.orange,
+                            name: p.pharmacyName,
+                            distance: p.address.isEmpty ? 'Localisation inconnue' : p.address,
+                            status: p.hasDelivery ? 'Livraison disponible' : 'Sans livraison',
+                            statusColor: p.hasDelivery ? Colors.green : Colors.orange,
                             gradient: const LinearGradient(
                               colors: [Color(0xFF4ECDC4), Color(0xFF44A08D)],
                             ),
-                            onTap: () {
-                              _openPharmaciesList(context);
-                            },
+                            isBoosted: _isBoostActive(p),
+                            isSelected: _selectedPharmacyIds.contains(p.id),
+                            onTap: () => _togglePharmacySelection(p.id),
                           ),
                           const SizedBox(height: 16),
                         ],
+                        if (_selectedPharmacyIds.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12, bottom: 8),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton.icon(
+                                onPressed: _navigateToDocuments,
+                                icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                                label: Text(
+                                  'Continue — Select Documents',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ] else ...[
                       if (_isLoadingCenters)
@@ -770,6 +915,8 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
     required String status,
     required Color statusColor,
     required LinearGradient gradient,
+    bool isBoosted = false,
+    bool isSelected = false,
     VoidCallback? onTap,
   }) {
     final card = Container(
@@ -778,6 +925,9 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppColors.small,
+        border: isSelected
+            ? Border.all(color: AppColors.primary, width: 2)
+            : null,
       ),
       child: Row(
         children: [
@@ -805,7 +955,25 @@ class _HealthDrawerScreenState extends State<HealthDrawerScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                if (isBoosted) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Boosted',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.location_on, size: 14, color: AppColors.textGrey),

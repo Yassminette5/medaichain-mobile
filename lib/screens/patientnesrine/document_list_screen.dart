@@ -625,7 +625,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
             }
 
             return FutureBuilder<Map<String, String>>(
-              future: ApiService.authImageHeaders(openUrl),
+              future: ApiService.authImageHeaders(),
               builder: (context, hdrSnap) {
                 return Image.network(
                   openUrl,
@@ -687,7 +687,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   Future<Uint8List?> _fetchImageBytes(String? url) async {
     if (url == null || url.isEmpty) return null;
     try {
-      final headers = await ApiService.authImageHeaders(url);
+      final headers = await ApiService.authImageHeaders();
       final resp = await http.get(Uri.parse(url), headers: headers);
       if (resp.statusCode == 200) return resp.bodyBytes;
     } catch (_) {}

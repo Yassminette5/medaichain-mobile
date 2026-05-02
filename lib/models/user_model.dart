@@ -73,6 +73,7 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final String? walletAddress;
   final String? fullName;
   final String? gender;
   final int? age;
@@ -92,6 +93,7 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
+    this.walletAddress,
     this.fullName,
     this.gender,
     this.age,
@@ -117,6 +119,7 @@ class User {
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'])
           : null,
+        walletAddress: json['walletAddress'],
       fullName: json['fullName'],
       gender: json['gender'],
       age: (json['age'] as num?)?.toInt(),

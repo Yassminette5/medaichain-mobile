@@ -25,7 +25,6 @@ class PrescriptionDetailScreen extends StatelessWidget {
     final doctorName = (doctor is Map) ? (doctor['fullName'] ?? doctor['email'] ?? 'Médecin') : (doctor?.toString() ?? 'Médecin');
     final meds = (prescription['medications'] as List?) ?? [];
     final imageUrl = prescription['prescriptionImageUrl'];
-    final id = prescription['_id'] ?? prescription['id'] ?? prescription['prescriptionId'];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,8 +93,7 @@ class PrescriptionDetailScreen extends StatelessWidget {
                       children: [
                         ElevatedButton.icon(
                           onPressed: () {
-                            if (id == null) return;
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => PharmaciesListScreen(prescriptionId: id.toString())));
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmaciesListScreen()));
                           },
                           icon: const Icon(Icons.local_pharmacy_outlined),
                           label: const Text('Partager avec pharmacie'),

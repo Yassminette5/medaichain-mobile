@@ -1294,6 +1294,7 @@ class ApiService {
         'isEmailVerified': user.isEmailVerified,
         'isProfileCompleted': user.isProfileCompleted,
         'isActive': user.isActive,
+        'walletAddress': user.walletAddress,
         'fullName': user.fullName,
         'gender': user.gender,
         'age': user.age,

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../models/pharmacy_model.dart';
-import 'pharmacy_ordonnance_form_screen.dart';
+import 'select_documents_screen.dart';
 
 class PharmaciesListScreen extends StatefulWidget {
   const PharmaciesListScreen({super.key, this.prescriptionId});
@@ -19,6 +19,7 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
+  final Set<String> _selectedPharmacyIds = {};
 
   @override
   void initState() {
@@ -54,13 +55,56 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
   }
 
   List<PharmacyModel> get _filteredPharmacies {
-    if (_searchQuery.isEmpty) return _pharmacies;
-    return _pharmacies
+    final sorted = [..._pharmacies]..sort((a, b) {
+      final aBoost = _isBoostActive(a) ? 1 : 0;
+      final bBoost = _isBoostActive(b) ? 1 : 0;
+      if (aBoost != bBoost) return bBoost - aBoost;
+      if (a.boostScore != b.boostScore) return b.boostScore - a.boostScore;
+      return a.pharmacyName.compareTo(b.pharmacyName);
+    });
+
+    if (_searchQuery.isEmpty) return sorted;
+    return sorted
         .where((p) =>
             p.pharmacyName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             p.city.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             p.wilaya.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
+  }
+
+  bool _isBoostActive(PharmacyModel pharmacy) {
+    final boostedUntil = pharmacy.boostedUntil;
+    return boostedUntil != null && boostedUntil.isAfter(DateTime.now());
+  }
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedPharmacyIds.contains(id)) {
+        _selectedPharmacyIds.remove(id);
+      } else {
+        _selectedPharmacyIds.add(id);
+      }
+    });
+  }
+
+  void _navigateToDocuments() {
+    final selectedPharmacies = _pharmacies
+        .where((p) => _selectedPharmacyIds.contains(p.id))
+        .toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SelectDocumentsScreen(
+          selectedPharmacies: selectedPharmacies,
+        ),
+      ),
+    ).then((result) {
+      if (result == true && mounted) {
+        // Go back to health drawer after successful share
+        Navigator.pop(context);
+      }
+    });
   }
 
   @override
@@ -71,7 +115,7 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 0,
         title: Text(
-          'Nearby Pharmacies',
+          'Select Pharmacies',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -111,6 +155,48 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                 ),
               ),
             ),
+            // Selection Hint
+            if (_selectedPharmacyIds.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle_rounded,
+                          color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${_selectedPharmacyIds.length} pharmacy(ies) selected',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => setState(() => _selectedPharmacyIds.clear()),
+                        child: Text(
+                          'Clear',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
             // Pharmacies List
             Expanded(
               child: _isLoading
@@ -197,6 +283,48 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                               },
                             ),
             ),
+            // Bottom Continue Button
+            if (_selectedPharmacyIds.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _navigateToDocuments,
+                      icon: const Icon(Icons.arrow_forward_rounded,
+                          color: Colors.white),
+                      label: Text(
+                        'Continue — Select Documents',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -206,177 +334,203 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
   Widget _buildPharmacyCard(BuildContext context, PharmacyModel pharmacy) {
     final isOpen = pharmacy.isOpen;
     final statusColor = isOpen ? Colors.green : Colors.orange;
+    final isSelected = _selectedPharmacyIds.contains(pharmacy.id);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with name and status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        pharmacy.pharmacyName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isSelected
+            ? BorderSide(color: AppColors.primary, width: 2)
+            : BorderSide.none,
+      ),
+      elevation: isSelected ? 4 : 2,
+      child: InkWell(
+        onTap: () => _toggleSelection(pharmacy.id),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with name, status, and checkbox
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Checkbox
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 26,
+                    width: 26,
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected ? AppColors.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color:
+                            isSelected ? AppColors.primary : AppColors.textGrey,
+                        width: 2,
                       ),
-                      const SizedBox(height: 4),
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check,
+                            color: Colors.white, size: 16)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pharmacy.pharmacyName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pharmacy.ownerName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isOpen ? 'Open' : 'Closed',
+                      style: GoogleFonts.poppins(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_isBoostActive(pharmacy)) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color:
+                        const Color(0xFF7C3AED).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                        color: const Color(0xFF7C3AED)
+                            .withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.trending_up_rounded,
+                          size: 14, color: Color(0xFF7C3AED)),
+                      const SizedBox(width: 6),
                       Text(
-                        pharmacy.ownerName,
+                        'Boosted by FRYMN',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: AppColors.textGrey,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF7C3AED),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    isOpen ? 'Open' : 'Closed',
-                    style: GoogleFonts.poppins(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
               ],
-            ),
-            const SizedBox(height: 12),
-            // Location
-            Row(
-              children: [
-                const Icon(Icons.location_on,
-                    size: 14, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${pharmacy.address}, ${pharmacy.city}, ${pharmacy.wilaya}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: AppColors.textGrey,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Hours
-            Row(
-              children: [
-                const Icon(Icons.access_time,
-                    size: 14, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Text(
-                  pharmacy.is24Hours
-                      ? 'Open 24/7'
-                      : '${pharmacy.openingTime} - ${pharmacy.closingTime}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: AppColors.textGrey,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Services
-            if (pharmacy.services.isNotEmpty) ...[
-              Wrap(
-                spacing: 6,
-                children: pharmacy.services.take(3).map((service) {
-                  return Chip(
-                    label: Text(
-                      service,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        color: Colors.white,
-                      ),
-                    ),
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                  );
-                }).toList(),
-              ),
               const SizedBox(height: 12),
-            ],
-            // Delivery info
-            if (pharmacy.hasDelivery)
+              // Location
               Row(
                 children: [
-                  const Icon(Icons.local_shipping,
-                      size: 14, color: Colors.green),
+                  const Icon(Icons.location_on,
+                      size: 14, color: AppColors.primary),
                   const SizedBox(width: 6),
-                  Text(
-                    'Delivery up to ${pharmacy.deliveryRadius}km',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.green,
-                      fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Text(
+                      '${pharmacy.address}, ${pharmacy.city}, ${pharmacy.wilaya}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textGrey,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-            const SizedBox(height: 12),
-            // Send Ordonnance Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PharmacyOrdonnanceFormScreen(
-                        pharmacy: pharmacy,
-                        prescriptionId: widget.prescriptionId,
+              const SizedBox(height: 8),
+              // Hours
+              Row(
+                children: [
+                  const Icon(Icons.access_time,
+                      size: 14, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    pharmacy.is24Hours
+                        ? 'Open 24/7'
+                        : '${pharmacy.openingTime} - ${pharmacy.closingTime}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Services
+              if (pharmacy.services.isNotEmpty) ...[
+                Wrap(
+                  spacing: 6,
+                  children: pharmacy.services.take(3).map((service) {
+                    return Chip(
+                      label: Text(
+                        service,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 8),
+              ],
+              // Delivery info
+              if (pharmacy.hasDelivery)
+                Row(
+                  children: [
+                    const Icon(Icons.local_shipping,
+                        size: 14, color: Colors.green),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Delivery up to ${pharmacy.deliveryRadius}km',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  ],
                 ),
-                child: Text(
-                  widget.prescriptionId != null &&
-                          widget.prescriptionId!.isNotEmpty
-                      ? 'Send & Share Prescription'
-                      : 'Send Prescription',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

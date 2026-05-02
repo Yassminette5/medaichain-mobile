@@ -21,6 +21,8 @@ class PharmacyModel {
   final bool isVerified;
   final DateTime? verifiedAt;
   final bool hasNotifications;
+  final int boostScore;
+  final DateTime? boostedUntil;
 
   PharmacyModel({
     required this.id,
@@ -45,6 +47,8 @@ class PharmacyModel {
     required this.isVerified,
     this.verifiedAt,
     required this.hasNotifications,
+    this.boostScore = 0,
+    this.boostedUntil,
   });
 
   factory PharmacyModel.fromJson(Map<String, dynamic> json) {
@@ -72,6 +76,10 @@ class PharmacyModel {
       verifiedAt:
           json['verifiedAt'] != null ? DateTime.parse(json['verifiedAt']) : null,
       hasNotifications: json['hasNotifications'] ?? true,
+      boostScore: (json['boostScore'] as num?)?.toInt() ?? 0,
+      boostedUntil: json['boostedUntil'] != null
+          ? DateTime.tryParse(json['boostedUntil'].toString())
+          : null,
     );
   }
 
@@ -98,6 +106,8 @@ class PharmacyModel {
         'isVerified': isVerified,
         'verifiedAt': verifiedAt?.toIso8601String(),
         'hasNotifications': hasNotifications,
+        'boostScore': boostScore,
+        'boostedUntil': boostedUntil?.toIso8601String(),
       };
 
   bool get isOpen {

@@ -363,9 +363,6 @@ class _PharmacieDashboardMobileState extends State<_PharmacieDashboardMobile>
             case RequestStatus.nonValide:
               chipColor = Colors.red;
               break;
-            case RequestStatus.termine:
-              chipColor = const Color(0xFF4FACFE);
-              break;
             default:
               chipColor = AppColors.textSecondary;
           }
@@ -555,9 +552,6 @@ class _PharmacieDashboardMobileState extends State<_PharmacieDashboardMobile>
             break;
           case RequestStatus.nonValide:
             statusColor = Colors.red;
-            break;
-          case RequestStatus.termine:
-            statusColor = const Color(0xFF4FACFE);
             break;
           default:
             statusColor = AppColors.textSecondary;

@@ -51,6 +51,7 @@ class AuthProvider with ChangeNotifier {
           isActive: fetchedUser.isActive,
           createdAt: fetchedUser.createdAt,
           lastLoginAt: fetchedUser.lastLoginAt,
+          walletAddress: fetchedUser.walletAddress ?? savedUser?.walletAddress,
           fullName: fetchedUser.fullName ?? savedUser?.fullName,
           gender: fetchedUser.gender ?? savedUser?.gender,
           age: fetchedUser.age ?? savedUser?.age,
@@ -264,10 +265,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedUser = await ApiService.patchPatientProfileFields(
-        temporaryAccessEnabled: enabled,
-        temporaryAccessUntil: until,
-      );
+      final updatedUser = await ApiService.getProfile();
       _user = updatedUser;
       _isLoading = false;
       notifyListeners();

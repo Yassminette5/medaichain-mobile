@@ -192,6 +192,43 @@ class PharmacyPrescriptionsService {
     }
   }
 
+  /// Share multiple prescriptions with multiple pharmacies (simple, no encryption)
+  static Future<Map<String, dynamic>> shareDocuments({
+    required List<String> prescriptionIds,
+    required List<String> pharmacyIds,
+  }) async {
+    final headers = await _authHeaders();
+    final payload = {
+      'prescriptionIds': prescriptionIds,
+      'pharmacyIds': pharmacyIds,
+    };
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/prescriptions/share-documents'),
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return shareDocuments(
+        prescriptionIds: prescriptionIds,
+        pharmacyIds: pharmacyIds,
+      );
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Erreur lors du partage");
+    } catch (_) {
+      throw Exception("Erreur lors du partage (${response.statusCode})");
+    }
+  }
+
   static Future<void> sharePrescriptionWithPharmacy({
     required String prescriptionId,
     required String pharmacyId,
