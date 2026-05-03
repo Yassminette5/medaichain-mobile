@@ -3705,6 +3705,85 @@ class ApiService {
     }
   }
 
+  // ========== DOCUMENT SHARING ==========
+
+  /// Share documents with doctors
+  static Future<bool> shareDocumentsWithDoctors({
+    required List<String> prescriptionIds,
+    List<String>? doctorIds,
+  }) async {
+    final token = await getAccessToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/prescriptions/share-documents'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'prescriptionIds': prescriptionIds,
+        'pharmacyIds': doctorIds ?? [], // Currently using doctorIds as pharmacyIds for compatibility
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return true;
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return shareDocumentsWithDoctors(
+        prescriptionIds: prescriptionIds,
+        doctorIds: doctorIds,
+      );
+    }
+    return false;
+  }
+
+  /// Get user's prescriptions with sharing status
+  static Future<List<Map<String, dynamic>>> getMyPrescriptionsWithSharing() async {
+    final token = await getAccessToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/my-prescriptions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List
+          ? List<Map<String, dynamic>>.from(
+              data.map((e) => e as Map<String, dynamic>),
+            )
+          : [];
+    } else if (response.statusCode == 401) {
+      await refreshToken();
+      return getMyPrescriptionsWithSharing();
+    }
+    return [];
+  }
+
+  /// Check if a specific prescription is shared with a doctor
+  static Future<bool> isPrescriptionSharedWithDoctor({
+    required String prescriptionId,
+    required String doctorId,
+  }) async {
+    try {
+      final prescriptions = await getMyPrescriptionsWithSharing();
+      final prescription = prescriptions.firstWhere(
+        (p) => p['_id'] == prescriptionId || p['id'] == prescriptionId,
+        orElse: () => {},
+      );
+      
+      if (prescription.isEmpty) return false;
+      
+      final sharedWith = prescription['sharedWith'] as List? ?? [];
+      return sharedWith.any((d) => d['_id'] == doctorId || d == doctorId);
+    } catch (e) {
+      debugPrint('Error checking prescription sharing: $e');
+      return false;
+    }
+  }
+
   // ==========================================
   //         CLINIC ONLINE APPOINTMENTS
   // ==========================================

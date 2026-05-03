@@ -157,7 +157,7 @@ class _PharmacyOrdonnanceFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Ajoutez au moins un medicament manuellement ou joignez une image de l\'ordonnance',
+            'either a picture of the prescription or a list of medication should be present',
           ),
         ),
       );
@@ -646,7 +646,7 @@ class _PharmacyOrdonnanceFormScreenState
             TextFormField(
               controller: medication.nameController,
               decoration: InputDecoration(
-                labelText: 'Medication Name *',
+                labelText: 'Medication Name${_uploadedPrescriptionUrl == null ? ' *' : ''}',
                 hintText: 'e.g., Paracetamol',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -683,7 +683,7 @@ class _PharmacyOrdonnanceFormScreenState
                   child: TextFormField(
                     controller: medication.quantityController,
                     decoration: InputDecoration(
-                      labelText: 'Quantity *',
+                      labelText: 'Quantity${_uploadedPrescriptionUrl == null ? ' *' : ''}',
                       hintText: '1',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),

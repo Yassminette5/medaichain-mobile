@@ -345,10 +345,15 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
           imageUrl = await PrescriptionsService.uploadPrescriptionImage(_pickedImage!);
           _uploadedImageUrl = imageUrl;
         }
-        await doCreate(imageUrl);
+        final prescriptionResponse = await PrescriptionsService.createPrescription(
+          patientId: _selectedPatientId!,
+          medications: meds,
+          notes: _notesController.text,
+          prescriptionImageUrl: imageUrl,
+        );
         if (!mounted) return;
         setState(() => _isLoading = false);
-        _showSuccessDialog();
+        _showAnalysisDialog(prescriptionResponse);
       } catch (e) {
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -364,10 +369,10 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
       patientId: _selectedPatientId!,
       medications: meds,
       notes: _notesController.text,
-    ).then((_) {
+    ).then((response) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSuccessDialog();
+      _showAnalysisDialog(response);
     }).catchError((e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -377,21 +382,98 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
     });
   }
 
-  void _showSuccessDialog() {
+  void _showAnalysisDialog(Map<String, dynamic> prescriptionResponse) {
+    final analysis = prescriptionResponse['analysis'] as Map<String, dynamic>?;
+    final hasAnalysis = analysis != null && analysis['analysis'] != null;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.successLight, shape: BoxShape.circle), child: const Icon(Icons.check_circle, color: AppColors.success, size: 48)),
-          const SizedBox(height: 24),
-          const Text('Ordonnance créée !', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          const Text("L'ordonnance a été validée et enregistrée sur la blockchain.", textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-          const SizedBox(height: 8),
-          Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: AppColors.blockchainLight, borderRadius: BorderRadius.circular(8)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.link, color: AppColors.blockchain, size: 16), SizedBox(width: 8), Text('TX: 0x7f2e...3a91', style: TextStyle(color: AppColors.blockchain, fontWeight: FontWeight.w500, fontSize: 12))])),
-        ]),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: hasAnalysis && (analysis['safe'] == true)
+                  ? AppColors.successLight
+                  : AppColors.warningLight,
+                shape: BoxShape.circle
+              ),
+              child: Icon(
+                hasAnalysis && (analysis['safe'] == true)
+                  ? Icons.check_circle
+                  : Icons.warning,
+                color: hasAnalysis && (analysis['safe'] == true)
+                  ? AppColors.success
+                  : AppColors.warning,
+                size: 48
+              )
+            ),
+            const SizedBox(height: 24),
+            const Text('Ordonnance créée !', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            const Text("L'ordonnance a été validée et enregistrée sur la blockchain.", textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 8),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: AppColors.blockchainLight, borderRadius: BorderRadius.circular(8)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.link, color: AppColors.blockchain, size: 16), SizedBox(width: 8), Text('TX: 0x7f2e...3a91', style: TextStyle(color: AppColors.blockchain, fontWeight: FontWeight.w500, fontSize: 12))])),
+            if (hasAnalysis) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: analysis['safe'] == true ? AppColors.successLight : AppColors.warningLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: analysis['safe'] == true ? AppColors.success : AppColors.warning)
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Icon(
+                      analysis['safe'] == true ? Icons.verified : Icons.warning_amber,
+                      color: analysis['safe'] == true ? AppColors.success : AppColors.warning,
+                      size: 20
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Analyse IA',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: analysis['safe'] == true ? AppColors.success : AppColors.warning
+                      )
+                    ),
+                  ]),
+                  const SizedBox(height: 8),
+                  Text(
+                    analysis['analysis'] ?? 'Analyse non disponible',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  if (analysis['warnings'] != null && (analysis['warnings'] as List).isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text('Avertissements:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    ...((analysis['warnings'] as List).map((warning) => Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('• ', style: TextStyle(color: AppColors.warning)),
+                        Expanded(child: Text(warning.toString(), style: const TextStyle(fontSize: 12))),
+                      ]),
+                    ))),
+                  ],
+                  if (analysis['recommendations'] != null && (analysis['recommendations'] as List).isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text('Recommandations:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    ...((analysis['recommendations'] as List).map((rec) => Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('• ', style: TextStyle(color: AppColors.info)),
+                        Expanded(child: Text(rec.toString(), style: const TextStyle(fontSize: 12))),
+                      ]),
+                    ))),
+                  ],
+                ]),
+              ),
+            ],
+          ]),
+        ),
         actions: [SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () { Navigator.pop(ctx); Navigator.pop(context); }, child: const Text('Terminé')))],
       ),
     );
