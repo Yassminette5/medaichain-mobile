@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/pharmacy_dashboard.dart';
+import '../../../services/pharmacy_service.dart';
 
 /// Web-optimized Pharmacy Prescription Details Screen
 class PharmacyWebPrescriptionDetails extends StatefulWidget {
@@ -19,6 +20,7 @@ class PharmacyWebPrescriptionDetails extends StatefulWidget {
 class _PharmacyWebPrescriptionDetailsState
     extends State<PharmacyWebPrescriptionDetails> {
   late RequestStatus _currentStatus;
+  bool _hasUpdated = false;
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _PharmacyWebPrescriptionDetailsState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, _hasUpdated),
         ),
         title: Text(
           'Détails de l\'ordonnance #${widget.request.id}',
@@ -51,35 +53,47 @@ class _PharmacyWebPrescriptionDetailsState
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(isLargeScreen ? 40 : 24),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: Column(
+        child: isLargeScreen
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPatientCard(),
+                        const SizedBox(height: 24),
+                        _buildMedicationsCard(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStatusCard(),
+                        const SizedBox(height: 24),
+                        _buildActionsCard(),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildPatientCard(),
                   const SizedBox(height: 24),
+                  _buildStatusCard(),
+                  const SizedBox(height: 24),
+                  _buildActionsCard(),
+                  const SizedBox(height: 24),
                   _buildMedicationsCard(),
                 ],
               ),
-            ),
-            if (isLargeScreen) const SizedBox(width: 24),
-            if (isLargeScreen)
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatusCard(),
-                    const SizedBox(height: 24),
-                    _buildActionsCard(),
-                  ],
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
@@ -267,10 +281,6 @@ class _PharmacyWebPrescriptionDetailsState
         statusColor = Colors.red;
         statusIcon = Icons.cancel_rounded;
         break;
-      case RequestStatus.termine:
-        statusColor = const Color(0xFF8B5CF6);
-        statusIcon = Icons.done_all_rounded;
-        break;
       default:
         statusColor = const Color(0xFF4FACFE);
         statusIcon = Icons.info_rounded;
@@ -393,15 +403,6 @@ class _PharmacyWebPrescriptionDetailsState
                 ? () => _updateStatus(RequestStatus.nonValide)
                 : null,
           ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            label: 'Marquer comme terminée',
-            icon: Icons.done_all_rounded,
-            color: const Color(0xFF8B5CF6),
-            onTap: _currentStatus != RequestStatus.termine
-                ? () => _updateStatus(RequestStatus.termine)
-                : null,
-          ),
         ],
       ),
     );
@@ -449,10 +450,14 @@ class _PharmacyWebPrescriptionDetailsState
 
   Future<void> _updateStatus(RequestStatus newStatus) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      final updatedRequest = await PharmacyService.updateMyRequest(
+        widget.request.id,
+        {'status': newStatus.name},
+      );
 
       setState(() {
-        _currentStatus = newStatus;
+        _currentStatus = updatedRequest.status;
+        _hasUpdated = true;
       });
 
       if (mounted) {

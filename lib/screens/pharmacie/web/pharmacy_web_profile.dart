@@ -20,7 +20,10 @@ class PharmacyWebProfile extends StatefulWidget {
 class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
   PharmacyDashboard? _dashboard;
   Map<String, dynamic>? _pharmacyProfile;
+  String? _walletBalance;
+  String? _walletAddress;
   bool _isLoading = true;
+  bool _isBoosting = false;
   bool _sidebarVisible = true;
 
   @override
@@ -33,13 +36,19 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
+      final walletAddress = authProvider.user?.walletAddress;
       
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
       final profile = await PharmacyService.getPharmacyProfile();
+      final balance = walletAddress != null && walletAddress.isNotEmpty
+          ? await PharmacyService.getWalletTokenBalance(walletAddress)
+          : null;
       
       setState(() {
         _dashboard = dashboard;
         _pharmacyProfile = profile;
+        _walletBalance = balance;
+        _walletAddress = walletAddress;
         _isLoading = false;
       });
     } catch (e) {
@@ -166,6 +175,37 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _boostListing() async {
+    if (_isBoosting) return;
+
+    setState(() => _isBoosting = true);
+    try {
+      await PharmacyService.boostMyPharmacy(amount: 1);
+      await _loadProfile();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Votre pharmacie a été boostée avec 1 FRYMN'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur boost: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBoosting = false);
       }
     }
   }
@@ -584,6 +624,36 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
+          if ((_walletAddress ?? '').isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _shortWallet(_walletAddress!),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -613,6 +683,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
         ],
       ),
     );
+  }
+
+  String _shortWallet(String address) {
+    if (address.length <= 12) return address;
+    return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
   }
 
   Widget _buildStatsCard() {
@@ -785,6 +860,49 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
                 ? '${user!.createdAt.day}/${user.createdAt.month}/${user.createdAt.year}'
                 : 'N/A',
           ),
+          const Divider(height: 32),
+          _buildInfoRow(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'Solde FRYMN',
+            value: _walletBalance ?? '0',
+          ),
+          const Divider(height: 32),
+          _buildInfoRow(
+            icon: Icons.trending_up_rounded,
+            label: 'Boost FRYMN',
+            value: '${(_pharmacyProfile?['boostScore'] ?? 0)}',
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isBoosting ? null : _boostListing,
+              icon: _isBoosting
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.local_fire_department_outlined),
+              label: Text(_isBoosting ? 'Boosting...' : 'Boost my visibility'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7C3AED),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          if (_pharmacyProfile?['boostedUntil'] != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Boost actif jusqu\'au ${_pharmacyProfile!['boostedUntil']}',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );

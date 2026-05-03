@@ -75,8 +75,7 @@ enum RequestStatus {
   urgent,
   enAttente,
   valide,
-  nonValide,
-  termine;
+  nonValide;
 
   String get displayName {
     switch (this) {
@@ -90,9 +89,31 @@ enum RequestStatus {
         return 'Validée';
       case RequestStatus.nonValide:
         return 'Rejetée';
-      case RequestStatus.termine:
-        return 'Terminé';
     }
+  }
+}
+
+extension RequestStatusParsing on RequestStatus {
+  static RequestStatus fromJson(String? rawStatus) {
+    final raw = rawStatus?.toString().toLowerCase().trim() ?? '';
+    if (raw.isEmpty) return RequestStatus.enAttente;
+    if (raw == 'urgent' || raw == 'urgente') return RequestStatus.urgent;
+    if (raw == 'enattente' || raw == 'en_attente' || raw == 'en attente' ||
+        raw == 'en cours' || raw == 'pending' || raw == 'en attente') {
+      return RequestStatus.enAttente;
+    }
+    if (raw == 'valide' || raw == 'validé' || raw == 'validée' || raw == 'completed') {
+      return RequestStatus.valide;
+    }
+    if (raw == 'nonvalide' || raw == 'non_valide' || raw == 'non valable' ||
+        raw == 'non valable' || raw == 'rejected' || raw == 'rejetée') {
+      return RequestStatus.nonValide;
+    }
+    if (raw == 'termine' || raw == 'terminé' || raw == 'terminée' ||
+        raw == 'done' || raw == 'finished') {
+      return RequestStatus.valide;
+    }
+    return RequestStatus.enAttente;
   }
 }
 
@@ -136,10 +157,7 @@ class MedicationRequest {
       id: (json['id'] ?? json['_id']) as String,
       patient: Patient.fromJson(json['patient'] as Map<String, dynamic>),
       medications: medications,
-      status: RequestStatus.values.firstWhere(
-        (e) => e.name == json['status'],
-        orElse: () => RequestStatus.enAttente,
-      ),
+      status: RequestStatusParsing.fromJson(json['status']?.toString()),
       requestDate: DateTime.parse(json['requestDate'] as String),
       isUrgent: json['isUrgent'] as bool? ?? false,
       requestsDelivery: json['requestsDelivery'] as bool? ?? false,
@@ -360,7 +378,7 @@ class _PharmacyDashboardPreviewState extends State<PharmacyDashboardPreview> {
               unit: 'flacon',
             ),
           ],
-          status: RequestStatus.termine,
+          status: RequestStatus.valide,
           requestDate: DateTime.now().subtract(const Duration(hours: 2)),
           isUrgent: false,
         ),

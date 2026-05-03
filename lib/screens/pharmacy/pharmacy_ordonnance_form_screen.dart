@@ -2,17 +2,20 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/api_service.dart';
+import '../../services/pharmacy_prescriptions_service.dart';
+import '../../services/prescriptions_service.dart';
 import '../../models/pharmacy_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
 class PharmacyOrdonnanceFormScreen extends StatefulWidget {
   final PharmacyModel pharmacy;
+  final String? prescriptionId;
 
   const PharmacyOrdonnanceFormScreen({
     super.key,
     required this.pharmacy,
+    this.prescriptionId,
   });
 
   @override
@@ -105,7 +108,7 @@ class _PharmacyOrdonnanceFormScreenState
         _uploadedPrescriptionUrl = null;
       });
 
-      final url = await ApiService.uploadPrescriptionImage(
+      final url = await PharmacyPrescriptionsService.uploadPrescriptionImage(
         bytes,
         file.name,
       );
@@ -154,7 +157,7 @@ class _PharmacyOrdonnanceFormScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Ajoutez au moins un medicament manuellement ou joignez une image de l\'ordonnance',
+            'either a picture of the prescription or a list of medication should be present',
           ),
         ),
       );
@@ -171,7 +174,7 @@ class _PharmacyOrdonnanceFormScreenState
         throw Exception('User not authenticated');
       }
 
-      final response = await ApiService.sendMedicationRequest(
+      final response = await PharmacyPrescriptionsService.sendMedicationRequest(
         pharmacyId: widget.pharmacy.id,
         patientId: user.id ?? '',
         patientName: user.fullName ?? 'Unknown Patient',
@@ -184,6 +187,8 @@ class _PharmacyOrdonnanceFormScreenState
         isUrgent: _isUrgent,
         requestsDelivery: _requestsDelivery,
       );
+
+      await _sharePrescriptionIfAvailable();
 
       if (!mounted) return;
 
@@ -211,6 +216,57 @@ class _PharmacyOrdonnanceFormScreenState
     } finally {
       setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<void> _sharePrescriptionIfAvailable() async {
+    final prescriptionId = widget.prescriptionId ?? await _getLatestPrescriptionId();
+    if (prescriptionId == null || prescriptionId.isEmpty) {
+      return;
+    }
+
+    try {
+      await PharmacyPrescriptionsService.sharePrescriptionWithPharmacy(
+        prescriptionId: prescriptionId,
+        pharmacyId: widget.pharmacy.id,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ordonnance partagée en toute sécurité ✅'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ Share prescription failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Envoi réussi, mais partage sécurisé échoué: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<String?> _getLatestPrescriptionId() async {
+    try {
+      final prescriptions = await PrescriptionsService.getMyPrescriptions();
+      if (prescriptions.isEmpty) return null;
+      final latest = prescriptions.first;
+      return _extractPrescriptionId(latest);
+    } catch (e) {
+      debugPrint('❌ Failed to load prescriptions: $e');
+      return null;
+    }
+  }
+
+  String? _extractPrescriptionId(Map<String, dynamic> data) {
+    final id = data['_id'] ?? data['id'] ?? data['prescriptionId'];
+    if (id == null) return null;
+    return id.toString();
   }
 
   @override
@@ -590,7 +646,7 @@ class _PharmacyOrdonnanceFormScreenState
             TextFormField(
               controller: medication.nameController,
               decoration: InputDecoration(
-                labelText: 'Medication Name *',
+                labelText: 'Medication Name${_uploadedPrescriptionUrl == null ? ' *' : ''}',
                 hintText: 'e.g., Paracetamol',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -627,7 +683,7 @@ class _PharmacyOrdonnanceFormScreenState
                   child: TextFormField(
                     controller: medication.quantityController,
                     decoration: InputDecoration(
-                      labelText: 'Quantity *',
+                      labelText: 'Quantity${_uploadedPrescriptionUrl == null ? ' *' : ''}',
                       hintText: '1',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),

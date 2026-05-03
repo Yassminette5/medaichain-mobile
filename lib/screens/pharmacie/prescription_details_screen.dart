@@ -160,9 +160,13 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
         statusColor = const Color(0xFFF59E0B);
         statusIcon = Icons.hourglass_empty_rounded;
         break;
-      case RequestStatus.termine:
+      case RequestStatus.valide:
         statusColor = const Color(0xFF10B981);
         statusIcon = Icons.check_circle_rounded;
+        break;
+      case RequestStatus.nonValide:
+        statusColor = Colors.red;
+        statusIcon = Icons.cancel_rounded;
         break;
       default:
         statusColor = const Color(0xFF4FACFE);
@@ -711,20 +715,13 @@ class _PrescriptionDetailsScreenState extends State<PrescriptionDetailsScreen> {
   }
 
   Widget _buildActionButtons() {
-    if (_request.status == RequestStatus.termine || 
-        _request.status == RequestStatus.valide || 
-        _request.status == RequestStatus.nonValide) {
+    if (_request.status == RequestStatus.valide || _request.status == RequestStatus.nonValide) {
       Color statusColor;
       IconData statusIcon;
       String statusText;
       String statusDescription;
       
-      if (_request.status == RequestStatus.termine) {
-        statusColor = const Color(0xFF10B981);
-        statusIcon = Icons.check_circle;
-        statusText = 'Ordonnance délivrée';
-        statusDescription = 'Cette ordonnance a été complétée';
-      } else if (_request.status == RequestStatus.valide) {
+      if (_request.status == RequestStatus.valide) {
         statusColor = const Color(0xFF10B981);
         statusIcon = Icons.verified;
         statusText = 'Ordonnance validée';

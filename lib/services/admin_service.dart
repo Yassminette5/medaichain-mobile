@@ -214,4 +214,76 @@ class AdminService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('admin_token');
   }
+
+  /// Get token information
+  Future<Map<String, dynamic>?> getTokenInfo() async {
+    final token = await _getToken();
+    if (token == null) return null;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/token/info'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error fetching token info: $e');
+    }
+    return null;
+  }
+
+  /// Mint tokens using backend endpoint. Returns null on success or an error message.
+  Future<String?> mintTokens({required String toAddress, required String amount}) async {
+    final token = await _getToken();
+    if (token == null) return 'Not authenticated';
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/token/mint'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'toAddress': toAddress, 'amount': amount}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return null;
+      }
+
+      try {
+        final data = jsonDecode(response.body);
+        return data['message'] ?? 'Mint failed';
+      } catch (e) {
+        return 'Mint failed: ${response.statusCode}';
+      }
+    } catch (e) {
+      return 'Error: $e';
+    }
+  }
+
+  /// Get token balance for an address via backend. Returns balance string or null on error.
+  Future<String?> getBalance(String address) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/token/balance/$address'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Backend returns { balance, formatted }
+        if (data is Map<String, dynamic>) {
+          return (data['formatted'] ?? data['balance'])?.toString();
+        }
+        return data.toString();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

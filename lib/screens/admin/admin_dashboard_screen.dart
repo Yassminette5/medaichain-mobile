@@ -25,9 +25,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   String _currentSection = 'dashboard';
   Map<String, dynamic>? _stats;
   List<dynamic>? _users;
+  Map<String, dynamic>? _tokenInfo;
   bool _isLoading = false;
   String? _deleteMessage;
   bool _deleteIsError = false;
+  // Token UI controllers
+  final TextEditingController _balanceAddressController = TextEditingController();
+  final TextEditingController _mintToController = TextEditingController();
+  final TextEditingController _mintAmountController = TextEditingController();
+  String? _balanceResult;
+  String? _mintResult;
 
   void _goToLogin() {
     if (!mounted) return;
@@ -53,6 +60,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ensureAuthAndLoad();
     });
+  }
+
+  @override
+  void dispose() {
+    _balanceAddressController.dispose();
+    _mintToController.dispose();
+    _mintAmountController.dispose();
+    super.dispose();
   }
 
   Future<void> _ensureAuthAndLoad() async {
@@ -94,6 +109,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     setState(() {
       _users = users;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _fetchTokenInfo() async {
+    setState(() => _isLoading = true);
+    final tokenInfo = await _adminService.getTokenInfo();
+    if (!mounted) return;
+
+    setState(() {
+      _tokenInfo = tokenInfo;
       _isLoading = false;
     });
   }
@@ -154,6 +180,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         if (mounted) setState(() => _deleteMessage = null);
       });
     }
+  }
+
+  String _toBaseUnits(String amountStr, int decimals) {
+    // Simple decimal string -> base units converter (handles integers and decimals)
+    if (amountStr.trim().isEmpty) return '0';
+    if (!amountStr.contains('.')) {
+      final whole = BigInt.parse(amountStr);
+      return (whole * BigInt.from(10).pow(decimals)).toString();
+    }
+    final parts = amountStr.split('.');
+    final whole = parts[0].isEmpty ? '0' : parts[0];
+    final frac = parts[1];
+    final fracPadded = (frac + List.filled(decimals, '0').join()).substring(0, decimals);
+    final wholeBig = BigInt.parse(whole) * BigInt.from(10).pow(decimals);
+    final fracBig = BigInt.parse(fracPadded);
+    return (wholeBig + fracBig).toString();
+  }
+
+  Future<void> _handleCheckBalance() async {
+    final addr = _balanceAddressController.text.trim();
+    if (addr.isEmpty) return;
+    setState(() { _balanceResult = null; _isLoading = true; });
+    final res = await _adminService.getBalance(addr);
+    if (!mounted) return;
+    setState(() { _balanceResult = res; _isLoading = false; });
+  }
+
+  Future<void> _handleMint(int decimals) async {
+    final to = _mintToController.text.trim();
+    final amountHuman = _mintAmountController.text.trim();
+    if (to.isEmpty || amountHuman.isEmpty) return;
+    setState(() { _mintResult = null; _isLoading = true; });
+    final amountBase = _toBaseUnits(amountHuman, decimals);
+    final err = await _adminService.mintTokens(toAddress: to, amount: amountBase);
+    if (!mounted) return;
+    setState(() { _mintResult = err == null ? 'Mint successful' : err; _isLoading = false; });
   }
 
   @override
@@ -228,6 +290,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   onTap: () {
                     setState(() => _currentSection = 'users');
                     _fetchUsers();
+                  },
+                ),
+                _navItem(
+                  icon: Icons.token,
+                  label: 'Token FRYMN',
+                  id: 'token',
+                  onTap: () {
+                    setState(() => _currentSection = 'token');
+                    _fetchTokenInfo();
                   },
                 ),
 
@@ -351,6 +422,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 'dashboard': return 'Tableau de bord';
       case 'invite': return 'Envoyer une invitation';
       case 'users': return 'Liste des utilisateurs';
+      case 'token': return 'Token FRYMN';
       default: return '';
     }
   }
@@ -360,6 +432,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       case 'dashboard': return 'Aperçu global de l\'activité';
       case 'invite': return 'Envoyez un lien d\'inscription aux professionnels';
       case 'users': return 'Gérer les comptes utilisateurs';
+      case 'token': return 'Informations et gestion du token de récompense';
       default: return '';
     }
   }
@@ -407,6 +480,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       case 'invite': return const _InviteUserForm();
       case 'users': return _buildUsersList();
+      case 'token': return _buildTokenSection();
       default: return const SizedBox();
     }
   }
@@ -628,6 +702,350 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTokenSection() {
+    if (_tokenInfo == null) {
+      return const Center(
+        child: Text(
+          'Token non disponible',
+          style: TextStyle(color: Color(0xFF64748B)),
+        ),
+      );
+    }
+
+    final tokenAddress = _tokenInfo!['address'] ?? 'N/A';
+    final tokenName = _tokenInfo!['name'] ?? 'N/A';
+    final tokenSymbol = _tokenInfo!['symbol'] ?? 'N/A';
+    final decimals = _tokenInfo!['decimals'] ?? 18;
+    final totalSupply = _tokenInfo!['totalSupply'] ?? '0';
+    final minterAddress = _tokenInfo!['minterAddress'] ?? 'N/A';
+
+    // Format total supply
+    final formattedSupply = decimals == 18
+        ? (BigInt.parse(totalSupply) / BigInt.from(10).pow(18)).toStringAsFixed(2)
+        : totalSupply;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Header card with main info
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.token,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tokenName,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Symbole: $tokenSymbol',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Supply totale: $formattedSupply $tokenSymbol',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Token details grid
+          Row(
+            children: [
+              Expanded(
+                child: _TokenDetailCard(
+                  title: 'Adresse du contrat',
+                  value: tokenAddress,
+                  icon: Icons.fingerprint,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _TokenDetailCard(
+                  title: 'Adresse du Minter',
+                  value: minterAddress,
+                  icon: Icons.account_balance_wallet,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _TokenDetailCard(
+                  title: 'Décimales',
+                  value: decimals.toString(),
+                  icon: Icons.calculate,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _TokenDetailCard(
+                  title: 'Total Supply (base)',
+                  value: totalSupply,
+                  icon: Icons.bar_chart,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // PolygonScan link
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.open_in_new,
+                  color: Color(0xFF7C3AED),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Voir le contrat sur PolygonScan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Polygonscan - Amoy Testnet',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final url = 'https://amoy.polygonscan.com/address/$tokenAddress';
+                    // In a real app, you'd use url_launcher package
+                    // For now, just show a message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Ouvrez: $url')),
+                    );
+                  },
+                  child: const Text(
+                    'Ouvrir',
+                    style: TextStyle(color: Color(0xFF7C3AED)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Balance check and Mint actions
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Vérifier le solde', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _balanceAddressController,
+                        decoration: const InputDecoration(labelText: 'Adresse', hintText: '0x...'),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: _handleCheckBalance,
+                            child: const Text('Vérifier'),
+                          ),
+                          const SizedBox(width: 12),
+                          if (_balanceResult != null) Expanded(child: Text(_balanceResult!, style: const TextStyle(fontWeight: FontWeight.w600))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Mint tokens (admin)', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _mintToController,
+                        decoration: const InputDecoration(labelText: 'To address', hintText: '0x...'),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _mintAmountController,
+                        decoration: InputDecoration(labelText: 'Amount (human)', hintText: 'e.g. 100.5 $tokenSymbol'),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => _handleMint(decimals is int ? decimals : int.parse(decimals.toString())),
+                            child: const Text('Mint'),
+                          ),
+                          const SizedBox(width: 12),
+                          if (_mintResult != null) Expanded(child: Text(_mintResult!, style: const TextStyle(fontWeight: FontWeight.w600))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TokenDetailCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+
+  const _TokenDetailCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: const Color(0xFF7C3AED),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1E293B),
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }

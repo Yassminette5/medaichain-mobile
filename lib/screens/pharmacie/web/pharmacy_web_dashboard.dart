@@ -20,6 +20,7 @@ class PharmacyWebDashboard extends StatefulWidget {
 
 class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
   PharmacyDashboard? _dashboard;
+  List<Map<String, dynamic>> _sharedDocuments = [];
   bool _isLoading = true;
   RequestStatus _selectedFilter = RequestStatus.enAttente;
   bool _sidebarVisible = true;
@@ -36,12 +37,16 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
       
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
+      final sharedDocs = await PharmacyService.getSharedDocuments();
       
+      if (!mounted) return;
       setState(() {
         _dashboard = dashboard;
+        _sharedDocuments = sharedDocs;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -74,6 +79,8 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                         _buildStatsGrid(isLargeScreen),
                         const SizedBox(height: 32),
                         _buildPrescriptionsSection(isLargeScreen),
+                        const SizedBox(height: 32),
+                        _buildSharedDocumentsSection(isLargeScreen),
                       ],
                     ),
                   ),
@@ -347,8 +354,8 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
     final validatedRequests = _dashboard?.medicationRequests
         .where((r) => r.status == RequestStatus.valide)
         .length ?? 0;
-    final completedRequests = _dashboard?.medicationRequests
-        .where((r) => r.status == RequestStatus.termine)
+    final rejectedRequests = _dashboard?.medicationRequests
+        .where((r) => r.status == RequestStatus.nonValide)
         .length ?? 0;
 
     final cards = [
@@ -371,10 +378,10 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
         color: const Color(0xFF10B981),
       ),
       _buildStatCard(
-        title: 'Terminées',
-        value: completedRequests.toString(),
-        icon: Icons.done_all_rounded,
-        color: const Color(0xFF8B5CF6),
+        title: 'Rejetées',
+        value: rejectedRequests.toString(),
+        icon: Icons.cancel_rounded,
+        color: Colors.red,
       ),
     ];
 
@@ -510,9 +517,9 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
           ),
           const SizedBox(width: 8),
           _buildFilterChip(
-            label: 'Terminées',
-            status: RequestStatus.termine,
-            color: const Color(0xFF8B5CF6),
+            label: 'Rejetées',
+            status: RequestStatus.nonValide,
+            color: Colors.red,
           ),
         ],
       ),
@@ -611,8 +618,8 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
       case RequestStatus.valide:
         statusColor = const Color(0xFF10B981);
         break;
-      case RequestStatus.termine:
-        statusColor = const Color(0xFF8B5CF6);
+      case RequestStatus.nonValide:
+        statusColor = Colors.red;
         break;
       default:
         statusColor = const Color(0xFF4FACFE);
@@ -757,6 +764,197 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
       ),
     );
   }
+
+  Widget _buildSharedDocumentsSection(bool isLargeScreen) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Documents Partagés',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (_sharedDocuments.isEmpty)
+          _buildEmptySharedState()
+        else
+          _buildSharedDocumentsList(_sharedDocuments, isLargeScreen),
+      ],
+    );
+  }
+
+  Widget _buildEmptySharedState() {
+    return Container(
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.folder_shared_rounded,
+              size: 80,
+              color: AppColors.textSecondary.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Aucun document partagé',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSharedDocumentsList(List<Map<String, dynamic>> docs, bool isLargeScreen) {
+    return Column(
+      children: [
+        for (int i = 0; i < docs.length; i++) ...[
+          _buildSharedDocumentCard(docs[i], isLargeScreen),
+          if (i < docs.length - 1) const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSharedDocumentCard(Map<String, dynamic> doc, bool isLargeScreen) {
+    final patient = doc['patientId'];
+    final patientName = (patient is Map)
+        ? (patient['fullName'] ?? patient['email'] ?? 'Patient')
+        : 'Patient';
+    final meds = (doc['medications'] as List?) ?? [];
+    final dateStr = doc['prescriptionDate'] ?? doc['createdAt'];
+    
+    String formattedDate = '--';
+    if (dateStr != null) {
+      try {
+        final dt = DateTime.parse(dateStr.toString());
+        formattedDate = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+      } catch (_) {
+        formattedDate = dateStr.toString();
+      }
+    }
+
+    final hasImage = doc['prescriptionImageUrl'] != null;
+
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () {
+          if (hasImage) {
+            showDialog(
+              context: context,
+              builder: (_) => Dialog(
+                child: InteractiveViewer(
+                  child: Image.network(doc['prescriptionImageUrl'], fit: BoxFit.contain),
+                ),
+              ),
+            );
+          }
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  hasImage ? Icons.image_rounded : Icons.description_rounded,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      patientName.toString(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${meds.length} médicament(s)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Partagé',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              if (hasImage) ...[
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+              ]
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
-
-

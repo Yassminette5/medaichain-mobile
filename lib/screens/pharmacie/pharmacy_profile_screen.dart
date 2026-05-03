@@ -36,6 +36,7 @@ class _PharmacyProfileMobile extends StatefulWidget {
 class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
   PharmacyDashboard? _dashboard;
   Map<String, dynamic>? _pharmacyProfile;
+  String? _walletBalance;
   bool _isLoading = true;
 
   @override
@@ -48,15 +49,20 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
+      final walletAddress = authProvider.user?.walletAddress;
       
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
       final profile = await PharmacyService.getPharmacyProfile();
       final raw = await PharmacyService.getPharmacyProfileRaw();
       final merged = <String, dynamic>{...raw, ...profile};
+      final balance = walletAddress != null && walletAddress.isNotEmpty
+          ? await PharmacyService.getWalletTokenBalance(walletAddress)
+          : null;
       
       setState(() {
         _dashboard = dashboard;
         _pharmacyProfile = merged;
+        _walletBalance = balance;
         _isLoading = false;
       });
     } catch (e) {
@@ -332,6 +338,8 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
                       children: [
                         _buildProfileHeader(),
                         const SizedBox(height: 24),
+                        _buildWalletSection(user),
+                        const SizedBox(height: 24),
                         _buildInfoSection(user),
                         const SizedBox(height: 24),
                         _buildStatsSection(),
@@ -504,6 +512,12 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
           ),
           const Divider(height: 24),
           _buildInfoRow(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'Wallet blockchain',
+            value: user?.walletAddress ?? 'Non lié',
+          ),
+          const Divider(height: 24),
+          _buildInfoRow(
             icon: Icons.badge_outlined,
             label: 'ID Pharmacie',
             value: _dashboard?.pharmacyInfo.id ?? 'N/A',
@@ -524,6 +538,39 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
               value: '${user!.lastLoginAt!.day}/${user.lastLoginAt!.month}/${user.lastLoginAt!.year}',
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWalletSection(user) {
+    final walletAddress = user?.walletAddress;
+
+    return _buildCard(
+      title: 'Mes FRYMN',
+      icon: Icons.account_balance_wallet_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(
+            icon: Icons.badge_outlined,
+            label: 'Adresse wallet',
+            value: walletAddress ?? 'Wallet non configuré',
+          ),
+          const Divider(height: 24),
+          _buildInfoRow(
+            icon: Icons.monetization_on_outlined,
+            label: 'Solde FRYMN',
+            value: _walletBalance ?? '0',
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Le solde est lu depuis la blockchain via le wallet lié à votre compte pharmacie.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );

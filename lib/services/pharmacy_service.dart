@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -28,6 +28,55 @@ class PharmacyService {
     };
   }
 
+  static Future<String?> getWalletTokenBalance(String walletAddress) async {
+    if (walletAddress.trim().isEmpty) return null;
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/token/balance/$walletAddress'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is Map<String, dynamic>) {
+        return (data['formatted'] ?? data['balance'])?.toString();
+      }
+      return data.toString();
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getWalletTokenBalance(walletAddress);
+    }
+
+    throw Exception('Failed to load token balance');
+  }
+
+  static Future<Map<String, dynamic>> boostMyPharmacy({int amount = 1}) async {
+    final headers = await _headers();
+    final response = await http.post(
+      Uri.parse('$baseUrl/pharmacy/my/boost'),
+      headers: headers,
+      body: jsonEncode({'amount': amount}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return Map<String, dynamic>.from(data as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return boostMyPharmacy(amount: amount);
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to boost pharmacy');
+    } catch (_) {
+      throw Exception('Failed to boost pharmacy (${response.statusCode})');
+    }
+  }
+
   // ================= DASHBOARD (MY) =================
   static Future<PharmacyDashboard> getMyDashboard() async {
     final headers = await _headers();
@@ -50,6 +99,31 @@ class PharmacyService {
   // Legacy wrapper (fedibenman code expects a pharmacyId)
   static Future<PharmacyDashboard> getDashboard(String pharmacyId) async =>
       getMyDashboard();
+
+  // ================= SHARED DOCUMENTS =================
+  /// Fetch prescriptions shared with this pharmacy by patients (simple share, no NFT)
+  static Future<List<Map<String, dynamic>>> getSharedDocuments() async {
+    final headers = await _headers();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/shared-documents'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(
+          data.map((e) => Map<String, dynamic>.from(e as Map)),
+        );
+      }
+      return [];
+    } else if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getSharedDocuments();
+    } else {
+      return [];
+    }
+  }
 
   // ================= STOCK (MY) =================
   static Future<PharmacyStock> getMyStock() async {

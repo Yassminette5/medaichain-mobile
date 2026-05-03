@@ -1,103 +1,275 @@
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+
 import 'api_service.dart';
 
 class PharmacyPrescriptionsService {
   static String get baseUrl => ApiService.baseUrl;
 
-  /// Share selected documents/prescriptions with selected pharmacies
-  static Future<bool> shareDocuments({
-    required List<String> pharmacyIds,
-    required List<String> documentIds,
-    required List<String> prescriptionIds,
-    String? note,
+  static Future<Map<String, String>> _authHeaders() async {
+    final token = await ApiService.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Non connecte');
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  static MediaType _guessImageContentType(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith('.png')) return MediaType('image', 'png');
+    if (lower.endsWith('.gif')) return MediaType('image', 'gif');
+    if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+    return MediaType('image', 'jpeg');
+  }
+
+  static Future<String> uploadPrescriptionImage(
+    List<int> bytes,
+    String filename,
+  ) async {
+    final token = await ApiService.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Non connecte');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/pharmacy/upload/prescription'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'prescription',
+        bytes,
+        filename: filename,
+        contentType: _guessImageContentType(filename),
+      ),
+    );
+
+    final streamed = await request.send();
+    final body = await streamed.stream.bytesToString();
+
+    if (streamed.statusCode == 200 || streamed.statusCode == 201) {
+      final data = jsonDecode(body);
+      if (data is Map && data['url'] != null) {
+        return data['url'].toString();
+      }
+      throw Exception("Reponse inattendue lors de l'upload");
+    }
+
+    if (streamed.statusCode == 401) {
+      await ApiService.refreshToken();
+      return uploadPrescriptionImage(bytes, filename);
+    }
+
+    try {
+      final error = jsonDecode(body);
+      throw Exception(error['message'] ?? "Erreur lors de l'upload");
+    } catch (_) {
+      throw Exception("Erreur lors de l'upload (${streamed.statusCode})");
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendMedicationRequest({
+    required String pharmacyId,
+    required String patientId,
+    required String patientName,
+    required String patientPhone,
+    required List<Map<String, dynamic>> medications,
+    String? prescriptionImageUrl,
+    String? doctorName,
+    bool isUrgent = false,
+    bool requestsDelivery = false,
   }) async {
-    try {
-      final token = await ApiService.getAccessToken();
-      final response = await http.post(
-        Uri.parse('$baseUrl/pharmacy/share-documents'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'pharmacyIds': pharmacyIds,
-          'documentIds': documentIds,
-          'prescriptionIds': prescriptionIds,
-          if (note != null && note.isNotEmpty) 'note': note,
-        }),
-      );
+    final headers = await _authHeaders();
+    final payload = <String, dynamic>{
+      'pharmacyId': pharmacyId,
+      'patient': {
+        'id': patientId,
+        'name': patientName,
+        'phoneNumber': patientPhone,
+      },
+      'medications': medications,
+      'isUrgent': isUrgent,
+      'requestsDelivery': requestsDelivery,
+    };
+    if (prescriptionImageUrl != null) {
+      payload['prescriptionImageUrl'] = prescriptionImageUrl;
+    }
+    if (doctorName != null) {
+      payload['doctorName'] = doctorName;
+    }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      } else if (response.statusCode == 401) {
-        await ApiService.refreshToken();
-        return shareDocuments(
-          pharmacyIds: pharmacyIds,
-          documentIds: documentIds,
-          prescriptionIds: prescriptionIds,
-          note: note,
-        );
-      }
-      debugPrint('Failed to share documents: ${response.statusCode}');
-      return false;
-    } catch (e) {
-      debugPrint('Error sharing documents: $e');
-      return false;
+    final response = await http.post(
+      Uri.parse('$baseUrl/pharmacy/medication-request'),
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return Map<String, dynamic>.from(data as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return sendMedicationRequest(
+        pharmacyId: pharmacyId,
+        patientId: patientId,
+        patientName: patientName,
+        patientPhone: patientPhone,
+        medications: medications,
+        prescriptionImageUrl: prescriptionImageUrl,
+        doctorName: doctorName,
+        isUrgent: isUrgent,
+        requestsDelivery: requestsDelivery,
+      );
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Erreur lors de l'envoi de la demande");
+    } catch (_) {
+      throw Exception(
+        "Erreur lors de l'envoi de la demande (${response.statusCode})",
+      );
     }
   }
 
-  /// Get Token Balance for Pharmacy Rewards
-  static Future<Map<String, dynamic>> getTokenBalance() async {
-    try {
-      final token = await ApiService.getAccessToken();
-      final response = await http.get(
-        Uri.parse('$baseUrl/blockchain/balance'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
+  static Future<List<Map<String, dynamic>>> getSharedPrescriptionsForPharmacy() async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/shared'),
+      headers: headers,
+    );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 401) {
-        await ApiService.refreshToken();
-        return getTokenBalance();
-      }
-      throw Exception('Failed to get token balance');
-    } catch (e) {
-      debugPrint('Error getting token balance: $e');
-      rethrow;
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List
+          ? List<Map<String, dynamic>>.from(
+              data.map((e) => e as Map<String, dynamic>),
+            )
+          : [];
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getSharedPrescriptionsForPharmacy();
+    }
+
+    throw Exception('Erreur lors du chargement des ordonnances partagees');
+  }
+
+  static Future<Map<String, dynamic>> getSharedPrescriptionForPharmacy(
+    String prescriptionId,
+  ) async {
+    final headers = await _authHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/prescriptions/shared/$prescriptionId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getSharedPrescriptionForPharmacy(prescriptionId);
+    }
+
+    try {
+      final errorData = jsonDecode(response.body);
+      throw Exception(
+        errorData['message'] ?? "Acces refuse a l'ordonnance partagee",
+      );
+    } catch (_) {
+      throw Exception("Acces refuse a l'ordonnance partagee");
     }
   }
 
-  /// Mint tokens (e.g., when a patient successfully buys from a pharmacy)
-  static Future<bool> mintTokens(double amount, String reason) async {
-    try {
-      final token = await ApiService.getAccessToken();
-      final response = await http.post(
-        Uri.parse('$baseUrl/blockchain/mint'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'amount': amount,
-          'reason': reason,
-        }),
-      );
+  /// Share multiple prescriptions with multiple pharmacies (simple, no encryption)
+  static Future<Map<String, dynamic>> shareDocuments({
+    required List<String> prescriptionIds,
+    required List<String> pharmacyIds,
+  }) async {
+    final headers = await _authHeaders();
+    final payload = {
+      'prescriptionIds': prescriptionIds,
+      'pharmacyIds': pharmacyIds,
+    };
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      } else if (response.statusCode == 401) {
-        await ApiService.refreshToken();
-        return mintTokens(amount, reason);
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Error minting tokens: $e');
-      return false;
+    final response = await http.post(
+      Uri.parse('$baseUrl/prescriptions/share-documents'),
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return shareDocuments(
+        prescriptionIds: prescriptionIds,
+        pharmacyIds: pharmacyIds,
+      );
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Erreur lors du partage");
+    } catch (_) {
+      throw Exception("Erreur lors du partage (${response.statusCode})");
+    }
+  }
+
+  static Future<void> sharePrescriptionWithPharmacy({
+    required String prescriptionId,
+    required String pharmacyId,
+    String? expiresAtIso,
+  }) async {
+    final headers = await _authHeaders();
+    final payload = <String, dynamic>{
+      'pharmacyId': pharmacyId,
+    };
+    if (expiresAtIso != null && expiresAtIso.isNotEmpty) {
+      payload['expiresAt'] = expiresAtIso;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/prescriptions/$prescriptionId/share'),
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return sharePrescriptionWithPharmacy(
+        prescriptionId: prescriptionId,
+        pharmacyId: pharmacyId,
+        expiresAtIso: expiresAtIso,
+      );
+    }
+
+    try {
+      final errorData = jsonDecode(response.body);
+      throw Exception(
+        errorData['message'] ?? "Erreur lors du partage de l'ordonnance",
+      );
+    } catch (_) {
+      throw Exception(
+        "Erreur lors du partage de l'ordonnance (${response.statusCode})",
+      );
     }
   }
 }

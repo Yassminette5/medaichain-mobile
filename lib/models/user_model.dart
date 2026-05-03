@@ -73,12 +73,15 @@ class User {
   final bool isActive;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final String? walletAddress;
   final String? fullName;
   final String? gender;
   final int? age;
   final int? height;
   final int? weight;
   final List<String>? allergies;
+  final bool? temporaryAccessEnabled;
+  final DateTime? temporaryAccessUntil;
 
   User({
     required this.id,
@@ -90,12 +93,15 @@ class User {
     required this.isActive,
     required this.createdAt,
     this.lastLoginAt,
+    this.walletAddress,
     this.fullName,
     this.gender,
     this.age,
     this.height,
     this.weight,
     this.allergies,
+    this.temporaryAccessEnabled,
+    this.temporaryAccessUntil,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -113,6 +119,7 @@ class User {
       lastLoginAt: json['lastLoginAt'] != null
           ? DateTime.parse(json['lastLoginAt'])
           : null,
+        walletAddress: json['walletAddress'],
       fullName: json['fullName'],
       gender: json['gender'],
       age: (json['age'] as num?)?.toInt(),
@@ -120,6 +127,10 @@ class User {
       weight: (json['weight'] as num?)?.toInt(),
       allergies: json['allergies'] != null
           ? List<String>.from(json['allergies'])
+          : null,
+      temporaryAccessEnabled: json['temporaryAccessEnabled'] as bool?,
+      temporaryAccessUntil: json['temporaryAccessUntil'] != null
+          ? DateTime.tryParse(json['temporaryAccessUntil'].toString())
           : null,
     );
   }
