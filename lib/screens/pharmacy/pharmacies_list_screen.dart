@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 import '../../models/pharmacy_model.dart';
 import 'pharmacy_ordonnance_form_screen.dart';
+import 'select_documents_screen.dart';
 
 class PharmaciesListScreen extends StatefulWidget {
   const PharmaciesListScreen({super.key});
@@ -17,6 +18,7 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
   bool _isLoading = false;
   String? _error;
   String _searchQuery = '';
+  final Set<String> _selectedPharmacyIds = {};
 
   @override
   void initState() {
@@ -59,6 +61,32 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
             p.city.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             p.wilaya.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
+  }
+
+  void _togglePharmacySelection(String id) {
+    setState(() {
+      if (_selectedPharmacyIds.contains(id)) {
+        _selectedPharmacyIds.remove(id);
+      } else {
+        _selectedPharmacyIds.add(id);
+      }
+    });
+  }
+
+  void _navigateToSelectDocuments() {
+    final selectedPharmacies = _pharmacies
+        .where((p) => _selectedPharmacyIds.contains(p.id))
+        .toList();
+    if (selectedPharmacies.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SelectDocumentsScreen(
+          selectedPharmacies: selectedPharmacies,
+        ),
+      ),
+    );
   }
 
   @override
@@ -195,6 +223,44 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                               },
                             ),
             ),
+            // Continue Button
+            if (_selectedPharmacyIds.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _navigateToSelectDocuments,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Continue (${_selectedPharmacyIds.length} selected)',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -204,16 +270,25 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
   Widget _buildPharmacyCard(BuildContext context, PharmacyModel pharmacy) {
     final isOpen = pharmacy.isOpen;
     final statusColor = isOpen ? Colors.green : Colors.orange;
+    final isSelected = _selectedPharmacyIds.contains(pharmacy.id);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return GestureDetector(
+      onTap: () => _togglePharmacySelection(pharmacy.id),
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        elevation: isSelected ? 4 : 2,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Header with name and status
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -339,36 +414,16 @@ class _PharmaciesListScreenState extends State<PharmaciesListScreen> {
                 ],
               ),
             const SizedBox(height: 12),
-            // Send Ordonnance Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PharmacyOrdonnanceFormScreen(
-                        pharmacy: pharmacy,
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            // Selection Indicator
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Icon(
+                  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isSelected ? AppColors.primary : Colors.grey.shade400,
+                  size: 28,
                 ),
-                child: Text(
-                  'Send Prescription',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              ],
             ),
           ],
         ),
