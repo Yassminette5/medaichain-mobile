@@ -20,7 +20,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
   late Animation<double> _fadeAnimation;
   Timer? _timer;
   
-  bool _isAnalyzing = false;
+  final bool _isAnalyzing = false;
   List<Map<String, dynamic>> _aiResults = [];
   bool _isLoadingAiResults = false;
 

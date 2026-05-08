@@ -8,7 +8,9 @@
         android:label="madaichain"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
 
     <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"

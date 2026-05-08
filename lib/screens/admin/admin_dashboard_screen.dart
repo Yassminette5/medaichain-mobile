@@ -215,7 +215,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final amountBase = _toBaseUnits(amountHuman, decimals);
     final err = await _adminService.mintTokens(toAddress: to, amount: amountBase);
     if (!mounted) return;
-    setState(() { _mintResult = err == null ? 'Mint successful' : err; _isLoading = false; });
+    setState(() { _mintResult = err ?? 'Mint successful'; _isLoading = false; });
   }
 
   @override

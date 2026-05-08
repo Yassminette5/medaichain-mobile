@@ -40,8 +40,8 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Test sur téléphone réel (IP du Mac sur le même WiFi)
-  ApiService.backendUrlOverride = 'http://172.20.10.4:3000';
+  // ✅ URL ngrok publique — tes amis accèdent à cette URL
+  ApiService.backendUrlOverride = 'https://riptide-linoleum-cactus.ngrok-free.dev';
 
   await initializeDateFormatting('fr_FR', null);
 

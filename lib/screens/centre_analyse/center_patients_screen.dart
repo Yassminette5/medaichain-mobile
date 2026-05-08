@@ -78,10 +78,12 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
       } else {
         final lowerQuery = query.toLowerCase();
         _filteredPatients = _patients.where((patient) {
+          final fullName = patient['fullName']?.toString().toLowerCase() ?? '';
           final firstName = patient['firstName']?.toString().toLowerCase() ?? '';
           final lastName = patient['lastName']?.toString().toLowerCase() ?? '';
           final email = patient['email']?.toString().toLowerCase() ?? '';
-          return firstName.contains(lowerQuery) || 
+          return fullName.contains(lowerQuery) || 
+                 firstName.contains(lowerQuery) || 
                  lastName.contains(lowerQuery) || 
                  email.contains(lowerQuery);
         }).toList();
@@ -145,9 +147,10 @@ class _CenterPatientsScreenState extends State<CenterPatientsScreen> {
   }
 
   Widget _buildPatientItem(Map<String, dynamic> patient) {
-    final firstName = patient['firstName'] ?? '';
-    final lastName = patient['lastName'] ?? '';
-    final name = '${firstName.trim()} ${lastName.trim()}'.trim();
+    final fullName = patient['fullName']?.toString() ?? '';
+    final firstName = patient['firstName']?.toString() ?? '';
+    final lastName = patient['lastName']?.toString() ?? '';
+    final name = fullName.isNotEmpty ? fullName : '${firstName.trim()} ${lastName.trim()}'.trim();
     final displayName = name.isNotEmpty ? name : (patient['email']?.toString().split('@')[0] ?? 'Patient');
     final email = patient['email'] ?? '';
     final id = patient['_id']?.toString() ?? patient['id']?.toString() ?? '';

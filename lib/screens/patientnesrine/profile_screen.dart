@@ -7,14 +7,16 @@ import '../../core/theme/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../services/subscription_service.dart';
 import '../patientnesrine/edit_profile_screen.dart';
 import '../patientnesrine/patient_qr_screen.dart';
 import '../patientnesrine/document_list_screen.dart';
 import '../patient/patient_upload_analysis_screen.dart';
 import '../patientnesrine/ocr_analyze_screen.dart';
 import '../patientnesrine/ocr_document_detail_screen.dart';
+import '../patientnesrine/subscription_screen.dart';
+import '../ai/premium_paywall_screen.dart';
 import '../../widgets/ai_assistant_chat.dart';
-
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -178,6 +180,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
             ),
+              // Badge Plan d'abonnement
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                  );
+                },
+                child: Builder(
+                  builder: (context) {
+                    final sub = SubscriptionService();
+                    final isPremium = sub.isPremium;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: isPremium
+                            ? const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)])
+                            : null,
+                        color: isPremium ? null : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isPremium
+                                ? const Color(0xFFFFD700).withOpacity(0.3)
+                                : Colors.black.withOpacity(0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isPremium ? Icons.diamond_rounded : Icons.person_rounded,
+                            color: isPremium ? Colors.white : AppColors.textGrey,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isPremium ? 'Pack Premium ✨' : 'Pack Gratuit',
+                            style: GoogleFonts.poppins(
+                              color: isPremium ? Colors.white : AppColors.textDark,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: isPremium ? Colors.white70 : AppColors.textGrey,
+                            size: 18,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
             const SizedBox(height: 24),
 
             // Medical NFT Card with Enhanced Design
@@ -794,16 +856,41 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
             ),
           ),
           const SizedBox(height: 16),
-          // Accéder à l'Assistant IA
+          // Accéder à l'Assistant IA (gaté par Premium)
           GestureDetector(
-            onTap: () {
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+            onTap: () async {
+              final sub = SubscriptionService();
+              await sub.refreshBackendStatus();
+
+              if (sub.isPremium || sub.adCredits > 0) {
+                if (!context.mounted) return;
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+                );
+                return;
+              }
+
+              // Paywall
+              if (!context.mounted) return;
+              final result = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
               );
+              if (result == true && context.mounted) {
+                await sub.refreshBackendStatus();
+                if (sub.isPremium || sub.adCredits > 0) {
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+                  );
+                }
+              }
             },
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -828,9 +915,27 @@ class _ProfileAnalysisResultsSectionState extends State<_ProfileAnalysisResultsS
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Assistant IA Média',
-                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                        Row(
+                          children: [
+                            Text(
+                              'Assistant IA Média',
+                              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                            ),
+                            if (!SubscriptionService().isPremium) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'PRO',
+                                  style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         Text(
                           "Posez vos questions de santé",

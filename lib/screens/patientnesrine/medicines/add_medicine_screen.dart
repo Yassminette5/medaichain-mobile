@@ -251,12 +251,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildFieldLabel("Time & Schedule"),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _buildScheduleButton("After Breakfast", "after_breakfast"),
-            const SizedBox(width: 12),
             _buildScheduleButton("After Dinner", "after_dinner"),
-            const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

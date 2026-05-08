@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 
@@ -60,9 +60,13 @@ class AppointmentDetailContent extends StatelessWidget {
     
     if (patientId != null && patientId is Map) {
       final patientMap = Map<String, dynamic>.from(patientId);
+      final fullName = patientMap['fullName']?.toString() ?? '';
       final firstName = patientMap['firstName']?.toString() ?? '';
       final lastName = patientMap['lastName']?.toString() ?? '';
-      if (firstName.isNotEmpty || lastName.isNotEmpty) {
+      
+      if (fullName.isNotEmpty) {
+        patientFirstName = fullName;
+      } else if (firstName.isNotEmpty || lastName.isNotEmpty) {
         patientFirstName = '${firstName.trim()} ${lastName.trim()}'.trim();
       } else {
         patientFirstName = patientMap['name']?.toString() ?? patientMap['email']?.toString() ?? 'Patient';
@@ -89,6 +93,8 @@ class AppointmentDetailContent extends StatelessWidget {
       children: [
         // En-tête du document
         _buildDocumentHeader(),
+        // Bannière si acceptée
+        if (status == 'accepted') _buildStatusBanner(),
         const SizedBox(height: 40),
         // Informations Patient
         _buildSectionHeader('INFORMATIONS PATIENT'),
@@ -163,6 +169,53 @@ class AppointmentDetailContent extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBanner() {
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9), // Fond vert très clair
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFC8E6C9)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF388E3C), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Demande acceptée automatiquement',
+                style: TextStyle(
+                  color: const Color(0xFF2E7D32),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: const Text(
+              'Acceptée',
+              style: TextStyle(
+                color: Color(0xFF388E3C),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
             ),
           ),
         ],

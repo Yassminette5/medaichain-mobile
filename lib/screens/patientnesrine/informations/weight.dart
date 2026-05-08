@@ -30,119 +30,126 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
 
     return Column(
       children: [
-        const SizedBox(height: 20),
-        
-        // Title
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              height: 1.2,
-            ),
-            children: [
-              const TextSpan(text: "Your "),
-              TextSpan(
-                text: "current weight",
-                style: TextStyle(color: _accentColor),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Text(
-            "We will use this data to give you a better diet type for you.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 30),
-
-        // Weight Value Box
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-          decoration: BoxDecoration(
-            color: _brandColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: RichText(
-            text: TextSpan(
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
               children: [
-                TextSpan(
-                  text: "$currentWeight ",
-                  style: GoogleFonts.poppins(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                const SizedBox(height: 20),
+                
+                // Title
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: GoogleFonts.poppins(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
+                    children: [
+                      const TextSpan(text: "Your "),
+                      TextSpan(
+                        text: "current weight",
+                        style: TextStyle(color: _accentColor),
+                      ),
+                    ],
                   ),
                 ),
-                TextSpan(
-                  text: "kg",
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    "We will use this data to give you a better diet type for you.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
                   ),
                 ),
+
+                const SizedBox(height: 30),
+
+                // Weight Value Box
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                  decoration: BoxDecoration(
+                    color: _brandColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "$currentWeight ",
+                          style: GoogleFonts.poppins(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        TextSpan(
+                          text: "kg",
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // Circular Dial
+                SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: CustomPaint(
+                    painter: WeightDialPainter(
+                      currentWeight: currentWeight,
+                      minWeight: _minWeight,
+                      maxWeight: _maxWeight,
+                      tealColor: _brandColor,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Linear Slider
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: _brandColor,
+                      inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
+                      thumbColor: Colors.white,
+                      overlayColor: _brandColor.withValues(alpha: 0.2),
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
+                    ),
+                    child: Slider(
+                      value: currentWeight.toDouble(),
+                      min: _minWeight.toDouble(),
+                      max: _maxWeight.toDouble(),
+                      onChanged: (val) {
+                        viewModel.setCurrentWeight(val.toInt());
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
 
-        const SizedBox(height: 40),
-
-        // Circular Dial
-        SizedBox(
-          width: 300,
-          height: 300,
-          child: CustomPaint(
-            painter: WeightDialPainter(
-              currentWeight: currentWeight,
-              minWeight: _minWeight,
-              maxWeight: _maxWeight,
-              tealColor: _brandColor,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Linear Slider
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: _brandColor,
-              inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
-              thumbColor: Colors.white,
-              overlayColor: _brandColor.withValues(alpha: 0.2),
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
-            ),
-            child: Slider(
-              value: currentWeight.toDouble(),
-              min: _minWeight.toDouble(),
-              max: _maxWeight.toDouble(),
-              onChanged: (val) {
-                viewModel.setCurrentWeight(val.toInt());
-              },
-            ),
-          ),
-        ),
-
-        const Spacer(),
-
         // Next Button (Standardized)
         Padding(
-          padding: const EdgeInsets.only(bottom: 30),
+          padding: const EdgeInsets.only(bottom: 30, top: 10),
           child: Container(
             height: 70,
             width: 70,

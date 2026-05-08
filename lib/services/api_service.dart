@@ -21,14 +21,23 @@ class ApiService {
   /// - Android émulateur: 10.0.2.2 (machine hôte)
   /// - Téléphone réel: définir backendUrlOverride dans main.dart avec l'IP du PC (même WiFi).
   static String get baseUrl {
-    // 1. Sur le Web, on doit utiliser localhost pour éviter les erreurs CORS
-    if (kIsWeb) return 'http://localhost:3000';
+    // 1. Web en mode debug (localhost) → utiliser localhost pour éviter CORS
+    if (kIsWeb) {
+      // En mode build (déployé sur ngrok), l'URL de la page sera ngrok
+      // En mode debug, l'URL sera localhost:xxxxx
+      final isLocalDebug = _isWebLocalhost();
+      if (isLocalDebug) return 'http://localhost:3000';
+      // Version build servie depuis ngrok → appeler le même serveur
+      if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
+        return backendUrlOverride!.trim();
+      }
+      return 'http://localhost:3000';
+    }
 
-    // 2. Sur téléphone physique ou émulateur, on utilise l'IP locale si elle est définie
+    // 2. Mobile : utiliser l'URL ngrok si définie
     if (backendUrlOverride != null && backendUrlOverride!.trim().isNotEmpty) {
       String url = backendUrlOverride!.trim();
-      if (!url.startsWith('http')) url = 'http://$url';
-      if (!url.contains(':3000') && !url.contains(':')) url = '$url:3000';
+      if (!url.startsWith('http')) url = 'https://$url';
       return url;
     }
 
@@ -43,7 +52,17 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
-  static String get aiBaseUrl => 'https://6dd4-34-81-16-201.ngrok-free.app';
+  /// Détecte si on est en mode debug web (localhost)
+  static bool _isWebLocalhost() {
+    try {
+      final uri = Uri.base;
+      return uri.host == 'localhost' || uri.host == '127.0.0.1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static String get aiBaseUrl => 'https://niki-unfancied-toshia.ngrok-free.dev';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }

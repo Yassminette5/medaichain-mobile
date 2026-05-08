@@ -113,6 +113,7 @@ class _HomeViewState extends State<_HomeView> {
     _loadAccessRequests();
     // Rafraîchir les consultations depuis le backend à l'affichage du tableau de bord
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
       calendarProvider.refresh();
     });
@@ -1451,7 +1452,9 @@ class _PatientsViewState extends State<_PatientsView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAccepted());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadAccepted();
+    });
   }
 
   @override

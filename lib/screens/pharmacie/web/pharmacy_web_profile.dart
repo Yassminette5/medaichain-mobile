@@ -694,7 +694,9 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
 
   String _effectiveBalance() {
     final rawBalance = double.tryParse(_walletBalance ?? '0') ?? 0.0;
-    return rawBalance.toStringAsFixed(1);
+    final boostScore = _pharmacyProfile?['boostScore'] as num? ?? 0;
+    final effective = rawBalance - boostScore.toDouble();
+    return effective > 0 ? effective.toStringAsFixed(1) : '0.0';
   }
 
   Widget _buildStatsCard() {

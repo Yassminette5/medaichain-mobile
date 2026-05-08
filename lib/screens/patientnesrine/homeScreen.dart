@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/prescriptions_service.dart';
+import '../../services/subscription_service.dart';
 import '../patientnesrine/notifications_screen.dart';
 import '../patientnesrine/doctor_detail_sheet.dart';
 import '../../core/theme/app_colors.dart';
@@ -13,6 +14,7 @@ import '../patientnesrine/profile_screen.dart';
 import '../patientnesrine/doctors_list_screen.dart';
 import '../../widgets/ai_assistant_chat.dart';
 import '../pharmacy/pharmacies_list_screen.dart';
+import '../ai/premium_paywall_screen.dart';
 import 'prescription_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -142,15 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () {
-                            final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
-                            );
-                          },
+                          onPressed: () => _openAiWithPremiumCheck(context),
                           icon: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -397,6 +391,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              // Note Premium pour rendez-vous automatique urgence
+              if (!SubscriptionService().isPremium) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF8E1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.diamond_rounded, color: Color(0xFFFFB300), size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Premium : Rendez-vous automatique en cas d\'urgence détectée par l\'IA',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: const Color(0xFF795548),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 28),
 
               // Mes ordonnances
@@ -850,9 +872,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAiAssistantCard(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
+  /// Vérifie l'accès premium avant d'ouvrir le chat IA.
+  Future<void> _openAiWithPremiumCheck(BuildContext context) async {
+    final sub = SubscriptionService();
+    await sub.refreshBackendStatus();
+
+    if (sub.isPremium || sub.adCredits > 0) {
+      // Accès direct
+      if (!mounted) return;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
+      );
+      return;
+    }
+
+    // Pas d'accès → Paywall
+    if (!mounted) return;
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+    );
+
+    if (result == true && mounted) {
+      await sub.refreshBackendStatus();
+      if (sub.isPremium || sub.adCredits > 0) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         showModalBottomSheet(
           context: context,
@@ -860,7 +906,16 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.transparent,
           builder: (context) => AiAssistantChat(userId: authProvider.user?.id),
         );
-      },
+      }
+    }
+  }
+
+  Widget _buildAiAssistantCard(BuildContext context) {
+    final sub = SubscriptionService();
+    final hasPremium = sub.isPremium;
+
+    return GestureDetector(
+      onTap: () => _openAiWithPremiumCheck(context),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 24),
         child: Container(
@@ -876,40 +931,74 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Besoin d\'aide ?',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                      ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      'Posez vos questions à l\'assistant IA.',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 13,
-                      ),
+                    child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Besoin d\'aide ?',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                          ),
+                        ),
+                        Text(
+                          'Posez vos questions à l\'assistant IA.',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+                ],
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 18),
+              // Note premium si l'utilisateur n'est pas premium
+              if (!hasPremium) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.diamond_rounded, color: Colors.amberAccent, size: 14),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Passez au Premium pour des options rapides',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withOpacity(0.95),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -52,6 +52,7 @@ class _MedecinWebDashboardState extends State<MedecinWebDashboard> {
     super.initState();
     // Charger le profil du médecin au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (authProvider.user?.role == UserRole.medecin && authProvider.doctorProfile == null) {
         authProvider.fetchDoctorProfile();
@@ -462,7 +463,9 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAccepted());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadAccepted();
+    });
   }
 
   @override

@@ -65,7 +65,7 @@ class _WebPatientMedicalRecordViewState extends State<WebPatientMedicalRecordVie
 
     try {
       final p = await PrescriptionsService.getMyPrescriptions();
-      if (p is List) prescriptions = p;
+      prescriptions = p;
     } catch (_) {}
 
     if (mounted) {

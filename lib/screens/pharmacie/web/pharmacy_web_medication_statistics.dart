@@ -88,7 +88,7 @@ class _PharmacyWebMedicationStatisticsState
 
       MedicationRequest? request;
       try {
-        request = await PharmacyService.getMyRequestById(requestId);
+        request = await PharmacyService.getMyRequestModelById(requestId);
       } catch (_) {
         request = null;
       }

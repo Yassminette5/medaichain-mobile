@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../services/subscription_service.dart';
+import '../ai/premium_paywall_screen.dart';
 
-
-
-/// Écran d'abonnement MEDAIChain — Choix entre Free / Plus / Premium.
+/// Écran d'abonnement MEDAIChain — Choix entre Free / Premium.
+/// Affiche le plan actuel et permet d'upgrader via RevenueCat.
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
 
@@ -13,17 +14,33 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  final bool _purchasing = false;
+  final _subService = SubscriptionService();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _refreshStatus();
+  }
+
+  Future<void> _refreshStatus() async {
+    setState(() => _isLoading = true);
+    await _subService.refreshBackendStatus();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _upgradeToPremium() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+    );
+    if (result == true && mounted) {
+      await _refreshStatus();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final plusPrice = '9.99 DT / mois';
-    final premiumPrice = '19.99 DT / mois';
+    final isPremium = _subService.isPremium;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,8 +77,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           color: Colors.white.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.workspace_premium_rounded,
-                            color: Colors.white, size: 44),
+                        child: Icon(
+                          isPremium ? Icons.diamond_rounded : Icons.workspace_premium_rounded,
+                          color: Colors.white,
+                          size: 44,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -74,7 +94,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Débloquez l\'intelligence artificielle',
+                        isPremium
+                            ? 'Vous êtes abonné Premium ✨'
+                            : 'Débloquez l\'intelligence artificielle',
                         style: GoogleFonts.poppins(
                           color: Colors.white70,
                           fontSize: 14,
@@ -89,110 +111,111 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
           // ── Contenu ──
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  // Interface statique (Stripe sera branché plus tard)
+            child: _isLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // Badge plan actuel
+                        _buildCurrentPlanBadge(isPremium),
+                        const SizedBox(height: 28),
 
-                  // Badge plan actuel (statique)
-                  _buildCurrentPlanBadge(),
-                  const SizedBox(height: 28),
+                        // ── Plan Free ──
+                        _buildPlanCard(
+                          title: 'Gratuit',
+                          subtitle: 'Fonctionnalités de base',
+                          price: '0 DT / mois',
+                          icon: Icons.person_rounded,
+                          gradient: LinearGradient(
+                            colors: [Colors.grey.shade400, Colors.grey.shade600],
+                          ),
+                          features: const [
+                            'Prendre des rendez-vous',
+                            'Consulter vos résultats',
+                            'Notifications en temps réel',
+                            'Dossier médical digital',
+                          ],
+                          lockedFeatures: const [
+                            'Assistant IA médical',
+                            'Rendez-vous automatique d\'urgence',
+                            'Analyse IA des résultats',
+                            'Priorité IA',
+                          ],
+                          isActive: !isPremium,
+                          onSubscribe: null,
+                        ),
 
-                  // ── Plan Free ──
-                  _buildPlanCard(
-                    title: 'Gratuit',
-                    subtitle: 'Fonctionnalités de base',
-                    price: '0 DT / mois',
-                    icon: Icons.person_rounded,
-                    gradient: LinearGradient(
-                      colors: [Colors.grey.shade400, Colors.grey.shade600],
+                        const SizedBox(height: 20),
+
+                        // ── Plan Premium ──
+                        _buildPlanCard(
+                          title: 'Premium',
+                          subtitle: 'Accès complet IA + Urgence',
+                          price: '19.99 DT / mois',
+                          icon: Icons.diamond_rounded,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+                          ),
+                          features: const [
+                            'Tout du plan Gratuit',
+                            '🤖 Assistant IA médical illimité',
+                            '🚑 Rendez-vous automatique d\'urgence',
+                            '🔬 Analyse IA des résultats d\'analyse',
+                            '📄 OCR intelligent des documents',
+                            '⚡ Réponses prioritaires',
+                            '🛡️ Zéro publicité',
+                          ],
+                          lockedFeatures: const [],
+                          isActive: isPremium,
+                          isRecommended: true,
+                          onSubscribe: isPremium ? null : _upgradeToPremium,
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Note informative
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  color: AppColors.primary, size: 20),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Les fonctionnalités IA incluent le chat médical, '
+                                  'l\'analyse automatique de vos résultats d\'analyse, '
+                                  'et la prise de rendez-vous automatique en cas d\'urgence détectée.',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+                      ],
                     ),
-                    features: const [
-                      'Prendre des rendez-vous',
-                      'Consulter vos résultats',
-                      'Notifications',
-                    ],
-                    lockedFeatures: const [
-                      'Acceptation automatique IA',
-                      'Analyse OCR des PDF',
-                    ],
-                    isActive: true,
-                    onSubscribe: null,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Plan Plus ──
-                  _buildPlanCard(
-                    title: 'Plus',
-                    subtitle: 'Priorité IA',
-                    price: plusPrice,
-                    icon: Icons.bolt_rounded,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF7C3AED), Color(0xFFA78BFA)],
-                    ),
-                    features: const [
-                      'Tout du plan Gratuit',
-                      '✨ Modèle IA : acceptation automatique',
-                      '📊 Rendez-vous prioritaires',
-                      '🔬 Nombre limité d\'analyses OCR / mois',
-                    ],
-                    lockedFeatures: const [
-                      'OCR illimité',
-                      'Description complète des analyses',
-                    ],
-                    isActive: false,
-                    isRecommended: true,
-                    onSubscribe: null,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Plan Premium ──
-                  _buildPlanCard(
-                    title: 'Premium',
-                    subtitle: 'Accès complet IA + OCR',
-                    price: premiumPrice,
-                    icon: Icons.diamond_rounded,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
-                    ),
-                    features: const [
-                      'Tout du plan Plus',
-                      '🧠 Modèle IA + OCR complet',
-                      '📄 Analyse automatique des PDF',
-                      '🔍 Plus de scans par mois',
-                      '📝 Description complète des analyses',
-                    ],
-                    lockedFeatures: const [],
-                    isActive: false,
-                    onSubscribe: null,
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Boutons Stripe seront branchés ici plus tard
-
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
           ),
         ],
       ),
-
-      // Overlay loading
-      bottomSheet: _purchasing
-          ? Container(
-              color: Colors.black45,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-            )
-          : null,
     );
   }
 
@@ -200,9 +223,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   // WIDGETS
   // ═══════════════════════════════════════════════════════════════════════
 
-  Widget _buildCurrentPlanBadge() {
-    const label = 'Gratuit';
-    final color = AppColors.textSecondary;
+  Widget _buildCurrentPlanBadge(bool isPremium) {
+    final label = isPremium ? 'Premium' : 'Gratuit';
+    final color = isPremium ? const Color(0xFFFFD700) : AppColors.textSecondary;
+    final icon = isPremium ? Icons.diamond_rounded : Icons.verified_rounded;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -214,7 +238,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_rounded, color: color, size: 20),
+          Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
           Text(
             'Plan actuel : $label',
@@ -228,8 +252,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       ),
     );
   }
-
-  // Stripe: actions de paiement seront ajoutées ici
 
   Widget _buildPlanCard({
     required String title,
@@ -364,7 +386,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _purchasing ? null : onSubscribe,
+                    onPressed: onSubscribe,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -381,13 +403,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       child: Container(
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Text(
-                          'S\'abonner',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.diamond_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Passer au Premium',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

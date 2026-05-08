@@ -60,9 +60,13 @@ class AppointmentDetailScreen extends StatelessWidget {
     
     if (patientId != null && patientId is Map) {
       final patientMap = Map<String, dynamic>.from(patientId);
+      final fullName = patientMap['fullName']?.toString() ?? '';
       final firstName = patientMap['firstName']?.toString() ?? '';
-      if (firstName.isNotEmpty) {
-        patientFirstName = firstName.trim();
+      final lastName = patientMap['lastName']?.toString() ?? '';
+      if (fullName.isNotEmpty) {
+        patientFirstName = fullName;
+      } else if (firstName.isNotEmpty || lastName.isNotEmpty) {
+        patientFirstName = '${firstName.trim()} ${lastName.trim()}'.trim();
       } else {
         patientFirstName = patientMap['name']?.toString() ?? patientMap['email']?.toString() ?? 'Patient';
       }

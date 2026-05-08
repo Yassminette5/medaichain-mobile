@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../services/subscription_service.dart';
+import '../ai/premium_paywall_screen.dart';
 import 'package:http/http.dart' as http;
 
 class OcrDocumentDetailScreen extends StatefulWidget {
@@ -262,9 +264,44 @@ class _OcrDocumentDetailScreenState extends State<OcrDocumentDetailScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _running ? null : () => _runOcrOnImage(fileUrl, fileName),
+                        onPressed: _running ? null : () async {
+                          // Vérifier premium
+                          final sub = SubscriptionService();
+                          await sub.refreshBackendStatus();
+                          if (sub.isPremium || sub.adCredits > 0) {
+                            _runOcrOnImage(fileUrl, fileName);
+                            return;
+                          }
+                          // Paywall
+                          if (!context.mounted) return;
+                          final result = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+                          );
+                          if (result == true) {
+                            await sub.refreshBackendStatus();
+                            if (sub.isPremium || sub.adCredits > 0) {
+                              _runOcrOnImage(fileUrl, fileName);
+                            }
+                          }
+                        },
                         icon: const Icon(Icons.psychology_alt_rounded),
-                        label: Text('Analyser l\'image', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Analyser l\'image', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                            if (!SubscriptionService().isPremium) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text('PRO', style: GoogleFonts.poppins(fontSize: 8, fontWeight: FontWeight.w800, color: Colors.white)),
+                              ),
+                            ],
+                          ],
+                        ),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),

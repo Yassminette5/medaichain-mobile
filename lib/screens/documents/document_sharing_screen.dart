@@ -14,8 +14,8 @@ class DocumentSharingScreen extends StatefulWidget {
 
 class _DocumentSharingScreenState extends State<DocumentSharingScreen> {
   List<Map<String, dynamic>> _documents = [];
-  Map<String, bool> _sharingState = {};
-  Map<String, bool> _loadingState = {};
+  final Map<String, bool> _sharingState = {};
+  final Map<String, bool> _loadingState = {};
   bool _isLoadingDocuments = true;
   String? _error;
   String _searchQuery = '';

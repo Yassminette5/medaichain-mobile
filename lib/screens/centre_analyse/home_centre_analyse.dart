@@ -581,15 +581,18 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
         String patientName = 'Patient';
         
         if (patientId != null && patientId is Map) {
-          final firstName = patientId['firstName'] ?? '';
-          final lastName = patientId['lastName'] ?? '';
-          if (firstName.isNotEmpty || lastName.isNotEmpty) {
+          final fullName = patientId['fullName']?.toString() ?? '';
+          final firstName = patientId['firstName']?.toString() ?? '';
+          final lastName = patientId['lastName']?.toString() ?? '';
+          if (fullName.isNotEmpty) {
+            patientName = fullName;
+          } else if (firstName.isNotEmpty || lastName.isNotEmpty) {
             patientName = '${firstName.trim()} ${lastName.trim()}'.trim();
             if (patientName.isEmpty) {
-              patientName = patientId['name'] ?? patientId['email'] ?? 'Patient';
+              patientName = patientId['name']?.toString() ?? patientId['email']?.toString() ?? 'Patient';
             }
           } else {
-            patientName = patientId['name'] ?? patientId['email'] ?? 'Patient';
+            patientName = patientId['name']?.toString() ?? patientId['email']?.toString() ?? 'Patient';
           }
         }
 

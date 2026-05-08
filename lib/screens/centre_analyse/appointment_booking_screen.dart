@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../services/subscription_service.dart';
+import '../ai/premium_paywall_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 /// Écran de prise de rendez-vous pour les patients
 class AppointmentBookingScreen extends StatefulWidget {
@@ -107,28 +112,68 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
     try {
       final backendType = _toBackendAnalysisType(_analysisTypeController.text);
+      final sub = SubscriptionService();
+      
       final appointmentData = {
         // Backend attend une valeur enum: analyse_sanguin | scanner | radiologie | imagerie | biologie | autre
         'analysisType': backendType,
         'appointmentDate': appointmentDateTime.toIso8601String(),
         'centreName': widget.centreName,
         'labId': widget.labId,
+        'subscriptionTier': sub.isPremium ? 'premium' : 'free',
         // Champs du backend (optionnels mais présents dans la doc)
         'hasCurrentTreatment': false,
         'hasAllergies': false,
         if (_notesController.text.trim().isNotEmpty) 'notes': _notesController.text.trim(),
       };
 
-      await ApiService.createLabAppointment(appointmentData);
+      final response = await ApiService.createLabAppointment(appointmentData);
 
       if (mounted) {
         setState(() => _isLoading = false);
+        
+        final status = response['status'];
+        final isAccepted = status == 'accepted';
+        
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final patientName = authProvider.user?.fullName ?? 'Votre demande';
+        
+        final dateStr = '${appointmentDateTime.year}-${appointmentDateTime.month.toString().padLeft(2, '0')}-${appointmentDateTime.day.toString().padLeft(2, '0')}';
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Rendez-vous créé avec succès'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      isAccepted ? Icons.check_box_rounded : Icons.access_time_filled_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isAccepted 
+                            ? 'Demande acceptée automatiquement' 
+                            : 'En attente de confirmation',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$dateStr • $patientName',
+                  style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12),
+                ),
+              ],
+            ),
+            backgroundColor: isAccepted ? const Color(0xFF388E3C) : const Color(0xFFF57C00),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
           ),
@@ -458,17 +503,47 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                 const SizedBox(height: 24),
 
                 // Notes
-                _buildSectionTitle('Notes (optionnel)'),
+                Row(
+                  children: [
+                    _buildSectionTitle('Notes '),
+                    if (!SubscriptionService().isPremium) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text('PRO (Urgence)', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _notesController,
+                  readOnly: !SubscriptionService().isPremium,
+                  onTap: () async {
+                    final sub = SubscriptionService();
+                    if (!sub.isPremium) {
+                      final result = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+                      );
+                      if (result == true) {
+                        await sub.refreshBackendStatus();
+                        setState(() {});
+                      }
+                    }
+                  },
                   maxLines: 4,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
-                    hintText: "Ajouter des notes ou informations supplémentaires...",
+                    hintText: SubscriptionService().isPremium 
+                        ? "Ajouter des notes ou informations d'urgence..."
+                        : "Passez au Premium pour marquer une urgence...",
                     hintStyle: TextStyle(color: AppColors.textLight),
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(bottom: 60),

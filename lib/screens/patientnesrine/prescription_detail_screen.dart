@@ -69,7 +69,7 @@ class PrescriptionDetailScreen extends StatelessWidget {
                           height: 200,
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primary.withOpacity(0.15))),
                           clipBehavior: Clip.antiAlias,
-                          child: Image.network(imageUrl!, fit: BoxFit.cover),
+                          child: Image.network(imageUrl, fit: BoxFit.cover),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -91,7 +91,7 @@ class PrescriptionDetailScreen extends StatelessWidget {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                     const SizedBox(height: 12),
                     Row(

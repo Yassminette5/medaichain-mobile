@@ -93,7 +93,7 @@ class _ClinicAppointmentBookingScreenState extends State<ClinicAppointmentBookin
 
     try {
       final User userProfile = await ApiService.getProfile();
-      String patientName = userProfile?.fullName ?? 'Patient Mobile';
+      String patientName = userProfile.fullName ?? 'Patient Mobile';
 
       final appointmentData = {
         'patientName': patientName,

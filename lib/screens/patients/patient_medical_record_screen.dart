@@ -81,7 +81,6 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
 
     try {
       prescriptions = await PrescriptionsService.getMyPrescriptions();
-      if (prescriptions is! List) prescriptions = [];
     } catch (_) {
       prescriptions = [];
     }
