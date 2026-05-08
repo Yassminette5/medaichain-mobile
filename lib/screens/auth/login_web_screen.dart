@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/push_notification_service.dart';
 import '../../models/user_model.dart';
 import '../web/center_dashboard_web.dart';
 import '../pharmacie/pharmacie_dashboard_screen.dart';
@@ -928,12 +929,22 @@ class _LoginWebScreenState extends State<LoginWebScreen>
 
     setState(() => _isLoading = true);
 
+    // Ask notification permission from a user gesture (required on web browsers).
+    try {
+      await NotificationService().requestPermission();
+    } catch (_) {}
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.login(email: email, password: password, rememberMe: _rememberMe);
 
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
+        // Now that we have a session token, sync FCM token to backend.
+        try {
+          await PushNotificationService.instance.syncTokenIfPossible();
+        } catch (_) {}
+
         final user = authProvider.user;
         final userRole = user?.role ?? UserRole.patient;
         final userEmail = user?.email ?? '';

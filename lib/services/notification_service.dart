@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:permission_handler/permission_handler.dart';
 import '../models/calendar_event_model.dart';
+
+import 'notification_permission_stub.dart'
+  if (dart.library.html) 'notification_permission_web.dart' as web_notif;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -17,6 +21,43 @@ class NotificationService {
     // For mobile, would use flutter_local_notifications
     _initialized = true;
     debugPrint('✅ NotificationService initialized');
+  }
+
+  /// Request notification permission.
+  ///
+  /// - Web (Chrome): triggers browser prompt via Notification API.
+  /// - Mobile: requests runtime notification permission (Android 13+/iOS).
+  ///
+  /// Note: On web this MUST be called from a user gesture (e.g. login button).
+  Future<void> requestPermission() async {
+    if (kIsWeb) {
+      final supported = web_notif.browserNotificationsSupported();
+      if (!supported) {
+        debugPrint('🔔 Browser notifications not supported');
+        return;
+      }
+
+      final current = web_notif.getBrowserNotificationPermission();
+      debugPrint('🔔 Browser notification permission (before): $current');
+
+      // Calling requestPermission triggers the prompt (if not already decided).
+      final permission = await web_notif.requestBrowserNotificationPermission();
+      debugPrint('🔔 Browser notification permission (after): $permission');
+      return;
+    }
+
+    try {
+      final status = await Permission.notification.status;
+      if (status.isGranted) {
+        debugPrint('🔔 Notification permission already granted');
+        return;
+      }
+
+      final result = await Permission.notification.request();
+      debugPrint('🔔 Notification permission request result: $result');
+    } catch (e) {
+      debugPrint('❌ Notification permission request failed: $e');
+    }
   }
 
   /// Schedule a notification for a calendar event

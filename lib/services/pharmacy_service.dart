@@ -100,6 +100,32 @@ class PharmacyService {
   static Future<PharmacyDashboard> getDashboard(String pharmacyId) async =>
       getMyDashboard();
 
+  // ================= REQUEST DETAILS (MY) =================
+  static Future<Map<String, dynamic>> getMyRequestById(String requestId) async {
+    final headers = await _headers();
+    final response = await http.get(
+      Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Map<String, dynamic>.from(data as Map);
+    }
+
+    if (response.statusCode == 401) {
+      await ApiService.refreshToken();
+      return getMyRequestById(requestId);
+    }
+
+    try {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to load request');
+    } catch (_) {
+      throw Exception('Failed to load request (${response.statusCode})');
+    }
+  }
+
   // ================= SHARED DOCUMENTS =================
   /// Fetch prescriptions shared with this pharmacy by patients (simple share, no NFT)
   static Future<List<Map<String, dynamic>>> getSharedDocuments() async {
@@ -392,7 +418,7 @@ class PharmacyService {
     Map<String, dynamic> updates,
   ) async => updateMyRequest(requestId, updates);
 
-  static Future<MedicationRequest> getMyRequestById(String requestId) async {
+  static Future<MedicationRequest> getMyRequestModelById(String requestId) async {
     final headers = await _headers();
     final response = await http.get(
       Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
@@ -404,7 +430,7 @@ class PharmacyService {
       return MedicationRequest.fromJson(data);
     } else if (response.statusCode == 401) {
       await ApiService.refreshToken();
-      return getMyRequestById(requestId);
+      return getMyRequestModelById(requestId);
     } else {
       throw Exception('Failed to load request');
     }

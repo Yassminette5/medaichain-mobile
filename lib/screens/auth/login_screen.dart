@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/push_notification_service.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import 'signup_screen.dart';
@@ -17,6 +18,7 @@ import '../pharmacie/pharmacie_dashboard_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../clinique/mobile/home_admin_clinique_mobile.dart';
 import '../clinique/web/dashboard_main_screen.dart';
+import '../../services/notification_service.dart';
 
 /// Écran de Connexion Ultra Moderne
 class LoginScreen extends StatefulWidget {
@@ -403,12 +405,22 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     setState(() => _isLoading = true);
 
+    // Ask notification permission from a user gesture.
+    try {
+      await NotificationService().requestPermission();
+    } catch (_) {}
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.login(email: email, password: password, rememberMe: _rememberMe);
 
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
+        // Now that we have a session token, sync FCM token to backend.
+        try {
+          await PushNotificationService.instance.syncTokenIfPossible();
+        } catch (_) {}
+
         final user = authProvider.user;
         final userRole = user?.role ?? UserRole.patient;
         final userEmail = user?.email ?? '';

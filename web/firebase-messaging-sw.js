@@ -28,17 +28,28 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
+  const data = event.notification?.data || {};
   const targetUrl = '/#/login';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ('focus' in client) {
+          try {
+            client.postMessage({ type: 'fcm_notification_click', data });
+          } catch (e) {}
           client.focus();
           return;
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(targetUrl).then((client) => {
+          try {
+            if (client) {
+              client.postMessage({ type: 'fcm_notification_click', data });
+            }
+          } catch (e) {}
+          return client;
+        });
       }
       return null;
     }),

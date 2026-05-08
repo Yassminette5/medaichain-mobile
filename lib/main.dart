@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -31,6 +32,10 @@ import 'screens/centre_analyse/home_centre_analyse.dart';
 import 'medecin/screens/dashboard/dashboard_screen.dart';
 import 'screens/clinique/mobile/home_admin_clinique_mobile.dart';
 import 'models/user_model.dart';
+import 'firebase_options.dart';
+import 'services/push_notification_service.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +66,15 @@ Future<void> main() async {
     } else {
       rethrow;
     }
+  }
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // Some dev platforms (windows/linux/macos) might not be configured.
+    debugPrint('[MEDAIChain] Firebase init skipped/failed: $e');
   }
   try {
     SystemChrome.setSystemUIOverlayStyle(
@@ -105,8 +119,21 @@ Future<void> main() async {
   runApp(const MEDAIChainApp());
 }
 
-class MEDAIChainApp extends StatelessWidget {
+class MEDAIChainApp extends StatefulWidget {
   const MEDAIChainApp({super.key});
+
+  @override
+  State<MEDAIChainApp> createState() => _MEDAIChainAppState();
+}
+
+class _MEDAIChainAppState extends State<MEDAIChainApp> {
+  @override
+  void initState() {
+    super.initState();
+    PushNotificationService.instance.configure(navigatorKey: rootNavigatorKey);
+    // Start listeners ASAP; token sync is triggered after login.
+    PushNotificationService.instance.startListening();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +145,7 @@ class MEDAIChainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PatientsProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: rootNavigatorKey,
         title: 'MEDAIChain',
         debugShowCheckedModeBanner: false,
         theme: clinique_theme.AppTheme.lightTheme,
