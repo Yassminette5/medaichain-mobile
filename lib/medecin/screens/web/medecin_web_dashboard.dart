@@ -409,7 +409,7 @@ class _MedecinWebDashboardState extends State<MedecinWebDashboard> {
   }
 }
 
-/// Vue Web : liste des patients ayant partagé l'accès + ouverture du dossier (comme sur mobile).
+/// Vue Web : liste des patients + ouverture du dossier (comme sur mobile).
 class _WebPatientsView extends StatefulWidget {
   const _WebPatientsView();
 
@@ -490,7 +490,7 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Patients ayant partagé l\'accès à leur dossier',
+              'Tous les patients',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
@@ -537,7 +537,7 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
                     const SizedBox(height: 16),
                     Text(
                       _searchQuery.isEmpty
-                          ? 'Aucun patient n\'a partagé l\'accès.\nAcceptez des demandes dans "Demandes d\'accès".'
+                          ? 'Aucun patient trouvé.'
                           : 'Aucun résultat',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       textAlign: TextAlign.center,
@@ -586,7 +586,7 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                  Text('Accès partagé', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text('Patient', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                 ],
               ),
             ),

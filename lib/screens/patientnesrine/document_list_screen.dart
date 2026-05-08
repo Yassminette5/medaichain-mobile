@@ -23,12 +23,14 @@ class DocumentListScreen extends StatefulWidget {
   final String title;
   final IconData icon;
   final LinearGradient gradient;
+  final String? openDocumentId;
 
   const DocumentListScreen({
     super.key,
     required this.title,
     required this.icon,
     required this.gradient,
+    this.openDocumentId,
   });
 
   @override
@@ -41,6 +43,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   String? _error;
   List<Map<String, dynamic>> _docs = const [];
   _DossierTab _tab = _DossierTab.analyses;
+  bool _openedDeepLink = false;
 
   @override
   void initState() {
@@ -191,6 +194,8 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
           _docs = merged;
           _loading = false;
         });
+
+        _maybeOpenDeepLinkDocument();
       }
     } catch (e) {
       if (mounted) {
@@ -199,8 +204,40 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
           _docs = const [];
           _loading = false;
         });
+
+        _maybeOpenDeepLinkDocument();
       }
     }
+  }
+
+  String _extractDocId(Map<String, dynamic> doc) {
+    return (doc['_id'] ?? doc['id'] ?? doc['documentId'] ?? '').toString();
+  }
+
+  void _maybeOpenDeepLinkDocument() {
+    if (_openedDeepLink) return;
+    final targetId = widget.openDocumentId;
+    if (targetId == null || targetId.isEmpty) return;
+    if (!mounted) return;
+    if (_loading) return;
+
+    final found = _docsWithFiles.where((d) => _extractDocId(d) == targetId).toList();
+    if (found.isEmpty) return;
+
+    final doc = found.first;
+    _openedDeepLink = true;
+
+    setState(() {
+      _tab = _isPrescriptionDoc(doc) ? _DossierTab.ordonnances : _DossierTab.analyses;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => OcrDocumentDetailScreen(document: doc)),
+      );
+    });
   }
 
   Future<void> _showAddDocumentMenu() async {

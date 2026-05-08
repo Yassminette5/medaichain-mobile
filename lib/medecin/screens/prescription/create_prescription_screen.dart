@@ -415,8 +415,6 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
             const Text('Ordonnance créée !', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             const Text("L'ordonnance a été validée et enregistrée sur la blockchain.", textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 8),
-            Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: AppColors.blockchainLight, borderRadius: BorderRadius.circular(8)), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.link, color: AppColors.blockchain, size: 16), SizedBox(width: 8), Text('TX: 0x7f2e...3a91', style: TextStyle(color: AppColors.blockchain, fontWeight: FontWeight.w500, fontSize: 12))])),
             if (hasAnalysis) ...[
               const SizedBox(height: 24),
               Container(

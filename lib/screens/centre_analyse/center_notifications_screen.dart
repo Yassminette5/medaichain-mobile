@@ -4,7 +4,9 @@ import '../../services/api_service.dart';
 
 /// Écran des notifications pour le centre d'analyse (Mobile)
 class CenterNotificationsScreen extends StatefulWidget {
-  const CenterNotificationsScreen({super.key});
+  final VoidCallback? onBack;
+
+  const CenterNotificationsScreen({super.key, this.onBack});
 
   @override
   State<CenterNotificationsScreen> createState() => _CenterNotificationsScreenState();
@@ -36,17 +38,18 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
         final patientInfo = apt['patientInfo'] ?? apt['patientId'];
         String patientName = 'Patient Inconnu';
         String patientEmail = '';
-        
-        if (patientInfo != null) {
-          if (patientInfo is Map) {
-            patientName = '${patientInfo['firstName'] ?? ''} ${patientInfo['lastName'] ?? ''}'.trim();
-            patientEmail = patientInfo['email']?.toString() ?? '';
-            if (patientName.isEmpty) {
-              patientName = patientEmail.split('@')[0];
-            }
+
+        if (patientInfo != null && patientInfo is Map) {
+          patientName =
+              '${patientInfo['firstName'] ?? ''} ${patientInfo['lastName'] ?? ''}'.trim();
+          patientEmail = patientInfo['email']?.toString() ?? '';
+          if (patientName.isEmpty) {
+            patientName = patientEmail.isNotEmpty
+                ? patientEmail.split('@').first
+                : 'Patient';
           }
         }
-        
+
         final status = apt['status']?.toString().toLowerCase() ?? 'pending';
         final appointmentDate = apt['appointmentDate']?.toString() ?? '';
         final createdAt = apt['createdAt']?.toString() ?? DateTime.now().toIso8601String();
@@ -335,7 +338,7 @@ class _CenterNotificationsScreenState extends State<CenterNotificationsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: widget.onBack ?? () => Navigator.maybePop(context),
         ),
         title: const Text(
           'Notifications',

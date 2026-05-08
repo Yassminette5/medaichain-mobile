@@ -1476,7 +1476,7 @@ class _PatientsViewState extends State<_PatientsView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Patients ayant partagé l\'accès à leur dossier',
+              'Tous les patients',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
@@ -1538,7 +1538,7 @@ class _PatientsViewState extends State<_PatientsView> {
                       const SizedBox(height: 16),
                       Text(
                         _searchQuery.isEmpty
-                            ? 'Aucun patient n\'a partagé l\'accès.\nAcceptez des demandes dans "Demandes d\'accès".'
+                            ? 'Aucun patient trouvé.'
                             : 'Aucun résultat',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
@@ -1558,7 +1558,7 @@ class _PatientsViewState extends State<_PatientsView> {
                     return _buildPatientCard(
                       context,
                       name,
-                      'Accès partagé',
+                      'Patient',
                       _getColorForIndex(index),
                       patientId: id,
                       patientName: name,

@@ -1121,27 +1121,34 @@ class ApiService {
     throw Exception('Erreur chargement demandes');
   }
 
-  /// Liste des patients dont le médecin a accepté la demande d'accès (pour afficher dossier + analyses).
-  static Future<List<Map<String, dynamic>>>
-  getAcceptedPatientsForDoctor() async {
-    final token = await getAccessToken();
-    if (token == null || token.isEmpty) throw Exception('Session expirée');
-    final response = await http.get(
-      Uri.parse('$baseUrl/access-requests/for-doctor/accepted'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data is List ? data.cast<Map<String, dynamic>>() : [];
+  /// Temporaire: retourner tous les patients (pas uniquement ceux avec accès partagé).
+  ///
+  /// IMPORTANT: on conserve le même format de retour que l'ancien endpoint
+  /// (`[{ patientId: {...} }]`) pour éviter de casser les écrans existants.
+  static Future<List<Map<String, dynamic>>> getAcceptedPatientsForDoctor() async {
+    try {
+      final patients = await getAllPatients();
+      return patients.map((p) {
+        final user = p['userId'] is Map
+            ? Map<String, dynamic>.from(p['userId'] as Map)
+            : <String, dynamic>{};
+
+        if (user['fullName'] == null && p['fullName'] != null) {
+          user['fullName'] = p['fullName'];
+        }
+        if (user['email'] == null && p['email'] != null) {
+          user['email'] = p['email'];
+        }
+        if (user['phone'] == null && p['phone'] != null) {
+          user['phone'] = p['phone'];
+        }
+
+        return {'patientId': user};
+      }).toList();
+    } catch (e) {
+      // Conserver l'ancien comportement "pas bloquant": renvoyer une liste vide.
+      return [];
     }
-    if (response.statusCode == 401) {
-      await refreshToken();
-      return getAcceptedPatientsForDoctor();
-    }
-    return [];
   }
 
   static Future<void> acceptAccessRequest(

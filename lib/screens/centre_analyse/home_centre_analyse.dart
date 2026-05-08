@@ -161,19 +161,32 @@ class _HomeCentreAnalyseState extends State<HomeCentreAnalyse>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      // Réduit fortement les animations d'insets clavier (source fréquente de jank/timeout sur émulateur)
-      resizeToAvoidBottomInset: false,
-      body: IndexedStack(
-        index: _currentIndex == 0 ? 0 : (_currentIndex == 2 ? 1 : 2),
-        children: [
-          _buildHomePage(),
-          const CenterNotificationsScreen(),
-          const CenterSettingsScreen(),
-        ],
+    return WillPopScope(
+      onWillPop: () async {
+        // Sur mobile, quand on est sur Notifications/Paramètres,
+        // le bouton "Retour" doit ramener à Accueil (au lieu de quitter l'espace labo).
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        // Réduit fortement les animations d'insets clavier (source fréquente de jank/timeout sur émulateur)
+        resizeToAvoidBottomInset: false,
+        body: IndexedStack(
+          index: _currentIndex == 0 ? 0 : (_currentIndex == 2 ? 1 : 2),
+          children: [
+            _buildHomePage(),
+            CenterNotificationsScreen(
+              onBack: () => setState(() => _currentIndex = 0),
+            ),
+            const CenterSettingsScreen(),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
