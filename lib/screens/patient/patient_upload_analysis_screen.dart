@@ -342,7 +342,7 @@ class _PatientUploadAnalysisScreenState
         ],
       ),
       child: DropdownButtonFormField<String>(
-        value: _analysisType,
+        initialValue: _analysisType,
         decoration: InputDecoration(
           labelText: 'Type d\'analyse',
           prefixIcon:

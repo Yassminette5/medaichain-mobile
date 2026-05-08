@@ -628,7 +628,7 @@ class _PatientAnalysisResultsSectionState extends State<_PatientAnalysisResultsS
   Future<void> _load() async {
     try {
       final list = await ApiService.getPatientAnalysisResults(widget.userId);
-      if (mounted) setState(() { _results = list is List ? list : []; _loading = false; });
+      if (mounted) setState(() { _results = list; _loading = false; });
     } catch (_) {
       if (mounted) setState(() { _results = []; _loading = false; });
     }

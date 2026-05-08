@@ -1165,7 +1165,7 @@ class _CenterProfileWebScreenState extends State<CenterProfileWebScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
             inactiveThumbColor: Colors.grey[300],
             inactiveTrackColor: Colors.grey[200],

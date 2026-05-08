@@ -24,7 +24,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
   DateTime? _selectedEndDate;
   PlatformFile? _selectedFile;
   bool _isUploading = false;
-  bool _isDragging = false;
+  final bool _isDragging = false;
 
   // Liste des patients acceptés pour l'autocomplétion
   List<Map<String, dynamic>> _acceptedPatients = [];
@@ -675,7 +675,7 @@ class _ResultsUploadScreenState extends State<ResultsUploadScreen> {
     String? Function(String?)? validator,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, size: 20),

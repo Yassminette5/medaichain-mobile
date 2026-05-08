@@ -265,7 +265,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedUser = await ApiService.getProfile();
+      final updatedUser = await ApiService.patchPatientTemporaryAccess(
+        temporaryAccessEnabled: enabled,
+        temporaryAccessUntil: until,
+      );
       _user = updatedUser;
       _isLoading = false;
       notifyListeners();

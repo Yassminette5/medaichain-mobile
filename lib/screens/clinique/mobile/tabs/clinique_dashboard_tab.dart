@@ -56,11 +56,6 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
     setState(() => _isLoadingAiResults = true);
     try {
       final results = await ApiService.getClinicAiResults();
-      results.sort((a, b) {
-        final double scoreA = (a['riskScore'] ?? 0).toDouble();
-        final double scoreB = (b['riskScore'] ?? 0).toDouble();
-        return scoreA.compareTo(scoreB);
-      });
       if (mounted) setState(() => _aiResults = List<Map<String, dynamic>>.from(results));
     } catch (e) {
       debugPrint('[AI] Erreur chargement résultats: $e');
@@ -85,7 +80,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFF2563EB),
           onRefresh: () async {
             _loadData();
             _loadAiResults();
@@ -124,7 +119,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF7C3AED)),
+                      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF2563EB)),
                       onPressed: () {},
                     ),
                   )
@@ -299,8 +294,8 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
                                     'Patients admis',
                                     totalAdmissionsToday.toString(),
                                     Icons.people_alt_rounded,
-                                    const Color(0xFF7C3AED),
-                                    [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)],
+                                    const Color(0xFF2563EB),
+                                    [const Color(0xFF2563EB), const Color(0xFF60A5FA)],
                                   ),
                                 ),
                                 const SizedBox(width: 14),
@@ -458,14 +453,14 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1E1B4B), Color(0xFF132E57), Color(0xFF1A4B8C)],
+          colors: [Color(0xFF3B82F6), Color(0xFF1E3A8A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E1B4B).withValues(alpha: 0.3),
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -648,7 +643,7 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
       children: [
         _buildPremiumBanner(clinicName, '...'),
         const SizedBox(height: 24),
-        const Center(child: CircularProgressIndicator(color: Color(0xFF7C3AED))),
+        const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
       ],
     );
   }
@@ -675,265 +670,407 @@ class _CliniqueDashboardTabState extends State<CliniqueDashboardTab> with Single
     );
   }
 
-  // ======= SECTION IA (MOBILE) =======
+  // ======= SECTION IA VIGILANCE (MOBILE PRO) =======
   Widget _buildMobileAiSection() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 5)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
+        border: Border.all(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // En-tête Gradient IA
+          // ══ EN-TÊTE PREMIUM ══
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+              border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5))),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 24),
+                  child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFFEF4444), size: 24),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Intelligence Artificielle',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                        'Vigilance Médicale',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), letterSpacing: -0.5),
                       ),
+                      const SizedBox(height: 2),
                       Text(
-                        'Prédiction d\'adhérence au traitement',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.white70),
+                        'L\'IA analyse tous les RDV en direct.',
+                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: _loadAiResults,
-                  icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF10B981)),
+                      const SizedBox(width: 4),
+                      Text('Auto', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF10B981))),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           
-          // Statistiques rapides IA
-          if (!_isLoadingAiResults && _aiResults.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(child: _buildAiMiniStat('Analysés', _aiResults.length.toString(), Colors.blue)),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildAiMiniStat('À Risque', _aiResults.where((r) => r['riskLevel'] == 'élevé').length.toString(), Colors.redAccent)),
-                ],
-              ),
-            ),
-
-          // Liste des patients
+          // ══ LISTE DES PATIENTS (VIGILANCE ROWS) ══
           if (_isLoadingAiResults)
-            const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator(color: Color(0xFF1E1B4B))))
+            const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator(color: Color(0xFFEF4444))))
           else if (_aiResults.isEmpty)
             Padding(
-              padding: const EdgeInsets.all(32),
-              child: Text('Aucune donnée d\'adhérence disponible.', style: GoogleFonts.plusJakartaSans(color: Colors.grey)),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _aiResults.length > 5 ? 5 : _aiResults.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemBuilder: (context, index) {
-                final result = _aiResults[index];
-                final patient = result['patient'] ?? {};
-                final riskLevel = result['riskLevel'] ?? 'faible';
-                final score = (result['riskScore'] ?? 0).toDouble();
-                final String name = '${patient['firstName'] ?? ''} ${patient['lastName'] ?? ''}'.trim();
-                final initials = name.length >= 2 ? name.substring(0, 2).toUpperCase() : (name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'P');
-                
-                final isHigh = riskLevel == 'élevé';
-                final isMed = riskLevel == 'modéré';
-
-                final badgeColor = isHigh ? const Color(0xFFEF4444) : isMed ? const Color(0xFFF59E0B) : const Color(0xFF10B981);
-                final badgeBg = isHigh ? const Color(0xFFFEF2F2) : isMed ? const Color(0xFFFFFBEB) : const Color(0xFFECFDF5);
-                final badgeLabel = isHigh ? 'Risque Élevé' : isMed ? 'Risque Modéré' : 'Risque Faible';
-                final levelIcon = isHigh ? Icons.warning_rounded : isMed ? Icons.error_outline_rounded : Icons.check_circle_rounded;
-
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isHigh ? const Color(0xFFFFF5F5) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isHigh ? const Color(0xFFFECACA) : isMed ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
-                      width: isHigh ? 1.5 : 1,
-                    ),
-                    boxShadow: isHigh ? [BoxShadow(color: const Color(0xFFEF4444).withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))] : [],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: isHigh
-                                    ? [const Color(0xFFEF4444), const Color(0xFFF97316)]
-                                    : isMed
-                                        ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]
-                                        : [const Color(0xFF10B981), const Color(0xFF34D399)],
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [BoxShadow(color: badgeColor.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
-                            ),
-                            child: Center(
-                              child: Text(initials, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(name.isNotEmpty ? name : 'Patient Inconnu', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(levelIcon, size: 14, color: badgeColor),
-                                    const SizedBox(width: 4),
-                                    Text(badgeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: badgeColor)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${score.toStringAsFixed(1)}%',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w900, color: badgeColor),
-                              ),
-                              const SizedBox(height: 6),
-                              SizedBox(
-                                width: 60,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: score / 100,
-                                    backgroundColor: const Color(0xFFE2E8F0),
-                                    color: badgeColor,
-                                    minHeight: 6,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      if (isHigh || isMed) ...[
-                        const SizedBox(height: 14),
-                        Divider(height: 1, color: isHigh ? const Color(0xFFFECACA) : const Color(0xFFFDE68A)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(isHigh ? Icons.phone_in_talk_rounded : Icons.sms_rounded, size: 14, color: badgeColor),
-                                const SizedBox(width: 6),
-                                Text(isHigh ? 'Action requise immédiate' : 'Suivi recommandé', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w600, color: badgeColor)),
-                              ],
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final phone = patient['phone'] ?? '';
-                                if (phone.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Numéro de téléphone non disponible')));
-                                  return;
-                                }
-                                final url = isHigh ? 'tel:$phone' : 'sms:$phone';
-                                if (await canLaunchUrl(Uri.parse(url))) {
-                                  await launchUrl(Uri.parse(url));
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Impossible de lancer l\'application')));
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: badgeColor,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                minimumSize: const Size(0, 32),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              icon: Icon(isHigh ? Icons.phone_rounded : Icons.sms_rounded, size: 14),
-                              label: Text(isHigh ? 'Appeler' : 'SMS', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-            
-          // Bouton Lancer Analyse
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isAnalyzing ? null : () async {
-                  setState(() => _isAnalyzing = true);
-                  try {
-                    final result = await ApiService.triggerClinicAdherenceAnalysis();
-                    await _loadAiResults();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('✅ ${result['analyzed']} patients analysés !'), backgroundColor: Colors.green));
-                    }
-                  } catch (e) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Erreur IA'), backgroundColor: Colors.red));
-                  } finally {
-                    if (mounted) setState(() => _isAnalyzing = false);
-                  }
-                },
-                icon: _isAnalyzing ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.play_arrow_rounded),
-                label: Text(_isAnalyzing ? 'Analyse en cours...' : 'Lancer l\'analyse IA'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E1B4B),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.health_and_safety_rounded, size: 48, color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+                    const SizedBox(height: 16),
+                    Text('Aucun patient à risque.', style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ],
                 ),
               ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _aiResults.length > 5 ? 5 : _aiResults.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  return _buildMobileVigilanceRow(_aiResults[index]);
+                },
+              ),
             ),
+        ],
+      ),
+    );
+  }
+
+  // ======= MOBILE VIGILANCE ROW (Adapted from Web) =======
+  Widget _buildMobileVigilanceRow(Map<String, dynamic> r) {
+    final patient = r['patient'] ?? {};
+    final String name = r['patientName'] ?? '${patient['firstName'] ?? ''} ${patient['lastName'] ?? ''}'.trim();
+    final timeSlot = r['timeSlot'] ?? '--:--';
+    final diseaseLabel = r['diseaseLabel'] ?? 'Sain';
+    final colorStr = r['diseaseColor'] ?? 'green';
+    final confidence = (r['diseaseConfidence'] ?? 0).toDouble();
+    final List<dynamic> explanations = r['explanations'] ?? [];
+    
+    Color badgeColor = const Color(0xFF22C55E);
+    Color bg = const Color(0xFFF0FDF4);
+    if (colorStr == 'red') {
+      badgeColor = const Color(0xFFEF4444);
+      bg = const Color(0xFFFEF2F2);
+    } else if (colorStr == 'orange') {
+      badgeColor = const Color(0xFFF59E0B);
+      bg = const Color(0xFFFFFBEB);
+    }
+
+    // NLP Priority
+    final nlpDiagnosis = r['nlpDiagnosis']?.toString();
+    final hasNlp = nlpDiagnosis != null && nlpDiagnosis.isNotEmpty;
+    if (hasNlp) {
+      final nColor = r['nlpColor']?.toString() ?? 'green';
+      if (nColor == 'red') {
+        badgeColor = const Color(0xFFEF4444);
+        bg = const Color(0xFFFEF2F2);
+      } else if (nColor == 'orange') {
+        badgeColor = const Color(0xFFF59E0B);
+        bg = const Color(0xFFFFFBEB);
+      } else {
+        badgeColor = const Color(0xFF22C55E);
+        bg = const Color(0xFFF0FDF4);
+      }
+    }
+
+    final initials = name.length >= 2 ? name.substring(0, 2).toUpperCase() : (name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'P');
+
+    final dateStr = r['date']?.toString() ?? '';
+    String displayDate = '';
+    if (dateStr.isNotEmpty) {
+      try {
+        final d = DateTime.parse(dateStr);
+        displayDate = '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')} • ';
+      } catch(_) {}
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // En-tête : Patient Info
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: badgeColor,
+                foregroundColor: Colors.white,
+                radius: 20,
+                child: Text(initials, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name.isNotEmpty ? name : 'Patient', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule_rounded, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text('$displayDate$timeSlot', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Action Button Top Right on Mobile
+              if (hasNlp && r['nlpActionButton'] != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: badgeColor == const Color(0xFF22C55E) ? Colors.white : badgeColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: badgeColor == const Color(0xFF22C55E) ? Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)) : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(badgeColor == const Color(0xFFEF4444) ? Icons.emergency_rounded : Icons.check_circle_outline_rounded, size: 12, color: badgeColor == const Color(0xFF22C55E) ? const Color(0xFF22C55E) : Colors.white),
+                      const SizedBox(width: 4),
+                      Text(r['nlpActionButton'], style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: badgeColor == const Color(0xFF22C55E) ? const Color(0xFF22C55E) : Colors.white)),
+                    ],
+                  ),
+                )
+              else if (badgeColor == const Color(0xFFEF4444) || badgeColor == const Color(0xFFF59E0B))
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: badgeColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(badgeColor == const Color(0xFFEF4444) ? Icons.warning_rounded : Icons.visibility_rounded, size: 12, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(badgeColor == const Color(0xFFEF4444) ? 'Urgence' : 'Aviser', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                    ],
+                  ),
+                ),
+            ],
           ),
+          
+          const SizedBox(height: 16),
+          
+          // Détails IA
+          if (hasNlp) ...[
+            // NLP Block
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text('NLP', style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w800, color: badgeColor)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '🩺 $nlpDiagnosis',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: badgeColor),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (r['nlpTriage'] != null)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.directions_walk_rounded, size: 14, color: badgeColor.withValues(alpha: 0.8)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      r['nlpTriage'],
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: badgeColor.withValues(alpha: 0.9)),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 6),
+            if (r['nlpPreparation'] != null)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.medical_services_rounded, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      r['nlpPreparation'],
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 8),
+            if (r['symptomsText'] != null)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '"${r['symptomsText']}"',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textSecondary.withValues(alpha: 0.8)),
+                ),
+              ),
+          ] else ...[
+            // Default Disease Block
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    diseaseLabel,
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: badgeColor),
+                  ),
+                ),
+                Text('${confidence.toStringAsFixed(0)}% fiable', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+              ],
+            ),
+            if (explanations.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: explanations.map((expl) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(colorStr == 'green' ? Icons.check_circle_outline : Icons.search_rounded, size: 14, color: badgeColor),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          expl.toString(),
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w600, color: badgeColor.withValues(alpha: 0.9), height: 1.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ),
+            ],
+          ],
+          
+          // Emergency Actions (Appeler / SMS)
+          if (badgeColor == const Color(0xFFEF4444) || badgeColor == const Color(0xFFF59E0B)) ...[
+            const SizedBox(height: 16),
+            Divider(height: 1, color: badgeColor.withValues(alpha: 0.2)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final phone = patient['phone'] ?? '';
+                      if (phone.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Numéro de téléphone non disponible')));
+                        return;
+                      }
+                      final url = 'tel:$phone';
+                      if (await canLaunchUrl(Uri.parse(url))) {
+                        await launchUrl(Uri.parse(url));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible de lancer l\'appel')));
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: badgeColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.phone_in_talk_rounded, size: 16),
+                    label: const Text('Appeler', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final phone = patient['phone'] ?? '';
+                      if (phone.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Numéro de téléphone non disponible')));
+                        return;
+                      }
+                      final url = 'sms:$phone';
+                      if (await canLaunchUrl(Uri.parse(url))) {
+                        await launchUrl(Uri.parse(url));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible d\'envoyer le SMS')));
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: badgeColor,
+                      side: BorderSide(color: badgeColor.withValues(alpha: 0.5)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.sms_rounded, size: 16),
+                    label: const Text('SMS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

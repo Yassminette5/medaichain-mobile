@@ -71,7 +71,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: RefreshIndicator(
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFF2563EB),
           onRefresh: () async {
             _loadData();
             await _invoicesFuture;
@@ -105,7 +105,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                         return const Center(
                           child: Padding(
                             padding: EdgeInsets.only(top: 50.0),
-                            child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                            child: CircularProgressIndicator(color: Color(0xFF2563EB)),
                           )
                         );
                       }
@@ -142,7 +142,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                                       'En Attente',
                                       '${_formatMoney(totalPending)} DA',
                                       Icons.pending_actions_rounded,
-                                      const Color(0xFF4F46E5), // Indigo
+                                      const Color(0xFF3B82F6), // Blue
                                     ),
                                   ),
                                 ],
@@ -274,14 +274,14 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF1E1B4B) : Colors.white,
+          color: isActive ? const Color(0xFF1E3A8A) : Colors.white,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isActive ? const Color(0xFF1E1B4B) : AppColors.border.withValues(alpha: 0.5),
+            color: isActive ? const Color(0xFF1E3A8A) : AppColors.border.withValues(alpha: 0.5),
           ),
           boxShadow: isActive ? [
             BoxShadow(
-              color: const Color(0xFF1E1B4B).withValues(alpha: 0.3),
+              color: const Color(0xFF1E3A8A).withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             )
@@ -429,7 +429,7 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF1E1B4B),
+                  color: const Color(0xFF1E3A8A),
                   letterSpacing: -0.5,
                 ),
               ),
@@ -450,10 +450,10 @@ class _CliniqueFinanceTabState extends State<CliniqueFinanceTab> with SingleTick
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
+                color: const Color(0xFF3B82F6).withValues(alpha: 0.06),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.receipt_long_rounded, size: 48, color: const Color(0xFF7C3AED).withValues(alpha: 0.4)),
+              child: Icon(Icons.receipt_long_rounded, size: 48, color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
             ),
             const SizedBox(height: 20),
             Text(

@@ -537,7 +537,7 @@ class _NewConsultationScreenState extends State<NewConsultationScreen> {
               _buildSectionTitle('Rappel'),
               const SizedBox(height: 12),
               DropdownButtonFormField<AlertOption>(
-                value: _selectedAlert,
+                initialValue: _selectedAlert,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.notifications_outlined),
                   filled: true,

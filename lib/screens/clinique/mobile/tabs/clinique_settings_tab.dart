@@ -85,13 +85,13 @@ class _CliniqueSettingsTabState extends State<CliniqueSettingsTab> with SingleTi
                   SliverAppBar(
                     expandedHeight: 280.0,
                     pinned: true,
-                    backgroundColor: const Color(0xFF1E1B4B), // Premium dark blue
+                    backgroundColor: const Color(0xFF1E3A8A), // Premium dark blue
                     elevation: 0,
                     flexibleSpace: FlexibleSpaceBar(
                       background: Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Color(0xFF1E1B4B), Color(0xFF132E57), Color(0xFF1A4B8C)],
+                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB), Color(0xFF3B82F6)],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),

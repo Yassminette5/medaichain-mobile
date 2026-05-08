@@ -8,6 +8,7 @@ import 'package:medaichainmobile/models/calendar_event_model.dart';
 import 'package:medaichainmobile/models/user_model.dart';
 import 'package:medaichainmobile/screens/patients/patient_access_request_screen.dart';
 import 'package:medaichainmobile/screens/patients/patient_medical_record_screen.dart';
+import 'web_patient_medical_record_view.dart';
 import 'package:medaichainmobile/screens/ai/ai_decision_support_screen.dart';
 import 'package:medaichainmobile/screens/consultations/new_consultation_screen.dart';
 import 'package:medaichainmobile/screens/video_call/video_call_screen.dart';
@@ -467,9 +468,9 @@ class _WebPatientsViewState extends State<_WebPatientsView> {
   @override
   Widget build(BuildContext context) {
     if (_selectedPatientId != null && _selectedPatientName != null) {
-      return PatientMedicalRecordScreen(
-        patientId: _selectedPatientId,
-        patientName: _selectedPatientName,
+      return WebPatientMedicalRecordView(
+        patientId: _selectedPatientId!,
+        patientName: _selectedPatientName!,
         onBack: () => setState(() { _selectedPatientId = null; _selectedPatientName = null; }),
       );
     }
@@ -1472,8 +1473,9 @@ class _DashboardHomeViewState extends State<_DashboardHomeView> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          if (label.contains('Consult')) _showNewConsultation(context);
-          else if (label.contains('Vidéo') || label.contains('Appel')) _showVideoCallPicker(context);
+          if (label.contains('Consult')) {
+            _showNewConsultation(context);
+          } else if (label.contains('Vidéo') || label.contains('Appel')) _showVideoCallPicker(context);
           else if (label.contains('Planifier')) widget.onNavigateToAgenda?.call();
         },
         child: Container(

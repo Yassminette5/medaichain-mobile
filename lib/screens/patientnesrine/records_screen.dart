@@ -1,13 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../patientnesrine/document_list_screen.dart';
 import '../../core/theme/app_colors.dart';
 import 'medicines/medicines_list_view.dart';
 import 'medicines/add_medicine_screen.dart';
-import '../../providers/auth_provider.dart';
-import '../../widgets/ai_assistant_chat.dart';
-import 'package:provider/provider.dart';
 
 class RecordsScreen extends StatefulWidget {
   const RecordsScreen({super.key});

@@ -428,7 +428,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: genderVal,
+                  initialValue: genderVal,
                   decoration: const InputDecoration(labelText: 'Genre', border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(value: 'male', child: Text('Homme')),

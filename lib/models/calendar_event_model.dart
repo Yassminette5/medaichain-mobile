@@ -142,7 +142,7 @@ class CalendarEvent {
       type: type ?? this.type,
       alertBefore: alertBefore ?? this.alertBefore,
       patientName: patientName ?? this.patientName,
-      patientId: patientId ?? this.patientId,
+      patientId: patientId ?? patientId,
     );
   }
 

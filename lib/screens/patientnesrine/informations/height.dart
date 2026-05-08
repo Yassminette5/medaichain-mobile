@@ -121,7 +121,7 @@ class _HeightStepScreenState extends State<HeightStepScreen> {
         const SizedBox(height: 40),
 
         // Roller/Ruler
-        Container(
+        SizedBox(
           height: 100,
           width: double.infinity,
           child: Stack(

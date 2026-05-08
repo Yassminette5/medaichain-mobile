@@ -316,7 +316,7 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
         String msg = e.toString().replaceFirst("Exception: ", "");
         if (msg.contains("Timeout") || msg.contains("timeout")) {
           msg =
-              "L'analyse IA prend trop de temps (${_elapsedLabel} écoulées). "
+              "L'analyse IA prend trop de temps ($_elapsedLabel écoulées). "
               "Le modèle local est lent sur votre GPU. "
               "Réessayez ou utilisez un modèle 3B plus léger.";
         }
@@ -451,7 +451,7 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
         if (msg.contains("Timeout") || msg.contains("timeout")) {
           msg =
               "L'analyse IA prend trop de temps. "
-              "Le modèle local est lent sur votre GPU (${_elapsedLabel} écoulées). "
+              "Le modèle local est lent sur votre GPU ($_elapsedLabel écoulées). "
               "Essayez un modèle 3B plus léger.";
         }
         ScaffoldMessenger.of(context).showSnackBar(
@@ -962,7 +962,7 @@ class _AiDecisionSupportScreenState extends State<AiDecisionSupportScreen> {
                       Expanded(
                         child: Text(
                           _elapsedSeconds > 120
-                              ? 'Analyse très longue (${_elapsedLabel}). Modèle 7B lent sur GPU 4GB. '
+                              ? 'Analyse très longue ($_elapsedLabel). Modèle 7B lent sur GPU 4GB. '
                                   'Envisagez un modèle 3B.'
                               : 'L\'analyse prend plus d\'une minute. '
                                   'Modèle lourd sur GPU limité — veuillez patienter.',

@@ -592,29 +592,34 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final id = p['_id'] ?? p['id'] ?? p['prescriptionId'];
-                      if (id == null) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => PharmaciesListScreen(prescriptionId: id.toString())),
-                      );
-                    },
-                    icon: const Icon(Icons.local_pharmacy_outlined),
-                    label: const Text('Partager'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.prescription),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        final id = p['_id'] ?? p['id'] ?? p['prescriptionId'];
+                        if (id == null) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PharmaciesListScreen(prescriptionId: id.toString())),
+                        );
+                      },
+                      icon: const Icon(Icons.local_pharmacy_outlined, size: 18),
+                      label: const Text('Partager', overflow: TextOverflow.ellipsis, maxLines: 1),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.prescription, padding: const EdgeInsets.symmetric(horizontal: 4)),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => PrescriptionDetailScreen(prescription: p)),
-                      );
-                    },
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: const Text('Voir'),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PrescriptionDetailScreen(prescription: p)),
+                        );
+                      },
+                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      label: const Text('Voir', overflow: TextOverflow.ellipsis, maxLines: 1),
+                      style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+                    ),
                   ),
                 ],
               ),

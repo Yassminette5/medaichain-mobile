@@ -10,7 +10,6 @@ import '../../services/api_service.dart';
 import 'login_screen.dart';
 import 'login_web_screen.dart';
 import '../patientnesrine/informations/informations_flow.dart';
-import '../onboarding/registration_success_screen.dart';
 
 /// Écran d'Inscription Ultra Moderne — 2 étapes (Patient only)
 class SignupScreen extends StatefulWidget {

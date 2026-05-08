@@ -36,13 +36,58 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final pharmacyId = authProvider.user?.id ?? 'pharmacy-1';
       
-      final dashboard = await PharmacyService.getDashboard(pharmacyId);
+      // Instead of getting dashboard stats from MedicationRequest logic, we
+      // synthesize them purely from the SharedPrescriptions to completely
+      // replace MedicationRequest logic with SharedPrescription logic.
       final sharedDocs = await PharmacyService.getSharedDocuments();
+      
+      final List<MedicationRequest> synthesizedRequests = sharedDocs.map((doc) {
+        final pData = doc['prescriptionId'] is Map ? doc['prescriptionId'] as Map<String, dynamic> : <String, dynamic>{};
+        final patData = doc['patientId'] is Map ? doc['patientId'] as Map<String, dynamic> : <String, dynamic>{};
+        
+        List<RequestedMedication> meds = [];
+        if (pData['medications'] != null && pData['medications'] is List) {
+          meds = (pData['medications'] as List)
+              .map((item) => RequestedMedication(
+                    id: item['_id'] ?? item['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                    name: item['name'] ?? item['medicationName'] ?? 'Médicament',
+                    dosage: item['dosage'] ?? '',
+                    quantity: item['quantity'] ?? 1,
+                    unit: item['unit'] ?? 'unités',
+                  ))
+              .toList();
+        }
+        
+        return MedicationRequest(
+          id: (doc['_id'] ?? doc['id']) as String,
+          patient: Patient(
+            id: patData['_id'] ?? patData['id'] ?? '',
+            name: patData['fullName'] ?? patData['email'] ?? 'Patient',
+            phoneNumber: patData['phone'] ?? patData['phoneNumber'],
+          ),
+          medications: meds,
+          status: RequestStatusParsing.fromJson(doc['status']?.toString() ?? 'enAttente'),
+          requestDate: DateTime.tryParse((doc['sharedAt'] ?? doc['createdAt'] ?? '').toString()) ?? DateTime.now(),
+          isUrgent: false,
+          requestsDelivery: false,
+          prescriptionImageUrl: pData['prescriptionImageUrl'] as String?,
+        );
+      }).toList();
+
+      final dashboard = PharmacyDashboard(
+        pharmacyInfo: PharmacyInfo(
+          id: pharmacyId,
+          name: 'Pharmacie Centrale',
+          totalOrders: synthesizedRequests.length,
+          totalPackages: synthesizedRequests.fold(0, (sum, req) => sum + req.medications.fold(0, (mSum, med) => mSum + med.quantity)),
+        ),
+        medicationRequests: synthesizedRequests,
+      );
       
       if (!mounted) return;
       setState(() {
         _dashboard = dashboard;
-        _sharedDocuments = sharedDocs;
+        _sharedDocuments = [];
         _isLoading = false;
       });
     } catch (e) {
@@ -79,8 +124,6 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                         _buildStatsGrid(isLargeScreen),
                         const SizedBox(height: 32),
                         _buildPrescriptionsSection(isLargeScreen),
-                        const SizedBox(height: 32),
-                        _buildSharedDocumentsSection(isLargeScreen),
                       ],
                     ),
                   ),
@@ -758,199 +801,6 @@ class _PharmacyWebDashboardState extends State<PharmacyWebDashboard> {
                 color: AppColors.textSecondary,
                 size: 20,
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSharedDocumentsSection(bool isLargeScreen) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Documents Partagés',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 20),
-        if (_sharedDocuments.isEmpty)
-          _buildEmptySharedState()
-        else
-          _buildSharedDocumentsList(_sharedDocuments, isLargeScreen),
-      ],
-    );
-  }
-
-  Widget _buildEmptySharedState() {
-    return Container(
-      padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.folder_shared_rounded,
-              size: 80,
-              color: AppColors.textSecondary.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Aucun document partagé',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSharedDocumentsList(List<Map<String, dynamic>> docs, bool isLargeScreen) {
-    return Column(
-      children: [
-        for (int i = 0; i < docs.length; i++) ...[
-          _buildSharedDocumentCard(docs[i], isLargeScreen),
-          if (i < docs.length - 1) const SizedBox(height: 16),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSharedDocumentCard(Map<String, dynamic> doc, bool isLargeScreen) {
-    final patient = doc['patientId'];
-    final patientName = (patient is Map)
-        ? (patient['fullName'] ?? patient['email'] ?? 'Patient')
-        : 'Patient';
-    final meds = (doc['medications'] as List?) ?? [];
-    final dateStr = doc['prescriptionDate'] ?? doc['createdAt'];
-    
-    String formattedDate = '--';
-    if (dateStr != null) {
-      try {
-        final dt = DateTime.parse(dateStr.toString());
-        formattedDate = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
-      } catch (_) {
-        formattedDate = dateStr.toString();
-      }
-    }
-
-    final hasImage = doc['prescriptionImageUrl'] != null;
-
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () {
-          if (hasImage) {
-            showDialog(
-              context: context,
-              builder: (_) => Dialog(
-                child: InteractiveViewer(
-                  child: Image.network(doc['prescriptionImageUrl'], fit: BoxFit.contain),
-                ),
-              ),
-            );
-          }
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.cardShadow,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  hasImage ? Icons.image_rounded : Icons.description_rounded,
-                  color: AppColors.primary,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      patientName.toString(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${meds.length} médicament(s)',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formattedDate,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Partagé',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              if (hasImage) ...[
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-              ]
             ],
           ),
         ),

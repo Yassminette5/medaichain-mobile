@@ -66,79 +66,41 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
 
         const SizedBox(height: 30),
 
-        // Weight Value Box with overlaid Next Button
-        Stack(
-          children: [
-            // Weight Value Box (unchanged)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-              decoration: BoxDecoration(
-                color: _brandColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "$currentWeight ",
-                      style: GoogleFonts.poppins(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    TextSpan(
-                      text: "kg",
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Next Button (positioned over the box, e.g., top-right corner)
-            Positioned(
-              top: 10,  // Adjust as needed for vertical positioning
-              right: 10,  // Adjust as needed for horizontal positioning
-              child: Container(
-                height: 70,
-                width: 70,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    onTap: widget.onNext,
-                    customBorder: const CircleBorder(),
-                    child: const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 32,
-                    ),
+        // Weight Value Box
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+          decoration: BoxDecoration(
+            color: _brandColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "$currentWeight ",
+                  style: GoogleFonts.poppins(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-              ),
+                TextSpan(
+                  text: "kg",
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
 
         const SizedBox(height: 40),
 
         // Circular Dial
-        Container(
+        SizedBox(
           width: 300,
           height: 300,
           child: CustomPaint(
@@ -172,6 +134,41 @@ class _WeightStepScreenState extends State<WeightStepScreen> {
               onChanged: (val) {
                 viewModel.setCurrentWeight(val.toInt());
               },
+            ),
+          ),
+        ),
+
+        const Spacer(),
+
+        // Next Button (Standardized)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 30),
+          child: Container(
+            height: 70,
+            width: 70,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: widget.onNext,
+                customBorder: const CircleBorder(),
+                child: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
             ),
           ),
         ),

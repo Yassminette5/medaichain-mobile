@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../core/theme/app_colors.dart';
-import '../../widgets/medical_card.dart';
 
 /// Écran Modèles d'Opérations - Design Ultra Moderne
 class OperationPresetsScreen extends StatefulWidget {

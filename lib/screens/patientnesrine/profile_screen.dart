@@ -165,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         child: Text(
-                          "ID: #${(user?.id != null && user!.id.length >= 8) ? user.id.substring(user.id.length - 8).toUpperCase() : (user?.id?.toUpperCase() ?? 'UNKNOWN')}",
+                          "ID: #${(user?.id != null && user!.id.length >= 8) ? user.id.substring(user.id.length - 8).toUpperCase() : (user?.id.toUpperCase() ?? 'UNKNOWN')}",
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             color: Colors.white.withOpacity(0.95),
@@ -508,7 +508,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             scale: 0.85,
             child: Switch(
               value: isActive,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
               onChanged: (val) {},
             ),
           ),

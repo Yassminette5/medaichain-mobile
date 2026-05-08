@@ -178,7 +178,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                               _buildLabel('Statut de l\'admission'),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                value: selectedStatus,
+                                initialValue: selectedStatus,
                                 decoration: _inputDecoration(hint: 'Statut', icon: Icons.info_outline_rounded),
                                 items: const [
                                   DropdownMenuItem(value: 'waiting', child: Text('En attente')),
@@ -195,7 +195,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                               _buildLabel('Motif de la visite', isRequired: true),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                value: selectedReason,
+                                initialValue: selectedReason,
                                 decoration: _inputDecoration(hint: 'Sélectionner un motif', icon: Icons.medical_services_outlined),
                                 items: reasons.map((r) => DropdownMenuItem(value: r, child: Text(r, style: GoogleFonts.plusJakartaSans(fontSize: 14)))).toList(),
                                 onChanged: (v) => setDialogState(() => selectedReason = v!),
@@ -216,7 +216,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                                   if (!doctorExists && selectedDoctorId != null) selectedDoctorId = null;
 
                                   return DropdownButtonFormField<String>(
-                                    value: selectedDoctorId,
+                                    initialValue: selectedDoctorId,
                                     decoration: _inputDecoration(hint: 'Aucun (file d\'attente)', icon: Icons.local_hospital_outlined),
                                     items: [
                                       DropdownMenuItem<String>(value: null, child: Text('Aucun', style: GoogleFonts.plusJakartaSans(fontSize: 14, color: Colors.grey))),
@@ -308,7 +308,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
     String? selectedDoctorId;
     String selectedGender = 'Homme';
     String selectedPriority = 'Normal';
-    int _currentStep = 0;
+    int currentStep = 0;
     bool isLoading = false;
 
     final visitTypes = [
@@ -368,7 +368,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                                   children: [
                                     Text('Nouvelle Admission', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
                                     const SizedBox(height: 2),
-                                    Text('Étape ${_currentStep + 1} sur 2 — ${_currentStep == 0 ? 'Patient & Motif' : 'Assignation & Confirmation'}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                                    Text('Étape ${currentStep + 1} sur 2 — ${currentStep == 0 ? 'Patient & Motif' : 'Assignation & Confirmation'}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                                   ],
                                 ),
                               ),
@@ -385,7 +385,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                               child: Container(
                                 margin: EdgeInsets.only(right: i < 1 ? 6 : 0),
                                 height: 3,
-                                decoration: BoxDecoration(color: i <= _currentStep ? Colors.white : Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(2)),
+                                decoration: BoxDecoration(color: i <= currentStep ? Colors.white : Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(2)),
                               ),
                             )),
                           ),
@@ -401,7 +401,7 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                           key: formKey,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 250),
-                            child: _currentStep == 0
+                            child: currentStep == 0
                                 ? Column(
                                     key: const ValueKey('admission_step1'),
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,10 +589,10 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                       decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1)))),
                       child: Row(
                         children: [
-                          if (_currentStep > 0)
+                          if (currentStep > 0)
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => setDialogState(() => _currentStep--),
+                                onPressed: () => setDialogState(() => currentStep--),
                                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
                                 label: Text('Retour', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: Colors.grey.withOpacity(0.3))),
@@ -611,12 +611,12 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                             flex: 2,
                             child: ElevatedButton.icon(
                               onPressed: isLoading ? null : () async {
-                                if (_currentStep == 0) {
+                                if (currentStep == 0) {
                                   if (nameCtrl.text.trim().isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Le nom du patient est requis')));
                                     return;
                                   }
-                                  setDialogState(() => _currentStep = 1);
+                                  setDialogState(() => currentStep = 1);
                                 } else {
                                   setDialogState(() => isLoading = true);
                                   try {
@@ -646,14 +646,14 @@ class _ReceptionAdmissionsViewState extends State<ReceptionAdmissionsView> {
                               },
                               icon: isLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : Icon(_currentStep == 0 ? Icons.arrow_forward_rounded : Icons.how_to_reg_rounded, size: 18),
+                                  : Icon(currentStep == 0 ? Icons.arrow_forward_rounded : Icons.how_to_reg_rounded, size: 18),
                               label: Text(
-                                _currentStep == 0 ? 'Continuer' : 'Admettre le Patient',
+                                currentStep == 0 ? 'Continuer' : 'Admettre le Patient',
                                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
                               ),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
-                                backgroundColor: _currentStep == 0 ? AppTheme.primaryMedical : AppTheme.success,
+                                backgroundColor: currentStep == 0 ? AppTheme.primaryMedical : AppTheme.success,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 elevation: 0,

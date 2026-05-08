@@ -708,7 +708,7 @@ class _PharmacyOrdonnanceFormScreenState
                 Expanded(
                   flex: 1,
                   child: DropdownButtonFormField<String>(
-                    value: medication.unit,
+                    initialValue: medication.unit,
                     items: ['units', 'boxes', 'bottles', 'tubes', 'packs']
                         .map((unit) => DropdownMenuItem(
                               value: unit,

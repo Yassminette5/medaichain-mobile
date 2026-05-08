@@ -3,7 +3,7 @@ import '../models/medical_document_model.dart';
 import '../services/api_service.dart';
 
 class DocumentsProvider extends ChangeNotifier {
-  Map<String, List<MedicalDocument>> _documentsByCategory = {};
+  final Map<String, List<MedicalDocument>> _documentsByCategory = {};
   bool _isLoading = false;
 
   Map<String, List<MedicalDocument>> get documentsByCategory => _documentsByCategory;

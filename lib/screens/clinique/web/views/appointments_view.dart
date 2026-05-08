@@ -13,8 +13,8 @@ class AppointmentsView extends StatefulWidget {
 
 class _AppointmentsViewState extends State<AppointmentsView> {
   late Future<List<dynamic>> _appointmentsFuture;
-  String _riskFilter = 'all'; // 'all', 'eleve', 'modere', 'faible'
-  bool _sortByRisk = false;
+  final String _riskFilter = 'all'; // 'all', 'eleve', 'modere', 'faible'
+  final bool _sortByRisk = false;
 
   @override
   void initState() {
@@ -66,7 +66,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
     bool hasAlcoholism = false;
     bool hasHandcap = false;
     bool smsReceived = true;
-    int _currentStep = 0;
+    int currentStep = 0;
     bool isLoading = false;
 
     final consultationTypes = [
@@ -149,7 +149,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                                   children: [
                                     Text('Planifier un Rendez-vous', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
                                     const SizedBox(height: 2),
-                                    Text('Étape ${_currentStep + 1} sur 3', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                                    Text('Étape ${currentStep + 1} sur 3', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                                   ],
                                 ),
                               ),
@@ -173,7 +173,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                                   margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
                                   height: 3,
                                   decoration: BoxDecoration(
-                                    color: i <= _currentStep ? Colors.white : Colors.white.withOpacity(0.15),
+                                    color: i <= currentStep ? Colors.white : Colors.white.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
@@ -192,7 +192,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                           key: formKey,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 250),
-                            child: _currentStep == 0
+                            child: currentStep == 0
                                 ? _buildStep1Patient(
                                     nameCtrl,
                                     phoneCtrl,
@@ -214,7 +214,7 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                                     (v) => setDialogState(() => smsReceived = v),
                                     (v) => setDialogState(() => selectedType = v),
                                   )
-                                : _currentStep == 1
+                                : currentStep == 1
                                     ? _buildStep2Doctor(selectedDoctorId, selectedDate, selectedTimeSlot, timeSlots, setDialogState, pickDate, dialogContext, (id, name) { selectedDoctorId = id; selectedDoctorName = name; }, (v) => selectedTimeSlot = v)
                                     : _buildStep3Summary(nameCtrl.text, phoneCtrl.text, selectedType, selectedDoctorName, selectedDate, selectedTimeSlot, reasonCtrl, notesCtrl, selectedUrgency, setDialogState, (v) => selectedUrgency = v),
                           ),
@@ -228,10 +228,10 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                       decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1)))),
                       child: Row(
                         children: [
-                          if (_currentStep > 0)
+                          if (currentStep > 0)
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => setDialogState(() => _currentStep--),
+                                onPressed: () => setDialogState(() => currentStep--),
                                 icon: const Icon(Icons.arrow_back_rounded, size: 16),
                                 label: Text('Retour', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                                 style: OutlinedButton.styleFrom(
@@ -258,18 +258,18 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                             flex: 2,
                             child: ElevatedButton.icon(
                               onPressed: isLoading ? null : () async {
-                                if (_currentStep == 0) {
+                                if (currentStep == 0) {
                                   if (nameCtrl.text.trim().isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Le nom du patient est requis')));
                                     return;
                                   }
-                                  setDialogState(() => _currentStep = 1);
-                                } else if (_currentStep == 1) {
+                                  setDialogState(() => currentStep = 1);
+                                } else if (currentStep == 1) {
                                   if (selectedDate == null || selectedTimeSlot == null) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sélectionnez la date et l\'heure')));
                                     return;
                                   }
-                                  setDialogState(() => _currentStep = 2);
+                                  setDialogState(() => currentStep = 2);
                                 } else {
                                   setDialogState(() => isLoading = true);
                                   try {
@@ -308,14 +308,14 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                               },
                               icon: isLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : Icon(_currentStep < 2 ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 18),
+                                  : Icon(currentStep < 2 ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 18),
                               label: Text(
-                                _currentStep < 2 ? 'Continuer' : 'Confirmer le RDV',
+                                currentStep < 2 ? 'Continuer' : 'Confirmer le RDV',
                                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14),
                               ),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
-                                backgroundColor: _currentStep < 2 ? AppTheme.primaryMedical : AppTheme.success,
+                                backgroundColor: currentStep < 2 ? AppTheme.primaryMedical : AppTheme.success,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 elevation: 0,
@@ -1157,8 +1157,9 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                   for (final a in aiAppointments) {
                     final p = double.tryParse(a['noShowProbability'].toString()) ?? 0;
                     sum += p;
-                    if (p >= 50) highRisk++;
-                    else if (p >= 20) medRisk++;
+                    if (p >= 50) {
+                      highRisk++;
+                    } else if (p >= 20) medRisk++;
                     else lowRisk++;
                   }
                   avgRisk = sum / totalAi;
@@ -1333,8 +1334,9 @@ class _AppointmentsViewState extends State<AppointmentsView> {
                                   PopupMenuButton<String>(
                                     icon: const Icon(Icons.more_horiz_rounded, color: Colors.grey),
                                     onSelected: (value) {
-                                      if (value == 'edit') _showEditAppointmentDialog(appt);
-                                      else if (value == 'delete') _deleteAppointment(appt['_id']);
+                                      if (value == 'edit') {
+                                        _showEditAppointmentDialog(appt);
+                                      } else if (value == 'delete') _deleteAppointment(appt['_id']);
                                       else if (value == 'ai_details') _showAiDetailSheet(context, appt);
                                     },
                                     itemBuilder: (context) => [

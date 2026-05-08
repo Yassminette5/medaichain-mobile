@@ -717,8 +717,8 @@ class _InvoicesViewState extends State<InvoicesView> {
                         children: [
                           Expanded(flex: 3, child: Text(item['label'] ?? '', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.darkNavy))),
                           Expanded(child: Text('${item['quantity'] ?? 1}', style: GoogleFonts.plusJakartaSans(fontSize: 13), textAlign: TextAlign.center)),
-                          Expanded(child: Text('${_formatMoney((item['unitPrice'] ?? 0).toDouble())}', style: GoogleFonts.plusJakartaSans(fontSize: 13), textAlign: TextAlign.right)),
-                          Expanded(child: Text('${_formatMoney((item['total'] ?? 0).toDouble())}', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
+                          Expanded(child: Text(_formatMoney((item['unitPrice'] ?? 0).toDouble()), style: GoogleFonts.plusJakartaSans(fontSize: 13), textAlign: TextAlign.right)),
+                          Expanded(child: Text(_formatMoney((item['total'] ?? 0).toDouble()), style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
                         ],
                       ),
                     )),

@@ -279,7 +279,7 @@ class _CenterSettingsScreenState extends State<CenterSettingsScreen> {
             Switch(
               value: hasSwitch,
               onChanged: onSwitchChanged,
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
             )
           else
             Icon(Icons.chevron_right, color: AppColors.textSecondary),

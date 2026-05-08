@@ -388,8 +388,7 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
                               onPrimary: Colors.white,
                               surface: AppColors.surface,
                               onSurface: AppColors.textPrimary,
-                            ),
-                            dialogBackgroundColor: AppColors.surface,
+                            ), dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
                           ),
                           child: child!,
                         );

@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 class MedicalDocument {
   final String id;

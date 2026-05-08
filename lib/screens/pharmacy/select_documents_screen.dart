@@ -4,6 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../services/prescriptions_service.dart';
 import '../../services/pharmacy_prescriptions_service.dart';
 import '../../models/pharmacy_model.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class SelectDocumentsScreen extends StatefulWidget {
   final List<PharmacyModel> selectedPharmacies;
@@ -141,15 +143,71 @@ class _SelectDocumentsScreenState extends State<SelectDocumentsScreen> {
   Future<void> _shareDocuments() async {
     if (_selectedIds.isEmpty) return;
 
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+    final patientId = user?.id ?? '';
+    final patientName = user?.fullName ?? user?.email ?? 'Patient';
+    final patientPhone = user?.phone ?? '';
+
     setState(() => _isSharing = true);
 
     try {
       final pharmacyIds = widget.selectedPharmacies.map((p) => p.id).toList();
 
+      // First, share the documents normally
       await PharmacyPrescriptionsService.shareDocuments(
         prescriptionIds: _selectedIds.toList(),
         pharmacyIds: pharmacyIds,
       );
+
+      // Second, generate a dynamic MedicationRequest so it appears in the dashboard stats
+      final selectedPrescriptions = _prescriptions
+          .where((p) => _selectedIds.contains(_extractId(p)))
+          .toList();
+
+      List<Map<String, dynamic>> allMedications = [];
+      String? firstImageUrl;
+      String? doctorName;
+
+      for (var p in selectedPrescriptions) {
+        if (p['medications'] != null && p['medications'] is List) {
+          // Keep only name, dosage, quantity, unit
+          for (var med in p['medications']) {
+            allMedications.add({
+              'name': med['name'] ?? med['medicationName'] ?? 'Médicament',
+              'dosage': med['dosage'] ?? '',
+              'quantity': med['quantity'] ?? 1,
+              'unit': med['unit'] ?? 'unités',
+            });
+          }
+        }
+        if (firstImageUrl == null && p['prescriptionImageUrl'] != null) {
+          firstImageUrl = p['prescriptionImageUrl'];
+        }
+        if (doctorName == null || doctorName == 'Médecin') {
+          doctorName = _getDoctorName(p);
+        }
+      }
+
+      if (allMedications.isNotEmpty) {
+        for (var pharmacyId in pharmacyIds) {
+          try {
+            await PharmacyPrescriptionsService.sendMedicationRequest(
+              pharmacyId: pharmacyId,
+              patientId: patientId,
+              patientName: patientName,
+              patientPhone: patientPhone,
+              medications: allMedications,
+              prescriptionImageUrl: firstImageUrl,
+              doctorName: doctorName,
+              isUrgent: false,
+              requestsDelivery: false,
+            );
+          } catch (_) {
+            // Ignore individual pharmacy request failures
+          }
+        }
+      }
 
       if (!mounted) return;
 

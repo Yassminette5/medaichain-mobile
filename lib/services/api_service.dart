@@ -43,7 +43,7 @@ class ApiService {
     return 'http://127.0.0.1:3000';
   }
 
-  static String get aiBaseUrl => 'https://82c8-35-190-205-158.ngrok-free.app';
+  static String get aiBaseUrl => 'https://6dd4-34-81-16-201.ngrok-free.app';
 
   /// Supprimer des documents OCR (liste d'IDs)
   /// Backend: DELETE /patient/ocr/documents  body: { ids: [...] }
@@ -242,8 +242,9 @@ class ApiService {
     if (gouvernorat != null) body['gouvernorat'] = gouvernorat;
     if (delegation != null) body['delegation'] = delegation;
     if (address != null) body['address'] = address;
-    if (yearsOfExperience != null)
+    if (yearsOfExperience != null) {
       body['yearsOfExperience'] = yearsOfExperience;
+    }
 
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
@@ -517,9 +518,52 @@ class ApiService {
       throw Exception(err['message']?.toString() ?? 'Erreur de mise à jour du profil');
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('Erreur de mise à jour du profil');
+      throw Exception('Erreur de serveur: ${response.statusCode}');
     }
   }
+
+  static Future<User> patchPatientTemporaryAccess({
+    required bool temporaryAccessEnabled,
+    DateTime? temporaryAccessUntil,
+  }) async {
+    final token = await getAccessToken();
+    final body = <String, dynamic>{
+      'temporaryAccessEnabled': temporaryAccessEnabled,
+    };
+    if (temporaryAccessUntil != null) {
+      body['temporaryAccessUntil'] = temporaryAccessUntil.toIso8601String();
+    } else if (!temporaryAccessEnabled) {
+      body['temporaryAccessUntil'] = null;
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/profiles/patient'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final updatedUser = User.fromJson(data);
+      final remember = await getRememberMe();
+      await _saveUser(updatedUser, persist: remember);
+      return updatedUser;
+    }
+    
+    if (response.statusCode == 401) {
+      await refreshToken();
+      return patchPatientTemporaryAccess(
+        temporaryAccessEnabled: temporaryAccessEnabled,
+        temporaryAccessUntil: temporaryAccessUntil,
+      );
+    }
+    
+    throw Exception('Failed to update temporary access: ${response.statusCode}');
+  }
+
   // ========== ANCIENNE MÉTHODE (deprecated) ==========
   static Future<void> updatePatientProfile({
     required String firstName,
@@ -708,8 +752,9 @@ class ApiService {
     // Inférence du content type pour le backend
     String contentType = 'application/pdf';
     final lower = fileName.toLowerCase();
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) contentType = 'image/jpeg';
-    else if (lower.endsWith('.png')) contentType = 'image/png';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      contentType = 'image/jpeg';
+    } else if (lower.endsWith('.png')) contentType = 'image/png';
 
     request.files.add(http.MultipartFile.fromBytes(
       'file',
@@ -906,9 +951,9 @@ class ApiService {
         '[ApiService] getAllPatients: ${response.statusCode} ${response.body}',
       );
       String msg = 'Erreur de chargement des patients';
-      if (response.statusCode == 403)
+      if (response.statusCode == 403) {
         msg = 'Accès refusé aux patients.';
-      else if (response.statusCode == 404)
+      } else if (response.statusCode == 404)
         msg = 'Endpoint patients non disponible.';
       else if (response.statusCode >= 500)
         msg = 'Serveur indisponible. Réessayez plus tard.';
@@ -1045,16 +1090,18 @@ class ApiService {
     String? wilaya,
   }) async {
     final query = <String, String>{};
-    if (speciality != null && speciality.isNotEmpty)
+    if (speciality != null && speciality.isNotEmpty) {
       query['speciality'] = speciality;
+    }
     if (city != null && city.isNotEmpty) query['city'] = city;
     if (wilaya != null && wilaya.isNotEmpty) query['wilaya'] = wilaya;
     final uri = Uri.parse(
       '$baseUrl/profiles/doctors/search',
     ).replace(queryParameters: query.isNotEmpty ? query : null);
     final response = await http.get(uri);
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Erreur recherche médecins');
+    }
     final data = jsonDecode(response.body);
     return data is List ? data.cast<Map<String, dynamic>>() : [];
   }
@@ -1345,8 +1392,9 @@ class ApiService {
   }) {
     try {
       final data = json.decode(response.body);
-      if (data is Map && data['message'] != null)
+      if (data is Map && data['message'] != null) {
         return data['message'].toString();
+      }
     } catch (_) {}
     return fallback ?? 'Erreur (${response.statusCode})';
   }
@@ -1355,8 +1403,9 @@ class ApiService {
     if (_cachedClinicId != null) return _cachedClinicId!;
     try {
       final headers = await _getClinicHeaders();
+      // Utiliser /my qui auto-crée et backfill les champs manquants
       final response = await http.get(
-        Uri.parse('$baseUrl/clinic-management/clinic/mine'),
+        Uri.parse('$baseUrl/clinic-management/my'),
         headers: headers,
       );
       if (response.statusCode == 200) {
@@ -1439,10 +1488,11 @@ class ApiService {
         'speciality': speciality,
       }),
     );
-    if (response.statusCode != 201)
+    if (response.statusCode != 201) {
       throw Exception(
         json.decode(response.body)['message'] ?? 'Failed to add doctor',
       );
+    }
   }
 
   static Future<void> changeDoctorStatus(
@@ -1500,8 +1550,9 @@ class ApiService {
       'patientName': patientName,
       'reason': reason,
     };
-    if (patientPhone != null && patientPhone.isNotEmpty)
+    if (patientPhone != null && patientPhone.isNotEmpty) {
       body['patientPhone'] = patientPhone;
+    }
     if (doctorId != null && doctorId.isNotEmpty) body['doctorId'] = doctorId;
     if (notes != null && notes.isNotEmpty) body['notes'] = notes;
 
@@ -1512,8 +1563,9 @@ class ApiService {
       headers: await _getClinicHeaders(),
       body: json.encode(body),
     );
-    if (response.statusCode != 201)
+    if (response.statusCode != 201) {
       throw Exception('Failed to create admission');
+    }
   }
 
   static Future<void> updateAdmission({
@@ -1538,8 +1590,9 @@ class ApiService {
       headers: await _getClinicHeaders(),
       body: json.encode(body),
     );
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Failed to update admission');
+    }
   }
 
   static Future<void> deleteAdmission(String admissionId) async {
@@ -1547,8 +1600,9 @@ class ApiService {
       Uri.parse('$baseUrl/clinic-management/admissions/$admissionId'),
       headers: await _getClinicHeaders(),
     );
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Failed to delete admission');
+    }
   }
 
   static Future<List<dynamic>> getAppointments() async {
@@ -1585,10 +1639,12 @@ class ApiService {
       'timeSlot': timeSlot,
     };
     if (reason != null && reason.isNotEmpty) body['reason'] = reason;
-    if (patientName != null && patientName.isNotEmpty)
+    if (patientName != null && patientName.isNotEmpty) {
       body['patientName'] = patientName;
-    if (doctorName != null && doctorName.isNotEmpty)
+    }
+    if (doctorName != null && doctorName.isNotEmpty) {
       body['doctorName'] = doctorName;
+    }
     if (patientAge != null) body['patientAge'] = patientAge;
     if (patientGender != null) body['patientGender'] = patientGender;
     if (hipertension != null) body['hipertension'] = hipertension;
@@ -1604,8 +1660,9 @@ class ApiService {
       headers: await _getClinicHeaders(),
       body: json.encode(body),
     );
-    if (response.statusCode != 201)
+    if (response.statusCode != 201) {
       throw Exception('Failed to create appointment');
+    }
   }
 
   // Version pour centres d'analyse (patient) — POST /lab-appointments
@@ -1777,8 +1834,9 @@ class ApiService {
       headers: await _getClinicHeaders(),
       body: json.encode(body),
     );
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Failed to update appointment');
+    }
   }
 
   static Future<void> deleteAppointment(String appointmentId) async {
@@ -1786,8 +1844,9 @@ class ApiService {
       Uri.parse('$baseUrl/clinic-management/appointments/$appointmentId'),
       headers: await _getClinicHeaders(),
     );
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Failed to delete appointment');
+    }
   }
 
   // ========== ADMISSIONS FILTRÉES ==========

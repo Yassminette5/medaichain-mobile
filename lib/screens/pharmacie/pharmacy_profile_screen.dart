@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print, use_build_context_synchronously
+// ignore_for_file: avoid_print, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
@@ -318,6 +318,11 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
     }
   }
 
+  String _effectiveBalance() {
+    final rawBalance = double.tryParse(_walletBalance ?? '0') ?? 0.0;
+    return rawBalance.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -561,7 +566,7 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
           _buildInfoRow(
             icon: Icons.monetization_on_outlined,
             label: 'Solde FRYMN',
-            value: _walletBalance ?? '0',
+            value: _effectiveBalance(),
           ),
           const SizedBox(height: 8),
           Text(
@@ -626,7 +631,7 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
             trailing: Switch(
               value: hasDelivery,
               onChanged: (value) => _toggleDeliveryService(value),
-              activeColor: const Color(0xFF10B981),
+              activeThumbColor: const Color(0xFF10B981),
             ),
           ),
           const Divider(height: 24),
@@ -636,7 +641,7 @@ class _PharmacyProfileMobileState extends State<_PharmacyProfileMobile> {
             trailing: Switch(
               value: notificationsEnabled,
               onChanged: (value) => _toggleNotifications(value),
-              activeColor: const Color(0xFF10B981),
+              activeThumbColor: const Color(0xFF10B981),
             ),
           ),
           const Divider(height: 24),

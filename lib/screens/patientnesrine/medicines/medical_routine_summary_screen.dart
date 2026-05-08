@@ -7,7 +7,6 @@ import 'package:gal/gal.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/medicines_provider.dart';
-import '../../../services/api_service.dart';
 import '../../../models/medicine_model.dart';
 import 'package:intl/intl.dart';
 

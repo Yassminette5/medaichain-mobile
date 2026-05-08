@@ -24,7 +24,9 @@ class AdminService {
       } else {
         try {
           final errorData = jsonDecode(response.body);
-          return errorData['message'] ?? 'Email ou mot de passe incorrect';
+          final message = errorData['message'];
+          if (message is List) return message.join(', ');
+          return message?.toString() ?? 'Email ou mot de passe incorrect';
         } catch (e) {
           return 'Email ou mot de passe incorrect';
         }
@@ -98,7 +100,11 @@ class AdminService {
         return null; // Success
       } else {
         final data = jsonDecode(response.body);
-        return data['message'] ?? 'Invitation failed';
+        final message = data['message'];
+        if (message is List) {
+          return message.join(', ');
+        }
+        return message?.toString() ?? 'Invitation failed';
       }
     } catch (e) {
       return 'Error: $e';
@@ -157,7 +163,9 @@ class AdminService {
         return null; // Success
       } else {
         final data = jsonDecode(response.body);
-        return data['message'] ?? 'Création utilisateur échouée';
+        final message = data['message'];
+        if (message is List) return message.join(', ');
+        return message?.toString() ?? 'Création utilisateur échouée';
       }
     } catch (e) {
       return 'Error: $e';
@@ -182,7 +190,9 @@ class AdminService {
       } else {
         try {
           final data = jsonDecode(response.body);
-          return data['message'] ?? 'Suppression échouée';
+          final message = data['message'];
+          if (message is List) return message.join(', ');
+          return message?.toString() ?? 'Suppression échouée';
         } catch (_) {
           return 'Suppression échouée';
         }
@@ -260,7 +270,9 @@ class AdminService {
 
       try {
         final data = jsonDecode(response.body);
-        return data['message'] ?? 'Mint failed';
+        final message = data['message'];
+        if (message is List) return message.join(', ');
+        return message?.toString() ?? 'Mint failed';
       } catch (e) {
         return 'Mint failed: ${response.statusCode}';
       }

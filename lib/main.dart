@@ -53,7 +53,7 @@ Future<void> main() async {
 
     // Respecter "remember me": si désactivé, purger la session persistée au démarrage.
     await ApiService.enforceRememberPolicyOnStartup();
-  } catch (e, st) {
+  } catch (e) {
     // En web, SharedPreferences ou l'init peuvent échouer (ex: mode privé).
     // On affiche l'app quand même ; l'utilisateur pourra se connecter.
     if (kIsWeb) {

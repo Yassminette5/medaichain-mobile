@@ -717,7 +717,7 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
     String selectedTime = '09:00';
     String? selectedDoctorId;
     String? selectedDoctorName;
-    int _currentStep = 0;
+    int currentStep = 0;
     bool isLoading = false;
 
     final consultTypes = [
@@ -771,7 +771,7 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('Planifier un RDV', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.3)),
                               const SizedBox(height: 2),
-                              Text('Étape ${_currentStep + 1} sur 2 — ${_currentStep == 0 ? 'Patient & Médecin' : 'Date & Heure'}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                              Text('Étape ${currentStep + 1} sur 2 — ${currentStep == 0 ? 'Patient & Médecin' : 'Date & Heure'}', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white.withOpacity(0.7))),
                             ]),
                           ),
                           InkWell(
@@ -784,7 +784,7 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                       const SizedBox(height: 16),
                       Row(
                         children: List.generate(2, (i) => Expanded(
-                          child: Container(margin: EdgeInsets.only(right: i < 1 ? 6 : 0), height: 3, decoration: BoxDecoration(color: i <= _currentStep ? Colors.white : Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(2))),
+                          child: Container(margin: EdgeInsets.only(right: i < 1 ? 6 : 0), height: 3, decoration: BoxDecoration(color: i <= currentStep ? Colors.white : Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(2))),
                         )),
                       ),
                     ],
@@ -797,7 +797,7 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                     padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
-                      child: _currentStep == 0
+                      child: currentStep == 0
                           ? Column(
                               key: const ValueKey('cal_step1'),
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -985,9 +985,9 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                   decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.1)))),
                   child: Row(
                     children: [
-                      if (_currentStep > 0)
+                      if (currentStep > 0)
                         Expanded(child: OutlinedButton.icon(
-                          onPressed: () => setDialogState(() => _currentStep--),
+                          onPressed: () => setDialogState(() => currentStep--),
                           icon: const Icon(Icons.arrow_back_rounded, size: 16),
                           label: Text('Retour', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), side: BorderSide(color: Colors.grey.withOpacity(0.3))),
@@ -1003,12 +1003,12 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                         flex: 2,
                         child: ElevatedButton.icon(
                           onPressed: isLoading ? null : () async {
-                            if (_currentStep == 0) {
+                            if (currentStep == 0) {
                               if (nameCtrl.text.isEmpty || selectedDoctorId == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez remplir tous les champs requis')));
                                 return;
                               }
-                              setDialogState(() => _currentStep = 1);
+                              setDialogState(() => currentStep = 1);
                             } else {
                               setDialogState(() => isLoading = true);
                               try {
@@ -1022,10 +1022,12 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                                 );
                                 if (dialogContext.mounted) Navigator.pop(dialogContext);
                                 _loadData();
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                   content: Row(children: [const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20), const SizedBox(width: 10), const Text('RDV planifié avec succès !')]),
                                   backgroundColor: AppTheme.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), margin: const EdgeInsets.all(16),
                                 ));
+                                }
                               } catch (e) {
                                 setDialogState(() => isLoading = false);
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
@@ -1034,11 +1036,11 @@ class _AppointmentsCalendarViewState extends State<AppointmentsCalendarView> {
                           },
                           icon: isLoading
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Icon(_currentStep == 0 ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 18),
-                          label: Text(_currentStep == 0 ? 'Continuer' : 'Confirmer le RDV', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
+                              : Icon(currentStep == 0 ? Icons.arrow_forward_rounded : Icons.check_rounded, size: 18),
+                          label: Text(currentStep == 0 ? 'Continuer' : 'Confirmer le RDV', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 14)),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: _currentStep == 0 ? AppTheme.primaryMedical : AppTheme.success,
+                            backgroundColor: currentStep == 0 ? AppTheme.primaryMedical : AppTheme.success,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             elevation: 0,

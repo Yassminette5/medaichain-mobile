@@ -12,7 +12,7 @@ class OpeningHoursScreen extends StatefulWidget {
 class _OpeningHoursScreenState extends State<OpeningHoursScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
-  Map<String, dynamic> _openingHours = {
+  final Map<String, dynamic> _openingHours = {
     'lundi': {'open': '08:00', 'close': '18:00', 'isOpen': true},
     'mardi': {'open': '08:00', 'close': '18:00', 'isOpen': true},
     'mercredi': {'open': '08:00', 'close': '18:00', 'isOpen': true},

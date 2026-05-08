@@ -395,7 +395,7 @@ class _AddConsultationDialogState extends State<AddConsultationDialog> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<AlertOption>(
-                        value: _selectedAlert,
+                        initialValue: _selectedAlert,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.notifications_outlined),
                           border: OutlineInputBorder(

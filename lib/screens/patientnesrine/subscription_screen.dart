@@ -13,7 +13,7 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  bool _purchasing = false;
+  final bool _purchasing = false;
 
   @override
   void initState() {

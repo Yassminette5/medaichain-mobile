@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../core/theme/app_colors.dart';
 import '../../services/api_service.dart';
 
 /// Écran d'appel vidéo médecin-patient (Agora).

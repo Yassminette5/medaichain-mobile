@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../pharmacy/pharmacies_list_screen.dart';
+import '../../services/api_service.dart';
 
 class PrescriptionDetailScreen extends StatelessWidget {
   final Map<String, dynamic> prescription;
@@ -24,7 +25,11 @@ class PrescriptionDetailScreen extends StatelessWidget {
     final doctor = prescription['doctorId'];
     final doctorName = (doctor is Map) ? (doctor['fullName'] ?? doctor['email'] ?? 'Médecin') : (doctor?.toString() ?? 'Médecin');
     final meds = (prescription['medications'] as List?) ?? [];
-    final imageUrl = prescription['prescriptionImageUrl'];
+    final rawUrl = prescription['prescriptionImageUrl']?.toString();
+    String? imageUrl;
+    if (rawUrl != null && rawUrl.isNotEmpty) {
+      imageUrl = rawUrl.startsWith('http') ? rawUrl : '${ApiService.baseUrl}${rawUrl.startsWith('/') ? '' : '/'}$rawUrl';
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,7 +61,7 @@ class PrescriptionDetailScreen extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (_) => Dialog(
-                              child: InteractiveViewer(child: Image.network(imageUrl, fit: BoxFit.contain)),
+                              child: InteractiveViewer(child: Image.network(imageUrl!, fit: BoxFit.contain)),
                             ),
                           );
                         },
@@ -64,7 +69,7 @@ class PrescriptionDetailScreen extends StatelessWidget {
                           height: 200,
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primary.withOpacity(0.15))),
                           clipBehavior: Clip.antiAlias,
-                          child: Image.network(imageUrl, fit: BoxFit.cover),
+                          child: Image.network(imageUrl!, fit: BoxFit.cover),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -91,16 +96,25 @@ class PrescriptionDetailScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmaciesListScreen()));
-                          },
-                          icon: const Icon(Icons.local_pharmacy_outlined),
-                          label: const Text('Partager avec pharmacie'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.prescription),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const PharmaciesListScreen()));
+                            },
+                            icon: const Icon(Icons.local_pharmacy_outlined, size: 18),
+                            label: const Text('Partager avec pharmacie', maxLines: 1, overflow: TextOverflow.ellipsis),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.prescription, padding: const EdgeInsets.symmetric(horizontal: 4)),
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        OutlinedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close), label: const Text('Fermer')),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => Navigator.pop(context), 
+                            icon: const Icon(Icons.close, size: 18), 
+                            label: const Text('Fermer', maxLines: 1, overflow: TextOverflow.ellipsis),
+                            style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 4)),
+                          ),
+                        ),
                       ],
                     ),
                   ],

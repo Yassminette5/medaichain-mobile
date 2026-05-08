@@ -406,7 +406,7 @@ class _SignaturePadState extends State<SignaturePad> {
       },
       child: CustomPaint(
         painter: SignaturePainter(_points),
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           height: double.infinity,
         ),

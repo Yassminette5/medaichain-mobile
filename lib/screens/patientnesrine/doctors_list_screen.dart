@@ -87,7 +87,7 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: urgency,
+                  initialValue: urgency,
                   decoration: InputDecoration(
                     labelText: 'Priorité',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

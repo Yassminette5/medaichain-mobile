@@ -34,6 +34,25 @@ class _WaitingRoomViewState extends State<WaitingRoomView> {
   Future<void> _loadAdmissions() async {
     try {
       final admissions = await ApiService.getAdmissions();
+      
+      // Trier par Priorité Triage IA (CRITIQUE > URGENT > ROUTINE)
+      admissions.sort((a, b) {
+        // En consultation et complétés restent où ils sont, on trie surtout ceux en attente
+        final statusA = a['triageStatus'] ?? 'ROUTINE';
+        final statusB = b['triageStatus'] ?? 'ROUTINE';
+        
+        final priorityMap = {'CRITIQUE': 1, 'URGENT': 2, 'ROUTINE': 3};
+        final pA = priorityMap[statusA] ?? 3;
+        final pB = priorityMap[statusB] ?? 3;
+        
+        if (pA != pB) return pA.compareTo(pB);
+        
+        // Si même priorité, trier par numéro de queue (ordre d'arrivée)
+        final qA = a['queueNumber'] ?? 999;
+        final qB = b['queueNumber'] ?? 999;
+        return qA.compareTo(qB);
+      });
+
       if (mounted) {
         setState(() {
           _admissions = admissions;
@@ -330,6 +349,41 @@ class _WaitingRoomViewState extends State<WaitingRoomView> {
                     ],
                   ],
                 ),
+                const SizedBox(height: 8),
+                // --- Triage AI Badge ---
+                if (admission['triageStatus'] != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getTriageColor(admission['triageColor']).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: _getTriageColor(admission['triageColor']).withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              admission['triageStatus'] == 'CRITIQUE' ? Icons.warning_rounded : (admission['triageStatus'] == 'URGENT' ? Icons.access_time_filled_rounded : Icons.check_circle_rounded),
+                              size: 11,
+                              color: _getTriageColor(admission['triageColor']),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Triage IA: ${admission['triageStatus']} (${admission['triageConfidence'] ?? 0}%)',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: _getTriageColor(admission['triageColor']),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -482,5 +536,11 @@ class _WaitingRoomViewState extends State<WaitingRoomView> {
         ],
       ),
     );
+  }
+
+  Color _getTriageColor(String? colorStr) {
+    if (colorStr == 'red') return const Color(0xFFEF4444);
+    if (colorStr == 'orange') return const Color(0xFFF59E0B);
+    return const Color(0xFF22C55E); // green by default
   }
 }

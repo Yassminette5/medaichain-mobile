@@ -16,7 +16,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _nameController = TextEditingController();
   final _nameFocusNode = FocusNode();
   String _selectedType = 'pill';
-  List<String> _selectedSchedule = ['after_breakfast'];
+  final List<String> _selectedSchedule = ['after_breakfast'];
   String _duration = '1 Month';
   String _frequency = 'Daily';
   String _description = '';
@@ -329,7 +329,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                          });
                          Navigator.pop(context);
                        },
-                     )).toList(),
+                     )),
                    ],
                  ),
                ),

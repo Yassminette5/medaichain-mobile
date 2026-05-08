@@ -1,13 +1,10 @@
 
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:gal/gal.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
@@ -38,7 +35,10 @@ class _PatientQrScreenState extends State<PatientQrScreen> {
       final userId = authProvider.user?.id;
       if (userId == null) throw Exception("Utilisateur non connecté");
       
-      final bytes = await ApiService.getQRCodeBytes(userId);
+      // L'URL de votre Ngrok local pour NestJS
+      final String nestJsUrl = 'https://cavity-kangaroo-saturday.ngrok-free.dev/patients/$userId/summary';
+      
+      final bytes = await ApiService.getQRCodeBytes(nestJsUrl);
       
       setState(() {
         _qrBytes = bytes;

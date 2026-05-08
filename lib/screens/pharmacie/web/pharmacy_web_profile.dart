@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -40,13 +40,15 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
       
       final dashboard = await PharmacyService.getDashboard(pharmacyId);
       final profile = await PharmacyService.getPharmacyProfile();
+      final rawProfile = await PharmacyService.getPharmacyProfileRaw();
+      final merged = <String, dynamic>{...profile, ...rawProfile};
       final balance = walletAddress != null && walletAddress.isNotEmpty
           ? await PharmacyService.getWalletTokenBalance(walletAddress)
           : null;
       
       setState(() {
         _dashboard = dashboard;
-        _pharmacyProfile = profile;
+        _pharmacyProfile = merged;
         _walletBalance = balance;
         _walletAddress = walletAddress;
         _isLoading = false;
@@ -690,6 +692,11 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
     return '${address.substring(0, 6)}...${address.substring(address.length - 4)}';
   }
 
+  String _effectiveBalance() {
+    final rawBalance = double.tryParse(_walletBalance ?? '0') ?? 0.0;
+    return rawBalance.toStringAsFixed(1);
+  }
+
   Widget _buildStatsCard() {
     final totalOrders = _dashboard?.pharmacyInfo.totalOrders ?? 0;
     final totalPackages = _dashboard?.pharmacyInfo.totalPackages ?? 0;
@@ -864,7 +871,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
           _buildInfoRow(
             icon: Icons.account_balance_wallet_outlined,
             label: 'Solde FRYMN',
-            value: _walletBalance ?? '0',
+            value: _effectiveBalance(),
           ),
           const Divider(height: 32),
           _buildInfoRow(
@@ -990,7 +997,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
             trailing: Switch(
               value: hasDelivery,
               onChanged: (value) => _toggleDeliveryService(value),
-              activeColor: const Color(0xFF10B981),
+              activeThumbColor: const Color(0xFF10B981),
             ),
           ),
           const Divider(height: 32),
@@ -1000,7 +1007,7 @@ class _PharmacyWebProfileState extends State<PharmacyWebProfile> {
             trailing: Switch(
               value: notificationsEnabled,
               onChanged: (value) => _toggleNotifications(value),
-              activeColor: const Color(0xFF10B981),
+              activeThumbColor: const Color(0xFF10B981),
             ),
           ),
           const Divider(height: 32),

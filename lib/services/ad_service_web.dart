@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'subscription_service.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// AdService — Implémentation WEB

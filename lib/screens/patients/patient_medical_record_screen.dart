@@ -60,7 +60,6 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
 
     try {
       records = await ApiService.getMyMedicalRecords(patientId: widget.patientId);
-      if (records is! List) records = [];
     } catch (e) {
       errorMsg = e.toString().replaceFirst('Exception: ', '');
       records = [];
@@ -68,14 +67,14 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
 
     try {
       final res = await ApiService.getPatientAnalysisResults(widget.patientId!);
-      analyses = res is List ? res : [];
+      analyses = res;
     } catch (_) {
       analyses = [];
     }
 
     try {
       final h = await ApiService.getPatientMedicalHistory(widget.patientId!);
-      history = h is List ? h : [];
+      history = h;
     } catch (_) {
       history = [];
     }
@@ -487,8 +486,11 @@ class _PatientMedicalRecordScreenState extends State<PatientMedicalRecordScreen>
 
     String heartStr = '—';
     if (heartRate != null) {
-      if (heartRate is num) heartStr = heartRate.toInt().toString();
-      else heartStr = heartRate.toString();
+      if (heartRate is num) {
+        heartStr = heartRate.toInt().toString();
+      } else {
+        heartStr = heartRate.toString();
+      }
     } else if (!_hasRealData) heartStr = '72';
 
     String tensionStr = '—/—';

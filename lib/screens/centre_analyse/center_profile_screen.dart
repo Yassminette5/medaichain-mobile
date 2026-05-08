@@ -418,7 +418,7 @@ class _CenterProfileScreenState extends State<CenterProfileScreen> {
                 _isActive = value;
               });
             } : null,
-            activeColor: AppColors.success,
+            activeThumbColor: AppColors.success,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],

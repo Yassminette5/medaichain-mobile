@@ -3,6 +3,7 @@
 /// Objectif: structurer les écrans médecin dans `lib/medecin/` sans casser
 /// les anciens imports (les anciens chemins dans `lib/screens/...` exportent
 /// vers ces fichiers).
+library;
 
 export 'screens/web/medecin_web_dashboard.dart';
 export 'screens/dashboard/dashboard_screen.dart';

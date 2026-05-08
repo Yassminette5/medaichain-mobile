@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medaichainmobile/clinique/theme/app_theme.dart';
 import 'package:medaichainmobile/services/api_service.dart';
+import 'dart:async';
 
 class DashboardHomeView extends StatefulWidget {
   final Function(int)? onNavigate;
@@ -16,6 +17,7 @@ class DashboardHomeView extends StatefulWidget {
 class _DashboardHomeViewState extends State<DashboardHomeView>
     with TickerProviderStateMixin {
   late Future<Map<String, dynamic>> _dashboardStats;
+  Timer? _refreshTimer;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
   late AnimationController _floatController;
@@ -32,6 +34,11 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
     super.initState();
     _dashboardStats = ApiService.getDashboardStats();
     _loadAiResults();
+    
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) _refresh();
+    });
+    
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -61,6 +68,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _pulseController.dispose();
     _floatController.dispose();
     _staggerController.dispose();
@@ -81,15 +89,9 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
     try {
       final results = await ApiService.getClinicAiResults();
       
-      // Trier par niveau de risque : les patients les plus à risque d'abord.
-      // Le 'riskScore' est la probabilité d'adhérence. 
-      // Plus elle est basse, plus le risque d'abandon est élevé.
-      // On trie donc par score croissant (du plus faible au plus élevé).
-      results.sort((a, b) {
-        final double scoreA = (a['riskScore'] ?? 0).toDouble();
-        final double scoreB = (b['riskScore'] ?? 0).toDouble();
-        return scoreA.compareTo(scoreB);
-      });
+      // Le backend renvoie maintenant les résultats triés par Date et Heure
+      // On conserve donc cet ordre chronologique ("b tandhim les date")
+      // results.sort(...) a été retiré.
 
       if (mounted) setState(() => _aiResults = List<Map<String, dynamic>>.from(results));
     } catch (e) {
@@ -225,8 +227,8 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
               ),
               const SizedBox(height: 28),
 
-              // ======= 🧠 ALERTES IA — Adhérence =======
-              _buildAiAlertsSection(),
+              // ======= 🧠 VIGILANCE MÉDICALE =======
+              _buildMedicalVigilanceSection(),
               const SizedBox(height: 28),
 
               // ======= Charts Row =======
@@ -680,7 +682,7 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                     final result = await ApiService.triggerClinicAdherenceAnalysis();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${result['analyzed']} dossiers analysés avec Kaggle !'), backgroundColor: AppTheme.primaryMedical)
+                        SnackBar(content: Text('✅ ${result['analyzed']} patients analysés par le modèle IA !'), backgroundColor: AppTheme.primaryMedical)
                       );
                       _refresh();
                     }
@@ -727,10 +729,11 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
   }
 
   // ======= 🧠 AI ALERTS SECTION (PRO) =======
-  Widget _buildAiAlertsSection() {
-    final highCount = _aiResults.where((r) => r['riskLevel'] == 'élevé').length;
-    final medCount = _aiResults.where((r) => r['riskLevel'] == 'modéré').length;
-    final lowCount = _aiResults.where((r) => r['riskLevel'] == 'faible').length;
+  Widget _buildMedicalVigilanceSection() {
+    // _aiResults contains appointments from the backend
+    final highCount = _aiResults.where((r) => r['diseaseColor'] == 'red').length;
+    final medCount = _aiResults.where((r) => r['diseaseColor'] == 'orange').length;
+    final lowCount = _aiResults.where((r) => r['diseaseColor'] == 'green').length;
     final total = _aiResults.length;
     final healthScore = total > 0 ? ((lowCount / total) * 100).round() : 0;
 
@@ -744,105 +747,56 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
       ),
       child: Column(
         children: [
-          // ═══════ GRADIENT HEADER ═══════
+          // ═══════ HEADER ═══════
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+              border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 24),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Intelligence Artificielle',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Prédiction d\'adhérence au traitement • Modèle Kaggle',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.monitor_heart_rounded, color: Color(0xFFEF4444), size: 24),
                     ),
-                    Row(
-                      children: [
-                        // Bouton Lancer
-                        ElevatedButton.icon(
-                          onPressed: _isAnalyzing ? null : () async {
-                            setState(() => _isAnalyzing = true);
-                            try {
-                              final result = await ApiService.triggerClinicAdherenceAnalysis();
-                              await _loadAiResults();
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('✅ ${result['analyzed']} patients analysés avec succès !'),
-                                    backgroundColor: const Color(0xFF22C55E),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('❌ Erreur: Vérifiez la configuration IA (🤖)'),
-                                    backgroundColor: Colors.redAccent,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _isAnalyzing = false);
-                            }
-                          },
-                          icon: _isAnalyzing
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1E1B4B)))
-                              : const Icon(Icons.play_arrow_rounded, size: 20),
-                          label: Text(_isAnalyzing ? 'Analyse en cours...' : 'Lancer l\'analyse'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF1E1B4B),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            elevation: 0,
-                            textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Vigilance Médicale du Jour',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.darkNavy),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: _loadAiResults,
-                          icon: const Icon(Icons.refresh_rounded, color: Colors.white70, size: 22),
-                          tooltip: 'Actualiser',
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'L\'IA analyse tous les nouveaux RDV pour détecter les risques cachés en amont.',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22C55E).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.auto_awesome, color: Color(0xFF22C55E), size: 14),
+                          const SizedBox(width: 6),
+                          Text('100% Auto', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFF22C55E))),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -852,13 +806,13 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      _buildHeaderStat('Patients analysés', '$total', Icons.people_alt_rounded, const Color(0xFF818CF8)),
+                      _buildHeaderStat('RDV Scannés', '$total', Icons.verified_user_rounded, const Color(0xFF64748B)),
                       const SizedBox(width: 12),
-                      _buildHeaderStat('Risque élevé', '$highCount', Icons.warning_amber_rounded, const Color(0xFFFB7185)),
+                      _buildHeaderStat('Risque Cardio', '$highCount', Icons.favorite_rounded, const Color(0xFFEF4444)),
                       const SizedBox(width: 12),
-                      _buildHeaderStat('Risque modéré', '$medCount', Icons.info_outline_rounded, const Color(0xFFFBBF24)),
+                      _buildHeaderStat('Risque Diabète', '$medCount', Icons.water_drop_rounded, const Color(0xFFF59E0B)),
                       const SizedBox(width: 12),
-                      _buildHeaderStat('Santé globale', '$healthScore%', Icons.favorite_rounded, const Color(0xFF34D399)),
+                      _buildHeaderStat('Taux Sains', '$healthScore%', Icons.shield_rounded, const Color(0xFF22C55E)),
                     ],
                   ),
                 ],
@@ -866,11 +820,11 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
             ),
           ),
 
-          // ═══════ TABLE CONTENT ═══════
+          // ═══════ PATIENT LIST ═══════
           if (_isLoadingAiResults)
             const Padding(
               padding: EdgeInsets.all(48),
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF4338CA))),
+              child: Center(child: CircularProgressIndicator(color: Color(0xFFEF4444))),
             )
           else if (_aiResults.isEmpty)
             Padding(
@@ -880,20 +834,15 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F3FF),
+                      color: const Color(0xFFF8FAFC),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.analytics_outlined, size: 48, color: Color(0xFFA78BFA)),
+                    child: const Icon(Icons.health_and_safety_rounded, size: 48, color: Color(0xFFCBD5E1)),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Aucune analyse disponible',
+                    'Aucun patient à analyser aujourd\'hui',
                     style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.darkNavy),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Cliquez sur "Lancer l\'analyse" pour détecter les patients à risque d\'abandon',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
@@ -912,17 +861,14 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
                     ),
                     child: Row(
                       children: [
-                        Expanded(flex: 4, child: Text('PATIENT & RECOMMANDATION IA', style: _tableHeaderStyle())),
-                        Expanded(flex: 2, child: Text('SCORE', style: _tableHeaderStyle())),
-                        Expanded(flex: 2, child: Text('NIVEAU', style: _tableHeaderStyle())),
-                        Expanded(flex: 1, child: Text('CONFIANCE', style: _tableHeaderStyle())),
-                        Expanded(flex: 2, child: Text('ACTION', style: _tableHeaderStyle())),
+                        Expanded(flex: 3, child: Text('PATIENT & HORAIRE', style: _tableHeaderStyle())),
+                        Expanded(flex: 4, child: Text('PRÉ-DIAGNOSTIC IA (DÉTECTION PRÉCOCE)', style: _tableHeaderStyle())),
+                        Expanded(flex: 2, child: Text('ACTION CLINIQUE', style: _tableHeaderStyle())),
                       ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Table Rows
-                  ...List.generate(_aiResults.length, (i) => _buildAiPatientRow(_aiResults[i], i)),
+                  ...List.generate(_aiResults.length, (i) => _buildVigilanceRow(_aiResults[i])),
                 ],
               ),
             ),
@@ -945,19 +891,27 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.15)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 20),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
-                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: Colors.white60)),
+                Text(value, style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.darkNavy)),
+                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
               ],
             ),
           ],
@@ -966,227 +920,300 @@ class _DashboardHomeViewState extends State<DashboardHomeView>
     );
   }
 
-  Widget _buildAiPatientRow(Map<String, dynamic> r, int index) {
-    final rawAdherenceScore = (r['riskScore'] ?? 0).toDouble();
-    // Inverser le score pour afficher le "Risque d'abandon" plutôt que "Probabilité d'adhérence"
-    // Ainsi, un haut risque (ex: 22% adhérence) deviendra 78% (Risque Élevé), très intuitif !
-    final score = 100 - rawAdherenceScore; 
-
-    final level = r['riskLevel'] ?? 'faible';
-    final isHigh = level == 'élevé';
-    final isMed = level == 'modéré';
-    final confidence = (r['confidence'] ?? 0).toDouble();
-    final riskFactors = List<String>.from(r['riskFactors'] ?? []);
-    final recommendation = r['recommendation'] ?? r['recommendedAction'] ?? 'Suivi standard';
-
+  Widget _buildVigilanceRow(Map<String, dynamic> r) {
+    final name = r['patientName'] ?? 'Patient';
+    final timeSlot = r['timeSlot'] ?? '--:--';
+    final diseaseLabel = r['diseaseLabel'] ?? 'Sain';
+    final colorStr = r['diseaseColor'] ?? 'green';
+    final confidence = (r['diseaseConfidence'] ?? 0).toDouble();
+    final List<dynamic> explanations = r['explanations'] ?? [];
+    
     Color badgeColor = const Color(0xFF22C55E);
-    Color badgeBg = const Color(0xFFDCFCE7);
-    String badgeLabel = 'Faible';
-    IconData levelIcon = Icons.check_circle_rounded;
-
-    if (isHigh) {
+    Color bg = const Color(0xFFF0FDF4);
+    if (colorStr == 'red') {
       badgeColor = const Color(0xFFEF4444);
-      badgeBg = const Color(0xFFFEE2E2);
-      badgeLabel = 'Élevé';
-      levelIcon = Icons.error_rounded;
-    } else if (isMed) {
+      bg = const Color(0xFFFEF2F2);
+    } else if (colorStr == 'orange') {
       badgeColor = const Color(0xFFF59E0B);
-      badgeBg = const Color(0xFFFEF3C7);
-      badgeLabel = 'Modéré';
-      levelIcon = Icons.warning_rounded;
+      bg = const Color(0xFFFFFBEB);
     }
 
-    final name = r['patientName'] ?? 'Patient';
+    // If NLP detected something, its color takes priority
+    final nlpDiagnosis = r['nlpDiagnosis']?.toString();
+    final hasNlp = nlpDiagnosis != null && nlpDiagnosis.isNotEmpty;
+    if (hasNlp) {
+      final nColor = r['nlpColor']?.toString() ?? 'green';
+      if (nColor == 'red') {
+        badgeColor = const Color(0xFFEF4444);
+        bg = const Color(0xFFFEF2F2);
+      } else if (nColor == 'orange') {
+        badgeColor = const Color(0xFFF59E0B);
+        bg = const Color(0xFFFFFBEB);
+      } else {
+        badgeColor = const Color(0xFF22C55E);
+        bg = const Color(0xFFF0FDF4);
+      }
+    }
+
     final initials = name.length >= 2 ? name.substring(0, 2).toUpperCase() : name.substring(0, 1).toUpperCase();
+
+    final dateStr = r['date']?.toString() ?? '';
+    String displayDate = '';
+    if (dateStr.isNotEmpty) {
+      try {
+        final d = DateTime.parse(dateStr);
+        displayDate = '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')} • ';
+      } catch(_) {}
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isHigh ? const Color(0xFFFFF5F5) : Colors.white,
+        color: bg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isHigh ? const Color(0xFFFECACA) : isMed ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
-          width: isHigh ? 1.5 : 1,
-        ),
-        boxShadow: isHigh ? [BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4))] : [],
+        border: Border.all(color: badgeColor.withOpacity(0.3)),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ═══ Main Row ═══
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          // ══ Patient Info ══
+          Expanded(
+            flex: 3,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Avatar
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isHigh
-                          ? [const Color(0xFFEF4444), const Color(0xFFF97316)]
-                          : isMed
-                              ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24)]
-                              : [const Color(0xFF6366F1), const Color(0xFF818CF8)],
+                CircleAvatar(
+                  backgroundColor: badgeColor,
+                  foregroundColor: Colors.white,
+                  radius: 18,
+                  child: Text(initials, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(name, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule_rounded, size: 12, color: AppTheme.textSecondary),
+                        const SizedBox(width: 4),
+                        Text('$displayDate$timeSlot', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: badgeColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
-                  ),
-                  child: Center(
-                    child: Text(initials, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white)),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 14),
-                // Nom + description
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+          ),
+          
+          // ══ AI PREDICTION & CLINICAL XAI ══
+          Expanded(
+            flex: 5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 1. NLP SYMPTOM CHECKER
+                if (hasNlp) ...[
+                  Row(
                     children: [
-                      Text(name, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.darkNavy)),
-                      const SizedBox(height: 2),
-                      Text(
-                        recommendation,
-                        style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text('NLP', style: GoogleFonts.plusJakartaSans(fontSize: 8, fontWeight: FontWeight.w800, color: badgeColor)),
                       ),
-                    ],
-                  ),
-                ),
-                // Score + bar
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${score.toStringAsFixed(1)}%',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w900, color: badgeColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '🩺 $nlpDiagnosis',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14, 
+                            fontWeight: FontWeight.w800, 
+                            color: badgeColor
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: score / 100,
-                          backgroundColor: const Color(0xFFE2E8F0),
-                          color: badgeColor,
-                          minHeight: 5,
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: badgeColor.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.psychology_alt_rounded, size: 10, color: Color(0xFF64748B)),
+                            const SizedBox(width: 4),
+                            Text('${(r['nlpConfidence'] ?? 0).toStringAsFixed(0)}%', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(levelIcon, size: 15, color: badgeColor),
-                      const SizedBox(width: 5),
-                      Text(badgeLabel, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w800, color: badgeColor)),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Confiance IA
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F3FF),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF7C3AED)),
-                      const SizedBox(width: 4),
-                      Text('${confidence.toStringAsFixed(0)}%', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF7C3AED))),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Action Button
-                isHigh || isMed
-                  ? ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('📞 Rappel planifié pour $name'),
-                            backgroundColor: const Color(0xFF4338CA),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 6),
+                  // Instructions Cliniques (Triage & Preparation)
+                  if (r['nlpTriage'] != null)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.directions_walk_rounded, size: 12, color: badgeColor.withOpacity(0.8)),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            r['nlpTriage'],
+                            style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: badgeColor.withOpacity(0.9)),
                           ),
-                        );
-                      },
-                      icon: Icon(isHigh ? Icons.phone_rounded : Icons.sms_rounded, size: 14),
-                      label: Text(isHigh ? 'Appeler' : 'SMS'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: badgeColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                        textStyle: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                    )
-                  : Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF22C55E)),
-                          const SizedBox(width: 5),
-                          Text('Stable', style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E))),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  const SizedBox(height: 4),
+                  if (r['nlpPreparation'] != null)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.medical_services_rounded, size: 12, color: AppTheme.textSecondary),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            r['nlpPreparation'],
+                            style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 6),
+                  if (r['symptomsText'] != null)
+                    Text(
+                      '"${r['symptomsText']}"',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 10, fontStyle: FontStyle.italic, color: AppTheme.textSecondary.withOpacity(0.6)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ] else ...[
+                  // 2. DISEASE PREDICTOR (Fallback)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          diseaseLabel,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: badgeColor),
+                        ),
+                      ),
+                      if (colorStr != 'green')
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: badgeColor.withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.auto_awesome, size: 10, color: Color(0xFF64748B)),
+                              const SizedBox(width: 4),
+                              Text('${confidence.toStringAsFixed(0)}%', style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (explanations.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: explanations.map((expl) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: badgeColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(colorStr == 'green' ? Icons.check_circle_outline : Icons.search_rounded, size: 10, color: badgeColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              expl.toString(),
+                              style: GoogleFonts.plusJakartaSans(fontSize: 9, fontWeight: FontWeight.w600, color: badgeColor.withOpacity(0.9)),
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                    ),
+                  ],
+                ],
               ],
             ),
           ),
-
-          // ═══ Risk Factors Tags ═══
-          if (riskFactors.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(76, 0, 18, 14),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: riskFactors.map((f) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: badgeColor.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isHigh ? Icons.report_problem_rounded : isMed ? Icons.info_outline_rounded : Icons.check_rounded,
-                        size: 11,
-                        color: badgeColor,
+          
+          // ══ ACTION CLINIQUE ══
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: hasNlp && r['nlpActionButton'] != null
+                  ? ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: Icon(badgeColor == const Color(0xFFEF4444) ? Icons.emergency_rounded : Icons.check_circle_outline_rounded, size: 14),
+                      label: Text(r['nlpActionButton']),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: badgeColor == const Color(0xFF22C55E) ? Colors.white : badgeColor,
+                        foregroundColor: badgeColor == const Color(0xFF22C55E) ? const Color(0xFF22C55E) : Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        side: badgeColor == const Color(0xFF22C55E) ? BorderSide(color: const Color(0xFF22C55E).withOpacity(0.3)) : BorderSide.none,
+                        elevation: 0,
+                        textStyle: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w800),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        f,
-                        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w600, color: badgeColor.withOpacity(0.9)),
-                      ),
-                    ],
-                  ),
-                )).toList(),
-              ),
+                    )
+                  : badgeColor == const Color(0xFFEF4444)
+                      ? ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.warning_rounded, size: 14),
+                          label: const Text('Préparer dossier'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                            textStyle: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
+                          ),
+                        )
+                      : badgeColor == const Color(0xFFF59E0B)
+                          ? ElevatedButton.icon(
+                              onPressed: () {},
+                              icon: const Icon(Icons.visibility_rounded, size: 14),
+                              label: const Text('Aviser médecin'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFF59E0B),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                elevation: 0,
+                                textStyle: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: const Text('RAS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8))),
+                            ),
             ),
+          ),
         ],
       ),
     );

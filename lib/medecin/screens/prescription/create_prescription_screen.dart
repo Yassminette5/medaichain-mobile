@@ -197,7 +197,7 @@ class _CreatePrescriptionScreenState extends State<CreatePrescriptionScreen> {
                 )
               else
                 DropdownButtonFormField<String>(
-                  value: _selectedPatientId,
+                  initialValue: _selectedPatientId,
                   decoration: InputDecoration(
                     hintText: 'Sélectionner un patient',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

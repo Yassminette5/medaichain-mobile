@@ -43,7 +43,7 @@ class _CenterDashboardWebState extends State<CenterDashboardWeb> {
   List<Map<String, dynamic>> _appointments = [];
   
   // Calendrier
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {

@@ -44,7 +44,7 @@ class _AiAssistantChatState extends State<AiAssistantChat>
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
 
-  String _currentMode = 'symptoms';
+  final String _currentMode = 'symptoms';
   bool _isLoading = false;
   String? _currentConversationId;
   XFile? _imageFile;
@@ -266,6 +266,7 @@ class _AiAssistantChatState extends State<AiAssistantChat>
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
         color: _kBg,
@@ -431,7 +432,7 @@ class _AiAssistantChatState extends State<AiAssistantChat>
     if (!isUser && data != null) {
       final type = data['type']?.toString();
       final isExpanded = msg['isExpanded'] ?? false;
-      final toggle = () => setState(() => msg['isExpanded'] = !isExpanded);
+      void toggle() => setState(() => msg['isExpanded'] = !isExpanded);
 
       if (type == 'paragraph' || type == 'sentence') return _buildParagraphBubble(data, isExpanded, toggle);
       if (type == 'steps')    return _buildStepsBubble(data);

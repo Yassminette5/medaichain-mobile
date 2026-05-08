@@ -734,7 +734,7 @@ class _AddDoctorDialogState extends State<_AddDoctorDialog> with SingleTickerPro
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
-              value: _selectedDoctorId,
+              initialValue: _selectedDoctorId,
               isExpanded: true,
               items: _availableDoctors.map((doc) {
                 final email = doc['email'] ?? '';
@@ -984,7 +984,7 @@ class _AddDoctorDialogState extends State<_AddDoctorDialog> with SingleTickerPro
             border: Border.all(color: AppTheme.dividerLight),
           ),
           child: DropdownButtonFormField<String>(
-            value: times.contains(value) ? value : null,
+            initialValue: times.contains(value) ? value : null,
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.access_time_rounded, size: 18, color: AppTheme.primaryMedical),
               border: InputBorder.none,

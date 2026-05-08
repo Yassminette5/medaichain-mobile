@@ -92,7 +92,7 @@ class _ClinicAppointmentBookingScreenState extends State<ClinicAppointmentBookin
     setState(() => _isLoading = true);
 
     try {
-      final User? userProfile = await ApiService.getProfile();
+      final User userProfile = await ApiService.getProfile();
       String patientName = userProfile?.fullName ?? 'Patient Mobile';
 
       final appointmentData = {

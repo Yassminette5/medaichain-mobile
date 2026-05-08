@@ -359,19 +359,30 @@ class PharmacyService {
   ) async {
     final headers = await _headers();
     final response = await http.put(
-      Uri.parse('$baseUrl/pharmacy/my/requests/$requestId'),
+      Uri.parse('$baseUrl/prescriptions/shared-documents/$requestId/status'),
       headers: headers,
-      body: jsonEncode(updates),
+      body: jsonEncode({
+        'status': updates['status'],
+        'validationNote': updates['validationNote'] ?? '',
+      }),
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return MedicationRequest.fromJson(data);
+      // The backend returns a SharedPrescription. 
+      // We can just return a dummy MedicationRequest or fetch again.
+      // Since the UI refetches the dashboard immediately after, a dummy is fine.
+      return MedicationRequest(
+        id: requestId,
+        patient: Patient(id: '', name: ''),
+        medications: [],
+        status: RequestStatusParsing.fromJson(updates['status']),
+        requestDate: DateTime.now(),
+      );
     } else if (response.statusCode == 401) {
       await ApiService.refreshToken();
       return updateMyRequest(requestId, updates);
     } else {
-      throw Exception('Failed to update request');
+      throw Exception('Failed to update request status');
     }
   }
 
